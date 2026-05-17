@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Diep.io Clone</title>
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #111;
+      }
+      #root {
+        width: 100%;
+        height: 100%;
+        min-height: 100vh;
+      }
+      @supports (height: 100dvh) {
+        #root { min-height: 100dvh; }
+      }
+      #error-box {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: #111;
+        color: #f55;
+        font-family: monospace;
+        font-size: 13px;
+        padding: 20px;
+        overflow: auto;
+        z-index: 99999;
+        white-space: pre-wrap;
+        word-break: break-all;
+      }
+    </style>
+    <link rel="stylesheet" href="./style.css" />
+    <script>
+      (function(){
+        if(navigator.maxTouchPoints>0||'ontouchstart' in window){
+          var _mm=window.matchMedia.bind(window);
+          window.matchMedia=function(q){
+            if(q==='(pointer: coarse)'){
+              return {matches:true,media:q,onchange:null,
+                addListener:function(){},removeListener:function(){},
+                addEventListener:function(){},removeEventListener:function(){},
+                dispatchEvent:function(){return false;}};
+            }
+            return _mm(q);
+          };
+        }
+      })();
+
+      window.onerror = function(msg, src, line, col, err) {
+        var box = document.getElementById('error-box');
+        if (box) {
+          box.style.display = 'block';
+          box.textContent = 'ОШИБКА:\n' + msg + '\n\nФайл: ' + src + '\nСтрока: ' + line + ':' + col + '\n\n' + (err ? err.stack : '');
+        }
+        return false;
+      };
+
+      window.addEventListener('unhandledrejection', function(e) {
+        var box = document.getElementById('error-box');
+        if (box) {
+          box.style.display = 'block';
+          box.textContent = (box.textContent || '') + '\nPromise error:\n' + (e.reason ? (e.reason.stack || e.reason) : e);
+        }
+      });
+    </script>
+  </head>
+  <body>
+    <div id="error-box"></div>
+    <div id="root"></div>
+
+    <!-- Резервные имена (не редактировать) -->
+    <script src="./names.fallback.js"></script>
+
+    <!-- Перехват ошибок names.js -->
+    <script>
+      (function () {
+        var _prevOnerror = window.onerror;
+        window._namesError = null;
+        window.onerror = function (msg, src, line, col, err) {
+          if (src && src.indexOf('names.js') !== -1) {
+            window._namesError = { msg: msg, line: line, col: col };
+            return true;
+          }
+          if (_prevOnerror) return _prevOnerror(msg, src, line, col, err);
+          return false;
+        };
+      })();
+    </script>
+
+    <!-- Имена ботов — редактируй этот файл -->
+    <script src="./names.js"></script>
+
+    <!-- Валидация и выбор источника имён -->
+    <script>
+      (function () {
+        var STORAGE_KEY = 'diep_bot_names_backup';
+        var err = window._namesError;
+        var names = window.BOT_NAMES;
+        var fallback = window.BOT_NAMES_FALLBACK;
+
+        function showPopup(source, errInfo) {
+          function render() {
+            var overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:100000;display:flex;align-items:center;justify-content:center;';
+            var box = document.createElement('div');
+            box.style.cssText = 'background:#1a1a2e;border:2px solid #e74c3c;border-radius:12px;padding:28px 32px;max-width:500px;width:90%;color:#fff;font-family:monospace;font-size:14px;line-height:1.6;box-shadow:0 0 50px rgba(231,76,60,0.35);';
+            var errHtml = errInfo
+              ? '<div style="margin:10px 0;padding:10px;background:#2a0a0a;border-radius:6px;color:#ff8080;">'
+                + 'Строка ' + errInfo.line + ', позиция ' + errInfo.col + ':<br>'
+                + errInfo.msg
+                + '</div>'
+              : '';
+            box.innerHTML =
+              '<div style="color:#e74c3c;font-size:17px;margin-bottom:10px;">⚠️ Ошибка в файле names.js</div>'
+              + errHtml
+              + '<div style="color:#aaa;margin-top:8px;">Игра запущена с именами из:<br><b style="color:#3498db;">'
+              + source + '</b></div>'
+              + '<button id="_names_ok" style="margin-top:20px;background:#e74c3c;border:none;color:#fff;'
+              + 'padding:9px 28px;border-radius:6px;cursor:pointer;font-size:14px;font-family:monospace;">'
+              + 'Понятно</button>';
+            overlay.appendChild(box);
+            document.body.appendChild(overlay);
+            document.getElementById('_names_ok').onclick = function () { overlay.remove(); };
+          }
+          if (document.body) render();
+          else document.addEventListener('DOMContentLoaded', render);
+        }
+
+        var valid = Array.isArray(names) && names.length > 0;
+
+        if (!err && valid) {
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(names)); } catch (e) {}
+          window._GAME_BOT_NAMES = names;
+          return;
+        }
+
+        // Попытка 1: localStorage
+        var lsBackup = null;
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) lsBackup = JSON.parse(raw);
+        } catch (e) {}
+
+        if (lsBackup && lsBackup.length > 0) {
+          window._GAME_BOT_NAMES = lsBackup;
+          showPopup('резервной копии браузера', err);
+          return;
+        }
+
+        // Попытка 2: names.fallback.js
+        if (Array.isArray(fallback) && fallback.length > 0) {
+          window._GAME_BOT_NAMES = fallback;
+          showPopup('names.fallback.js', err);
+          return;
+        }
+
+        // Попытка 3: встроенные имена в game.js (window._GAME_BOT_NAMES остаётся null)
+        window._GAME_BOT_NAMES = null;
+        showPopup('встроенного списка игры', err);
+      })();
+    </script>
+
+    <script src="./game.js"></script>
+  </body>
+</html>
