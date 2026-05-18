@@ -100,6 +100,17 @@
     <!-- Валидация и выбор источника имён -->
     <script>
       (function () {
+        // Пользовательские имена имеют наивысший приоритет
+        var _customRaw = null;
+        try { _customRaw = localStorage.getItem('diep_bot_names_custom'); } catch(e) {}
+        if (_customRaw) {
+          var _customParsed = null;
+          try { _customParsed = JSON.parse(_customRaw); } catch(e) {}
+          if (Array.isArray(_customParsed) && _customParsed.length > 0) {
+            window._GAME_BOT_NAMES = _customParsed;
+            return;
+          }
+        }
         var STORAGE_KEY = 'diep_bot_names_backup';
         var err = window._namesError;
         var names = window.BOT_NAMES;
@@ -601,5 +612,329 @@
       else document.addEventListener('DOMContentLoaded', init);
     })();
     </script>
+    <!-- Bot Names Editor -->
+    <script>
+    (function() {
+      var CUSTOM_KEY = 'diep_bot_names_custom';
+      var editingIdx = -1;
+
+      function getDefaultNames() {
+        var src = window.BOT_NAMES || window.BOT_NAMES_FALLBACK || [];
+        return src.slice();
+      }
+
+      function loadNames() {
+        try {
+          var raw = localStorage.getItem(CUSTOM_KEY);
+          if (raw) { var p = JSON.parse(raw); if (Array.isArray(p) && p.length > 0) return p; }
+        } catch(e) {}
+        return getDefaultNames();
+      }
+
+      function saveNames(arr) {
+        try { localStorage.setItem(CUSTOM_KEY, JSON.stringify(arr)); } catch(e) {}
+        // Mutate global array in place so running game picks up changes immediately
+        if (window._GAME_BOT_NAMES && Array.isArray(window._GAME_BOT_NAMES)) {
+          window._GAME_BOT_NAMES.splice(0, window._GAME_BOT_NAMES.length);
+          arr.forEach(function(n) { window._GAME_BOT_NAMES.push(n); });
+        } else {
+          window._GAME_BOT_NAMES = arr.slice();
+        }
+      }
+
+      function init() {
+        /* ── CSS ── */
+        var style = document.createElement('style');
+        style.textContent = [
+          '#_nm-btn{position:fixed;bottom:14px;right:14px;z-index:9000;',
+          'background:rgba(20,20,35,0.92);border:1.5px solid rgba(100,180,255,0.35);',
+          'color:#7ecfff;font-family:Arial,sans-serif;font-size:11px;font-weight:bold;',
+          'padding:7px 12px;border-radius:8px;cursor:pointer;letter-spacing:.4px;',
+          'backdrop-filter:blur(4px);transition:background .15s,border-color .15s;}',
+          '#_nm-btn:hover{background:rgba(30,40,70,0.97);border-color:rgba(100,180,255,0.7);}',
+          '#_nm-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;',
+          'z-index:8999;background:rgba(0,0,0,0.55);}',
+          '#_nm-panel{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);',
+          'z-index:9001;background:#0d1525;border:1.5px solid rgba(68,136,255,0.4);',
+          'border-radius:16px;padding:0;width:360px;max-width:96vw;max-height:88vh;',
+          'display:none;flex-direction:column;',
+          'box-shadow:0 12px 50px rgba(0,0,0,0.85);font-family:Arial,sans-serif;}',
+          '#_nm-head{padding:16px 18px 0;flex-shrink:0;}',
+          '#_nm-title{color:#7ecfff;font-size:13px;font-weight:bold;text-align:center;',
+          'letter-spacing:.6px;margin-bottom:10px;}',
+          '#_nm-close{position:absolute;top:10px;right:12px;background:none;border:none;',
+          'color:rgba(255,255,255,0.4);font-size:18px;cursor:pointer;padding:2px 7px;border-radius:4px;}',
+          '#_nm-close:hover{color:#fff;background:rgba(255,255,255,0.08);}',
+          '#_nm-stats{color:rgba(255,255,255,0.4);font-size:10px;text-align:center;margin-bottom:8px;}',
+          '#_nm-search{width:100%;box-sizing:border-box;background:rgba(255,255,255,0.06);',
+          'border:1px solid rgba(255,255,255,0.12);border-radius:7px;color:#fff;',
+          'font-family:Arial,sans-serif;font-size:12px;padding:7px 10px;outline:none;',
+          'margin-bottom:10px;}',
+          '#_nm-search:focus{border-color:rgba(100,180,255,0.5);}',
+          '#_nm-list-wrap{overflow-y:auto;flex:1;min-height:0;padding:0 14px;}',
+          '._nm-item{display:flex;align-items:center;gap:6px;padding:5px 0;',
+          'border-bottom:1px solid rgba(255,255,255,0.05);}',
+          '._nm-item:last-child{border-bottom:none;}',
+          '._nm-idx{color:rgba(255,255,255,0.2);font-size:10px;min-width:22px;text-align:right;flex-shrink:0;}',
+          '._nm-name{flex:1;color:#ddd;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}',
+          '._nm-edit-input{flex:1;background:rgba(100,160,255,0.12);border:1px solid rgba(100,180,255,0.5);',
+          'border-radius:5px;color:#fff;font-family:Arial,sans-serif;font-size:12px;',
+          'padding:3px 7px;outline:none;}',
+          '._nm-btn-sm{border:none;border-radius:5px;padding:3px 8px;font-size:10px;',
+          'font-weight:bold;cursor:pointer;font-family:Arial,sans-serif;flex-shrink:0;transition:opacity .12s;}',
+          '._nm-btn-sm:hover{opacity:.75;}',
+          '._nm-btn-edit{background:rgba(100,180,255,0.2);color:#7ecfff;}',
+          '._nm-btn-ok{background:rgba(80,200,120,0.25);color:#6eda8a;}',
+          '._nm-btn-del{background:rgba(220,60,60,0.2);color:#e07070;}',
+          '._nm-btn-cancel{background:rgba(255,255,255,0.1);color:#bbb;}',
+          '#_nm-add{padding:10px 14px;border-top:1px solid rgba(255,255,255,0.08);flex-shrink:0;}',
+          '#_nm-add-row{display:flex;gap:6px;}',
+          '#_nm-add-input{flex:1;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);',
+          'border-radius:7px;color:#fff;font-family:Arial,sans-serif;font-size:12px;',
+          'padding:7px 10px;outline:none;}',
+          '#_nm-add-input:focus{border-color:rgba(100,180,255,0.5);}',
+          '#_nm-add-btn{background:rgba(100,180,255,0.25);border:1px solid rgba(100,180,255,0.4);',
+          'color:#7ecfff;border-radius:7px;padding:7px 12px;font-size:12px;font-weight:bold;',
+          'cursor:pointer;white-space:nowrap;}',
+          '#_nm-add-btn:hover{background:rgba(100,180,255,0.4);}',
+          '#_nm-footer{padding:8px 14px 12px;display:flex;gap:6px;justify-content:space-between;',
+          'border-top:1px solid rgba(255,255,255,0.08);flex-shrink:0;}',
+          '#_nm-reset{background:rgba(220,120,40,0.2);border:1px solid rgba(220,120,40,0.35);',
+          'color:#e0a060;border-radius:7px;padding:6px 10px;font-size:10px;font-weight:bold;cursor:pointer;}',
+          '#_nm-reset:hover{background:rgba(220,120,40,0.35);}',
+          '#_nm-status{color:rgba(255,255,255,0.35);font-size:10px;align-self:center;flex:1;text-align:right;}'
+        ].join('');
+        document.head.appendChild(style);
+
+        /* ── BUTTON ── */
+        var btn = document.createElement('button');
+        btn.id = '_nm-btn';
+        btn.textContent = '📝 Имена ботов';
+        document.body.appendChild(btn);
+
+        /* ── OVERLAY ── */
+        var overlay = document.createElement('div');
+        overlay.id = '_nm-overlay';
+        document.body.appendChild(overlay);
+
+        /* ── PANEL ── */
+        var panel = document.createElement('div');
+        panel.id = '_nm-panel';
+        panel.innerHTML =
+          '<div id="_nm-head">' +
+            '<div id="_nm-title">📝 Имена ботов</div>' +
+            '<button id="_nm-close" title="Закрыть">✕</button>' +
+            '<div id="_nm-stats"></div>' +
+            '<input id="_nm-search" type="text" placeholder="🔍 Поиск по именам..." />' +
+          '</div>' +
+          '<div id="_nm-list-wrap"></div>' +
+          '<div id="_nm-add">' +
+            '<div id="_nm-add-row">' +
+              '<input id="_nm-add-input" type="text" placeholder="Новое имя..." maxlength="32" />' +
+              '<button id="_nm-add-btn">+ Добавить</button>' +
+            '</div>' +
+          '</div>' +
+          '<div id="_nm-footer">' +
+            '<button id="_nm-reset">↺ Сброс к умолчанию</button>' +
+            '<div id="_nm-status"></div>' +
+          '</div>';
+        document.body.appendChild(panel);
+
+        var listWrap = panel.querySelector('#_nm-list-wrap');
+        var searchInput = panel.querySelector('#_nm-search');
+        var addInput = panel.querySelector('#_nm-add-input');
+        var statusEl = panel.querySelector('#_nm-status');
+        var statsEl = panel.querySelector('#_nm-stats');
+        var currentNames = [];
+        var filterText = '';
+
+        function setStatus(msg, color) {
+          statusEl.style.color = color || '#6ada8a';
+          statusEl.textContent = msg;
+          setTimeout(function() {
+            statusEl.style.color = 'rgba(255,255,255,0.35)';
+            statusEl.textContent = '';
+          }, 2000);
+        }
+
+        function updateStats() {
+          var shown = filterText
+            ? currentNames.filter(function(n) { return n.toLowerCase().indexOf(filterText) >= 0; }).length
+            : currentNames.length;
+          statsEl.textContent = filterText
+            ? ('Показано: ' + shown + ' из ' + currentNames.length)
+            : ('Всего имён: ' + currentNames.length);
+        }
+
+        function renderList() {
+          editingIdx = -1;
+          listWrap.innerHTML = '';
+          var filter = filterText;
+          var visible = currentNames.map(function(n, i) { return { name: n, idx: i }; });
+          if (filter) {
+            visible = visible.filter(function(e) { return e.name.toLowerCase().indexOf(filter) >= 0; });
+          }
+          if (visible.length === 0) {
+            var empty = document.createElement('div');
+            empty.style.cssText = 'color:rgba(255,255,255,0.3);font-size:12px;text-align:center;padding:20px;';
+            empty.textContent = filter ? 'Ничего не найдено' : 'Список пуст';
+            listWrap.appendChild(empty);
+            updateStats();
+            return;
+          }
+          visible.forEach(function(entry) {
+            var row = document.createElement('div');
+            row.className = '_nm-item';
+            row.dataset.idx = entry.idx;
+
+            var idxEl = document.createElement('span');
+            idxEl.className = '_nm-idx';
+            idxEl.textContent = (entry.idx + 1) + '.';
+            row.appendChild(idxEl);
+
+            var nameEl = document.createElement('span');
+            nameEl.className = '_nm-name';
+            nameEl.title = entry.name;
+            nameEl.textContent = entry.name;
+            row.appendChild(nameEl);
+
+            var editBtn = document.createElement('button');
+            editBtn.className = '_nm-btn-sm _nm-btn-edit';
+            editBtn.textContent = '✏';
+            editBtn.title = 'Редактировать';
+            editBtn.addEventListener('click', function() { startEdit(row, entry.idx); });
+            row.appendChild(editBtn);
+
+            var delBtn = document.createElement('button');
+            delBtn.className = '_nm-btn-sm _nm-btn-del';
+            delBtn.textContent = '✕';
+            delBtn.title = 'Удалить';
+            delBtn.addEventListener('click', function() {
+              currentNames.splice(entry.idx, 1);
+              saveNames(currentNames);
+              renderList();
+              setStatus('Удалено: ' + entry.name, '#e07070');
+            });
+            row.appendChild(delBtn);
+
+            listWrap.appendChild(row);
+          });
+          updateStats();
+        }
+
+        function startEdit(row, idx) {
+          // Remove old inline editor if any
+          var old = listWrap.querySelector('._nm-edit-row');
+          if (old) old.parentNode.removeChild(old);
+
+          var editRow = document.createElement('div');
+          editRow.className = '_nm-item _nm-edit-row';
+
+          var idxEl = document.createElement('span');
+          idxEl.className = '_nm-idx';
+          idxEl.textContent = (idx + 1) + '.';
+          editRow.appendChild(idxEl);
+
+          var inp = document.createElement('input');
+          inp.className = '_nm-edit-input';
+          inp.value = currentNames[idx];
+          inp.maxLength = 32;
+          editRow.appendChild(inp);
+
+          var okBtn = document.createElement('button');
+          okBtn.className = '_nm-btn-sm _nm-btn-ok';
+          okBtn.textContent = '✔';
+          okBtn.title = 'Сохранить';
+          okBtn.addEventListener('click', function() {
+            var v = inp.value.trim();
+            if (!v) { setStatus('Имя не может быть пустым', '#e07070'); return; }
+            currentNames[idx] = v;
+            saveNames(currentNames);
+            renderList();
+            setStatus('Сохранено: ' + v);
+          });
+          editRow.appendChild(okBtn);
+
+          var cancelBtn = document.createElement('button');
+          cancelBtn.className = '_nm-btn-sm _nm-btn-cancel';
+          cancelBtn.textContent = '✕';
+          cancelBtn.title = 'Отмена';
+          cancelBtn.addEventListener('click', renderList);
+          editRow.appendChild(cancelBtn);
+
+          inp.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') okBtn.click();
+            if (e.key === 'Escape') cancelBtn.click();
+          });
+
+          row.parentNode.insertBefore(editRow, row.nextSibling);
+          row.parentNode.removeChild(row);
+          inp.focus();
+          inp.select();
+        }
+
+        function addName() {
+          var v = addInput.value.trim();
+          if (!v) { addInput.focus(); return; }
+          if (v.length > 32) { setStatus('Максимум 32 символа', '#e07070'); return; }
+          currentNames.push(v);
+          saveNames(currentNames);
+          addInput.value = '';
+          searchInput.value = '';
+          filterText = '';
+          renderList();
+          // Scroll to bottom to show new name
+          setTimeout(function() { listWrap.scrollTop = listWrap.scrollHeight; }, 50);
+          setStatus('Добавлено: ' + v);
+          addInput.focus();
+        }
+
+        /* ── EVENTS ── */
+        searchInput.addEventListener('input', function() {
+          filterText = this.value.trim().toLowerCase();
+          renderList();
+        });
+
+        addInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') addName(); });
+        panel.querySelector('#_nm-add-btn').addEventListener('click', addName);
+
+        panel.querySelector('#_nm-reset').addEventListener('click', function() {
+          if (!confirm('Сбросить к именам из файла names.js? Все изменения будут удалены.')) return;
+          try { localStorage.removeItem(CUSTOM_KEY); } catch(e) {}
+          currentNames = getDefaultNames();
+          saveNames(currentNames);
+          searchInput.value = '';
+          filterText = '';
+          renderList();
+          setStatus('Сброшено к умолчанию', '#e0a060');
+        });
+
+        function openPanel() {
+          currentNames = loadNames();
+          filterText = '';
+          searchInput.value = '';
+          addInput.value = '';
+          renderList();
+          panel.style.display = 'flex';
+          overlay.style.display = 'block';
+          searchInput.focus();
+        }
+
+        function closePanel() {
+          panel.style.display = 'none';
+          overlay.style.display = 'none';
+        }
+
+        btn.addEventListener('click', openPanel);
+        overlay.addEventListener('click', closePanel);
+        panel.querySelector('#_nm-close').addEventListener('click', closePanel);
+        document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closePanel(); });
+      }
+
+      if (document.body) init();
+      else document.addEventListener('DOMContentLoaded', init);
+    })();
+    </script>
   </body>
 </html>
+
