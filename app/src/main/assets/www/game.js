@@ -1206,7 +1206,24 @@ Error generating stack: `+e.message+`
       _t['Rocketeer'].description='Огромный снаряд вперёд + реактивный выхлоп — настоящая ракета.';
     }
   })();
-  
+
+;(function applyTierColors(){
+  // T0=blue T1=white T2=green T3=yellow T4=orange T5=red
+  // Prime variants (strongest T4 branch) are treated as T5
+  Object.keys(_t).forEach(function(k){
+    var tank=_t[k];
+    var rl=tank.requiredLevel||1;
+    var color;
+    if(rl<=1)        color='#44aaff'; // T0 blue
+    else if(rl<=15)  color='#e0e0e0'; // T1 white
+    else if(rl<=30)  color='#22cc55'; // T2 green
+    else if(rl<=45)  color='#ffdd00'; // T3 yellow
+    else if(k.endsWith('Prime')) color='#ff3333'; // T5 red (Prime = top tier)
+    else             color='#ff8800'; // T4 orange (Alpha, Omega, others at 60+)
+    tank.color=color;
+  });
+})();
+
 ;(function applyDualCol(){
   var nodeMap={};
   w0.forEach(function(n){nodeMap[n.name]=n;});
