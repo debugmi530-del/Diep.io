@@ -828,6 +828,10 @@ Error generating stack: `+e.message+`
     }
 
     var active=false,_hiddenEls=[];
+    var _obsRoot=document.getElementById('root');
+    if(!_obsRoot){
+      _obsRoot=document.body;
+    }
     new MutationObserver(function(){
       var svg=document.querySelector('svg[width="'+V0+'"]');
       if(svg&&!active){
@@ -877,22 +881,6 @@ Error generating stack: `+e.message+`
         _hiddenEls.forEach(function(el){el.style.display=el._pdisp||'';});
         _hiddenEls=[];
       }
-    var _obsRoot=document.getElementById('root');
-    if(!_obsRoot){
-      _obsRoot=document.body;
-      (function(){
-        var ov=document.createElement('div');
-        ov.style.cssText='position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.65);z-index:999999;display:flex;align-items:center;justify-content:center;';
-        var box=document.createElement('div');
-        box.style.cssText='background:#1a1a2e;border:2px solid #e74c3c;border-radius:12px;padding:28px 32px;max-width:460px;width:90%;color:#fff;font-family:Arial,sans-serif;font-size:14px;line-height:1.6;box-shadow:0 0 50px rgba(231,76,60,0.3);';
-        box.innerHTML='<div style="color:#e74c3c;font-size:16px;font-weight:bold;margin-bottom:10px;">⚠️ Внутреннее предупреждение</div>'
-          +'<div style="color:#ccc;">Элемент <b>#root</b> не найден при инициализации дерева улучшений.<br>Использован резервный режим — дерево работает в штатном режиме.</div>'
-          +'<button id="_root_ok" style="margin-top:20px;background:#e74c3c;border:none;color:#fff;padding:9px 28px;border-radius:6px;cursor:pointer;font-size:14px;font-family:Arial,sans-serif;">Понятно</button>';
-        ov.appendChild(box);
-        document.body.appendChild(ov);
-        document.getElementById('_root_ok').onclick=function(){ov.remove();};
-      })();
-    }
     }).observe(_obsRoot,{childList:true,subtree:true});
   })();
 function zy({onClose}){
