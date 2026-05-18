@@ -85,7 +85,7 @@ Error generating stack: `+e.message+`
   W1['Shotgun']     = 'Дробовик';
   W1['Dreadnought'] = 'Дредноут';
   W1['Blaster']     = 'Бластер';
-  W1['Buster']      = 'Разрушитель';
+  W1['Buster']      = 'Сокрушитель';
   W1['Riot']        = 'Буря';
   W1['Colossus']    = 'Колосс';
   W1['Cruiser']     = 'Крейсер';
