@@ -118,7 +118,7 @@
                 + '</div>'
               : '';
             box.innerHTML =
-              '<div style="color:#e74c3c;font-size:17px;margin-bottom:10px;">⚠️ Ошибка в файле names.js</div>'
+              '<div style="color:#e74c3c;font-size:17px;margin-bottom:10px;">&#9888;&#65039; Ошибка в файле names.js</div>'
               + errHtml
               + '<div style="color:#aaa;margin-top:8px;">Игра запущена с именами из:<br><b style="color:#3498db;">'
               + source + '</b></div>'
@@ -141,7 +141,6 @@
           return;
         }
 
-        // Попытка 1: localStorage
         var lsBackup = null;
         try {
           var raw = localStorage.getItem(STORAGE_KEY);
@@ -154,14 +153,12 @@
           return;
         }
 
-        // Попытка 2: names.fallback.js
         if (Array.isArray(fallback) && fallback.length > 0) {
           window._GAME_BOT_NAMES = fallback;
           showPopup('names.fallback.js', err);
           return;
         }
 
-        // Попытка 3: встроенные имена в game.js (window._GAME_BOT_NAMES остаётся null)
         window._GAME_BOT_NAMES = null;
         showPopup('встроенного списка игры', err);
       })();
@@ -172,26 +169,28 @@
     <!-- Admin Panel -->
     <script>
     (function() {
+
+      /* ── SHAPES DATA ─────────────────────────────────────── */
       var SHAPES = [
-        { type: 'square',          label: 'Квадрат' },
-        { type: 'triangle',        label: 'Треугольник' },
-        { type: 'mediumSquare',    label: 'Средний квадрат' },
-        { type: 'largeSquare',     label: 'Большой квадрат' },
-        { type: 'mediumTriangle',  label: 'Средний треугольник' },
-        { type: 'largeTriangle',   label: 'Гигантский треугольник' },
-        { type: 'pentagon',        label: 'Пятиугольник' },
-        { type: 'crasher',         label: 'Крашер' },
-        { type: 'bigPentagon',     label: 'Большой пятиугольник' },
-        { type: 'alphaPentagon',   label: 'Альфа пятиугольник' },
-        { type: 'hexagon',         label: 'Шестиугольник' },
-        { type: 'heptagon',        label: 'Семиугольник' },
-        { type: 'octagon',         label: 'Восьмиугольник' },
-        { type: 'decagon',         label: 'Десятиугольник' },
-        { type: 'megaPentagon',    label: 'Мега пятиугольник' },
-        { type: 'ultraPolygon',    label: 'Ультра полигон' }
+        { type:'square',         label:'Квадрат' },
+        { type:'triangle',       label:'Треугольник' },
+        { type:'mediumSquare',   label:'Средний квадрат' },
+        { type:'largeSquare',    label:'Большой квадрат' },
+        { type:'mediumTriangle', label:'Средний треугольник' },
+        { type:'largeTriangle',  label:'Гигантский треугольник' },
+        { type:'pentagon',       label:'Пятиугольник' },
+        { type:'crasher',        label:'Крашер' },
+        { type:'bigPentagon',    label:'Большой пятиугольник' },
+        { type:'alphaPentagon',  label:'Альфа пятиугольник' },
+        { type:'hexagon',        label:'Шестиугольник' },
+        { type:'heptagon',       label:'Семиугольник' },
+        { type:'octagon',        label:'Восьмиугольник' },
+        { type:'decagon',        label:'Десятиугольник' },
+        { type:'megaPentagon',   label:'Мега пятиугольник' },
+        { type:'ultraPolygon',   label:'Ультра полигон' }
       ];
 
-      var COLORS = {
+      var SHAPE_COLORS = {
         square:'#f0dc40', triangle:'#f05050', mediumSquare:'#00ddcc',
         largeSquare:'#ff8800', mediumTriangle:'#ffcc00', largeTriangle:'#44cc44',
         pentagon:'#6088ff', crasher:'#ff66aa', bigPentagon:'#4466ff',
@@ -200,8 +199,90 @@
         ultraPolygon:'#cc00ff'
       };
 
-      window._adminSpawnQueue = window._adminSpawnQueue || [];
+      /* ── TANKS DATA ──────────────────────────────────────── */
+      var TANK_TREE = [
+        {
+          branch: 'Basic', color: '#8888cc', tier: 1,
+          desc: 'Базовый танк — один средний ствол.',
+          children: [
+            /* Shotgun branch */
+            {
+              branch: 'Shotgun', color: '#d06830', tier: 2,
+              desc: 'Залп из 7 дробин в конусе 55° — ближний бой, высокий суммарный урон.',
+              badge: 'NEW',
+              children: [
+                {
+                  branch: 'Blaster', color: '#e05020', tier: 3,
+                  desc: '9 дробин в конусе 70° — максимальный разброс, огромный ближний урон.',
+                  t4: [
+                    { name:'BlasterAlpha', label:'Alpha', desc:'11 дробин + ускоренная перезарядка' },
+                    { name:'BlasterOmega', label:'Omega', desc:'1 гигантский взрывной снаряд' },
+                    { name:'BlasterPrime', label:'Prime', desc:'9 вперёд + 3 назад' }
+                  ]
+                },
+                {
+                  branch: 'Buster', color: '#c07020', tier: 3,
+                  desc: '3 тяжёлых снаряда в узком конусе — фокусированный дробовой удар.',
+                  t4: [
+                    { name:'BusterAlpha',  label:'Alpha', desc:'5 тяжёлых снарядов, быстрая серия' },
+                    { name:'BusterOmega',  label:'Omega', desc:'2 колоссальных снаряда рядом' },
+                    { name:'BusterPrime',  label:'Prime', desc:'3 вперёд + 3 сзади' }
+                  ]
+                },
+                {
+                  branch: 'Riot', color: '#a03010', tier: 3,
+                  desc: '3 дробины в 4 диагональных направления — покрывает 360° вокруг.',
+                  t4: [
+                    { name:'RiotAlpha', label:'Alpha', desc:'5 дробин × 4 направления' },
+                    { name:'RiotOmega', label:'Omega', desc:'1 крупный снаряд × 4 стороны' },
+                    { name:'RiotPrime', label:'Prime', desc:'3 дробины × 8 направлений (каждые 45°)' }
+                  ]
+                }
+              ]
+            },
+            /* Dreadnought branch */
+            {
+              branch: 'Dreadnought', color: '#607880', tier: 2,
+              desc: 'Один огромный ствол — медленный тяжёлый снаряд с колоссальным уроном.',
+              badge: 'NEW',
+              children: [
+                {
+                  branch: 'Colossus', color: '#405060', tier: 3,
+                  desc: 'Абсолютно колоссальный ствол — наивысший разовый урон в T3.',
+                  t4: [
+                    { name:'ColossusAlpha', label:'Alpha', desc:'Ультра-ствол + 2 реактивных задних' },
+                    { name:'ColossusOmega', label:'Omega', desc:'Мегаствол — максимальный урон в игре' },
+                    { name:'ColossusPrime', label:'Prime', desc:'Вперёд + назад + 2 боковых' }
+                  ]
+                },
+                {
+                  branch: 'Cruiser', color: '#5070a0', tier: 3,
+                  desc: 'Два тяжёлых ствола в шахмат — устойчивый двойной тяжёлый огонь.',
+                  t4: [
+                    { name:'CruiserAlpha', label:'Alpha', desc:'2 тяжёлых + 2 задних малых' },
+                    { name:'CruiserOmega', label:'Omega', desc:'1 объединённый мегаствол' },
+                    { name:'CruiserPrime', label:'Prime', desc:'4 тяжёлых ствола крестом (0°/90°/180°/270°)' }
+                  ]
+                },
+                {
+                  branch: 'Brawler', color: '#708040', tier: 3,
+                  desc: 'Средний ствол + высокий урон корпусом — стреляет и таранит.',
+                  t4: [
+                    { name:'BrawlerAlpha', label:'Alpha', desc:'Ствол + 2 боковых, быстрее' },
+                    { name:'BrawlerOmega', label:'Omega', desc:'Тяжёлый ствол + макс. bodyDamage' },
+                    { name:'BrawlerPrime', label:'Prime', desc:'3 вперёд + высокий bodyDamage + реген' }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ];
 
+      window._adminSpawnQueue = window._adminSpawnQueue || [];
+      window._adminNpcQueue  = window._adminNpcQueue  || [];
+
+      /* ── INIT ────────────────────────────────────────────── */
       function init() {
         var style = document.createElement('style');
         style.textContent = [
@@ -212,62 +293,296 @@
           'backdrop-filter:blur(4px);transition:background .15s;}',
           '#_adm-btn:hover{background:rgba(40,40,70,0.97);}',
           '#_adm-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;',
-          'z-index:8999;background:rgba(0,0,0,0.35);}',
+          'z-index:8999;background:rgba(0,0,0,0.4);}',
           '#_adm-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);',
-          'z-index:9001;background:rgba(15,15,28,0.97);border:1.5px solid rgba(255,255,255,0.15);',
-          'border-radius:12px;padding:18px 20px 16px;min-width:320px;max-width:94vw;',
-          'backdrop-filter:blur(8px);box-shadow:0 8px 40px rgba(0,0,0,0.7);',
-          'font-family:Arial,sans-serif;display:none;}',
-          '#_adm-panel h3{margin:0 0 12px;color:#c8a018;font-size:13px;letter-spacing:.6px;',
-          'text-align:center;text-transform:uppercase;}',
+          'z-index:9001;background:rgba(13,13,24,0.98);border:1.5px solid rgba(255,255,255,0.13);',
+          'border-radius:14px;padding:0;min-width:340px;max-width:96vw;max-height:88vh;',
+          'display:none;flex-direction:column;',
+          'backdrop-filter:blur(10px);box-shadow:0 10px 50px rgba(0,0,0,0.8);',
+          'font-family:Arial,sans-serif;}',
+          /* header */
+          '#_adm-header{padding:14px 20px 0;flex-shrink:0;}',
+          '#_adm-title{margin:0 0 10px;color:#c8a018;font-size:12px;letter-spacing:.8px;',
+          'text-align:center;text-transform:uppercase;font-weight:bold;}',
           '#_adm-close{position:absolute;top:10px;right:12px;background:none;border:none;',
-          'color:rgba(255,255,255,0.5);font-size:18px;cursor:pointer;line-height:1;padding:2px 4px;}',
-          '#_adm-close:hover{color:#fff;}',
+          'color:rgba(255,255,255,0.45);font-size:18px;cursor:pointer;padding:2px 6px;border-radius:4px;}',
+          '#_adm-close:hover{color:#fff;background:rgba(255,255,255,0.08);}',
+          /* tabs */
+          '#_adm-tabs{display:flex;gap:0;border-bottom:1px solid rgba(255,255,255,0.1);',
+          'padding:0 16px;}',
+          '._adm-tab{flex:1;padding:7px 4px;background:none;border:none;',
+          'color:rgba(255,255,255,0.45);font-family:Arial,sans-serif;font-size:11px;',
+          'font-weight:bold;cursor:pointer;border-bottom:2px solid transparent;',
+          'transition:color .15s,border-color .15s;letter-spacing:.4px;}',
+          '._adm-tab:hover{color:rgba(255,255,255,0.8);}',
+          '._adm-tab.active{color:#c8a018;border-bottom-color:#c8a018;}',
+          /* body */
+          '#_adm-body{overflow-y:auto;padding:14px 16px;flex:1;min-height:0;}',
+          /* shapes grid */
           '#_adm-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}',
           '._adm-shape{border:none;border-radius:7px;padding:7px 8px;cursor:pointer;',
           'font-family:Arial,sans-serif;font-size:11px;font-weight:bold;',
           'color:#111;text-align:left;transition:opacity .12s,transform .1s;}',
-          '._adm-shape:hover{opacity:.85;transform:scale(1.04);}',
+          '._adm-shape:hover{opacity:.82;transform:scale(1.04);}',
           '._adm-shape:active{transform:scale(.97);}',
-          '#_adm-status{margin-top:10px;text-align:center;color:rgba(255,255,255,0.45);',
-          'font-size:10px;min-height:14px;}'
+          /* tank tree */
+          '._adm-branch{margin-bottom:10px;border-radius:9px;overflow:hidden;',
+          'border:1px solid rgba(255,255,255,0.08);}',
+          '._adm-branch-hd{display:flex;align-items:center;gap:7px;padding:8px 11px;',
+          'cursor:pointer;user-select:none;transition:opacity .12s;}',
+          '._adm-branch-hd:hover{opacity:.88;}',
+          '._adm-branch-name{font-size:12px;font-weight:bold;color:#fff;flex:1;}',
+          '._adm-badge{font-size:8px;font-weight:bold;padding:2px 5px;border-radius:3px;',
+          'background:#c8a018;color:#111;letter-spacing:.5px;}',
+          '._adm-branch-desc{font-size:10px;color:rgba(255,255,255,0.5);line-height:1.4;',
+          'padding:0 11px 6px;margin-top:-2px;}',
+          '._adm-spawn-btn{border:none;border-radius:5px;padding:4px 9px;',
+          'font-family:Arial,sans-serif;font-size:10px;font-weight:bold;',
+          'cursor:pointer;color:#111;white-space:nowrap;transition:opacity .12s,transform .1s;flex-shrink:0;}',
+          '._adm-spawn-btn:hover{opacity:.82;transform:scale(1.05);}',
+          '._adm-spawn-btn:active{transform:scale(.96);}',
+          '._adm-children{padding:6px 8px 8px;display:flex;flex-direction:column;gap:5px;',
+          'background:rgba(0,0,0,0.25);}',
+          '._adm-t3-row{display:flex;align-items:flex-start;gap:7px;padding:5px 8px;',
+          'border-radius:7px;background:rgba(255,255,255,0.04);}',
+          '._adm-t3-info{flex:1;min-width:0;}',
+          '._adm-t3-name{font-size:11px;font-weight:bold;color:#eee;}',
+          '._adm-t3-desc{font-size:9px;color:rgba(255,255,255,0.42);margin-top:2px;line-height:1.3;}',
+          '._adm-t4s{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px;}',
+          '._adm-t4-btn{border:none;border-radius:4px;padding:3px 7px;',
+          'font-family:Arial,sans-serif;font-size:9px;font-weight:bold;',
+          'cursor:pointer;color:#fff;background:rgba(255,255,255,0.15);',
+          'transition:opacity .12s,transform .1s;white-space:nowrap;}',
+          '._adm-t4-btn:hover{opacity:.82;transform:scale(1.06);}',
+          '._adm-t4-btn:active{transform:scale(.95);}',
+          /* status */
+          '#_adm-status{flex-shrink:0;padding:7px 16px 12px;text-align:center;',
+          'color:rgba(255,255,255,0.38);font-size:10px;min-height:28px;',
+          'border-top:1px solid rgba(255,255,255,0.07);}'
         ].join('');
         document.head.appendChild(style);
 
+        /* toggle button */
         var btn = document.createElement('button');
         btn.id = '_adm-btn';
         btn.textContent = '⚙ Админ';
         document.body.appendChild(btn);
 
+        /* overlay */
         var overlay = document.createElement('div');
         overlay.id = '_adm-overlay';
         document.body.appendChild(overlay);
 
+        /* panel */
         var panel = document.createElement('div');
         panel.id = '_adm-panel';
-        panel.innerHTML = '<h3>Спавн фигур</h3>'
-          + '<button id="_adm-close" title="Закрыть">✕</button>'
-          + '<div id="_adm-grid"></div>'
-          + '<div id="_adm-status">Нажмите на фигуру чтобы заспавнить рядом с вами</div>';
+        panel.innerHTML =
+          '<div id="_adm-header">' +
+            '<div id="_adm-title">Панель администратора</div>' +
+            '<button id="_adm-close" title="Закрыть">✕</button>' +
+            '<div id="_adm-tabs">' +
+              '<button class="_adm-tab active" data-tab="shapes">Фигуры</button>' +
+              '<button class="_adm-tab" data-tab="tanks">Танки</button>' +
+            '</div>' +
+          '</div>' +
+          '<div id="_adm-body">' +
+            '<div id="_adm-pane-shapes">' +
+              '<div id="_adm-grid"></div>' +
+            '</div>' +
+            '<div id="_adm-pane-tanks" style="display:none;"></div>' +
+          '</div>' +
+          '<div id="_adm-status">Нажмите кнопку для действия</div>';
         document.body.appendChild(panel);
 
+        /* ── STATUS helper ─── */
+        function setStatus(msg, color) {
+          var st = document.getElementById('_adm-status');
+          if (!st) return;
+          st.style.color = color || '#6ef';
+          st.textContent = msg;
+          setTimeout(function() {
+            st.style.color = 'rgba(255,255,255,0.38)';
+            st.textContent = 'Нажмите кнопку для действия';
+          }, 1800);
+        }
+
+        /* ── SHAPES TAB ─── */
         var grid = document.getElementById('_adm-grid');
         SHAPES.forEach(function(s) {
           var b = document.createElement('button');
           b.className = '_adm-shape';
-          b.style.background = COLORS[s.type] || '#888';
+          b.style.background = SHAPE_COLORS[s.type] || '#888';
           b.textContent = s.label;
           b.addEventListener('click', function() {
             window._adminSpawnQueue = window._adminSpawnQueue || [];
             window._adminSpawnQueue.push(s.type);
-            var st = document.getElementById('_adm-status');
-            if (st) { st.style.color = '#6ef'; st.textContent = 'Заспавнено: ' + s.label; setTimeout(function(){ st.style.color='rgba(255,255,255,0.45)'; st.textContent='Нажмите на фигуру чтобы заспавнить рядом с вами'; }, 1500); }
+            setStatus('Заспавнено: ' + s.label);
           });
           grid.appendChild(b);
         });
 
-        function openPanel() { panel.style.display = 'block'; overlay.style.display = 'block'; }
-        function closePanel() { panel.style.display = 'none'; overlay.style.display = 'none'; }
+        /* ── TANKS TAB ─── */
+        var tanksPane = document.getElementById('_adm-pane-tanks');
+
+        function spawnNpc(className, level, label) {
+          window._adminNpcQueue = window._adminNpcQueue || [];
+          window._adminNpcQueue.push({ className: className, level: level || 45 });
+          setStatus('Спавн NPC: ' + (label || className) + ' (Lv' + (level||45) + ')');
+        }
+
+        function darken(hex, amt) {
+          var r = Math.max(0, parseInt(hex.slice(1,3),16) - amt);
+          var g = Math.max(0, parseInt(hex.slice(3,5),16) - amt);
+          var b = Math.max(0, parseInt(hex.slice(5,7),16) - amt);
+          return '#' + [r,g,b].map(function(v){return v.toString(16).padStart(2,'0');}).join('');
+        }
+
+        function buildTankTree(nodes, parentColor) {
+          nodes.forEach(function(node) {
+            var col = node.color || parentColor || '#888';
+            var darkCol = darken(col, 40);
+            var wrap = document.createElement('div');
+            wrap.className = '_adm-branch';
+            wrap.style.borderColor = col + '44';
+
+            /* header row */
+            var hd = document.createElement('div');
+            hd.className = '_adm-branch-hd';
+            hd.style.background = darkCol + 'cc';
+
+            var dot = document.createElement('span');
+            dot.style.cssText = 'width:10px;height:10px;border-radius:50%;background:' + col + ';flex-shrink:0;';
+            hd.appendChild(dot);
+
+            var nameEl = document.createElement('span');
+            nameEl.className = '_adm-branch-name';
+            nameEl.textContent = node.branch;
+            hd.appendChild(nameEl);
+
+            if (node.badge) {
+              var badge = document.createElement('span');
+              badge.className = '_adm-badge';
+              badge.textContent = node.badge;
+              hd.appendChild(badge);
+            }
+
+            var lvl = node.tier === 1 ? 1 : node.tier === 2 ? 15 : 30;
+            var spawnBtn = document.createElement('button');
+            spawnBtn.className = '_adm-spawn-btn';
+            spawnBtn.style.background = col;
+            spawnBtn.textContent = '▶ NPC';
+            spawnBtn.title = 'Заспавнить NPC ' + node.branch + ' (Lv' + lvl + ')';
+            spawnBtn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              spawnNpc(node.branch, lvl, node.branch);
+            });
+            hd.appendChild(spawnBtn);
+            wrap.appendChild(hd);
+
+            if (node.desc) {
+              var descEl = document.createElement('div');
+              descEl.className = '_adm-branch-desc';
+              descEl.textContent = node.desc;
+              wrap.appendChild(descEl);
+            }
+
+            /* T3 children with T4 buttons */
+            if (node.children && node.children.length) {
+              var childWrap = document.createElement('div');
+              childWrap.className = '_adm-children';
+
+              if (node.children[0].t4) {
+                /* These ARE T3 nodes */
+                node.children.forEach(function(t3) {
+                  var row = document.createElement('div');
+                  row.className = '_adm-t3-row';
+                  row.style.borderLeft = '3px solid ' + (t3.color || col);
+
+                  var info = document.createElement('div');
+                  info.className = '_adm-t3-info';
+
+                  var nameRow = document.createElement('div');
+                  nameRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
+
+                  var t3name = document.createElement('span');
+                  t3name.className = '_adm-t3-name';
+                  t3name.textContent = t3.branch;
+                  nameRow.appendChild(t3name);
+
+                  var t3spawn = document.createElement('button');
+                  t3spawn.className = '_adm-spawn-btn';
+                  t3spawn.style.background = t3.color || col;
+                  t3spawn.textContent = '▶ NPC';
+                  t3spawn.addEventListener('click', function() {
+                    spawnNpc(t3.branch, 30, t3.branch);
+                  });
+                  nameRow.appendChild(t3spawn);
+                  info.appendChild(nameRow);
+
+                  if (t3.desc) {
+                    var t3desc = document.createElement('div');
+                    t3desc.className = '_adm-t3-desc';
+                    t3desc.textContent = t3.desc;
+                    info.appendChild(t3desc);
+                  }
+
+                  /* T4 variant buttons */
+                  if (t3.t4 && t3.t4.length) {
+                    var t4wrap = document.createElement('div');
+                    t4wrap.className = '_adm-t4s';
+                    t3.t4.forEach(function(v) {
+                      var vbtn = document.createElement('button');
+                      vbtn.className = '_adm-t4-btn';
+                      vbtn.textContent = v.label;
+                      vbtn.title = v.name + ': ' + v.desc;
+                      vbtn.addEventListener('click', function() {
+                        spawnNpc(v.name, 45, v.label + ' ' + t3.branch);
+                      });
+                      t4wrap.appendChild(vbtn);
+                    });
+                    info.appendChild(t4wrap);
+                  }
+
+                  row.appendChild(info);
+                  childWrap.appendChild(row);
+                });
+                wrap.appendChild(childWrap);
+              } else {
+                /* These are T2 branches — recurse */
+                buildTankTree(node.children, col);
+                node.children.forEach(function(child) {
+                  childWrap.appendChild(child._el);
+                });
+                wrap.appendChild(childWrap);
+              }
+            }
+
+            node._el = wrap;
+            tanksPane.appendChild(wrap);
+          });
+        }
+
+        /* flatten Basic > T2 > T3 structure for display */
+        var basicNode = TANK_TREE[0];
+        basicNode.children.forEach(function(t2node) {
+          buildTankTree([t2node], basicNode.color);
+        });
+
+        /* ── TABS ─── */
+        var tabs = panel.querySelectorAll('._adm-tab');
+        tabs.forEach(function(tab) {
+          tab.addEventListener('click', function() {
+            tabs.forEach(function(t){ t.classList.remove('active'); });
+            tab.classList.add('active');
+            var which = tab.getAttribute('data-tab');
+            document.getElementById('_adm-pane-shapes').style.display = which==='shapes' ? '' : 'none';
+            document.getElementById('_adm-pane-tanks').style.display  = which==='tanks'  ? '' : 'none';
+          });
+        });
+
+        /* ── OPEN / CLOSE ─── */
+        function openPanel()  { panel.style.display = 'flex'; overlay.style.display = 'block'; }
+        function closePanel() { panel.style.display = 'none';  overlay.style.display = 'none'; }
 
         btn.addEventListener('click', openPanel);
         overlay.addEventListener('click', closePanel);
