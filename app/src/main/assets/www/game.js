@@ -27,7 +27,7 @@ Error generating stack: `+e.message+`
       _row(_pe,_pr,"player",true)
     ]}):null
   ]});
-}function by({availableClasses:i,onSelect:h}){if(i.length===0)return null;const o=i[0]?_t[i[0]].requiredLevel:"";return D.jsx("div",{style:{position:"absolute",bottom:20,left:0,right:0,display:"flex",justifyContent:"center",zIndex:600,pointerEvents:"none"},onPointerDown:s=>s.stopPropagation(),children:D.jsxs("div",{style:{pointerEvents:"auto",display:"flex",flexDirection:"column",alignItems:"center",gap:10,background:"rgba(0,0,0,0.62)",borderRadius:14,padding:"12px 20px 14px",backdropFilter:"blur(2px)"},children:[D.jsx("div",{style:{color:"#fff",fontFamily:"Arial",fontSize:13,fontWeight:"bold",letterSpacing:.4,opacity:.85}},void 0,"Уровень "+o+" — выберите класс:"),D.jsx("div",{style:{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center",maxWidth:640},children:i.map(s=>{const T=_t[s];return D.jsxs("button",{onPointerDown:v=>{v.stopPropagation();h(s)},style:{background:T.color+"bb",border:"2px solid "+T.color,borderRadius:8,padding:"6px 12px 8px",cursor:"pointer",color:"#fff",fontFamily:"Arial",fontWeight:"bold",fontSize:12,textShadow:"0 1px 4px #0009",display:"flex",flexDirection:"column",alignItems:"center",gap:3,minWidth:82,transition:"transform .1s"},onMouseEnter:v=>{v.currentTarget.style.transform="scale(1.08)";v.currentTarget.style.boxShadow="0 0 16px "+T.color+"99"},onMouseLeave:v=>{v.currentTarget.style.transform="";v.currentTarget.style.boxShadow=""},children:[D.jsx(Rc,{className:s,size:40,angle:-Math.PI/2}),D.jsxs("div",{style:{display:"flex",flexDirection:"column",alignItems:"center",gap:1},children:[D.jsx("span",{style:{fontSize:11,fontWeight:"bold"},children:Dc(s)}),_t[s]&&_t[s].upgradesFrom&&_t[s].upgradesFrom.length>0?D.jsx("span",{style:{fontSize:9,color:"rgba(255,255,255,0.6)"},children:"← "+(_t[s].upgradesFrom.map(p=>W1[p]||p).join("/"))}):null]})]},s)})})]})})}const xl=[55,165,295,430,590],at=19,Ou=[812,2275,3737],Oc=80;let V0=750,py=16000;function Ql(i,h){return(i*9+h*3+2)*65}function Ql3(i,h,k){return(i*9+h*3+k+1)*65}const w0=[{name:"Basic",tier:0,x:xl[0],y:910},{name:"Sniper",tier:1,x:xl[1],y:260},{name:"MachineGun",tier:1,x:xl[1],y:845},{name:"FlankGuard",tier:1,x:xl[1],y:1430},{name:"Assassin",tier:2,x:xl[2],y:130},{name:"Hunter",tier:2,x:xl[2],y:325},{name:"Stalker",tier:2,x:xl[2],y:520},{name:"Gunner",tier:2,x:xl[2],y:715},{name:"Sprayer",tier:2,x:xl[2],y:910},{name:"TripleShot",tier:2,x:xl[2],y:1105},{name:"Twin",tier:2,x:xl[2],y:1300},{name:"QuadTank",tier:2,x:xl[2],y:1495},{name:"Smasher",tier:2,x:xl[2],y:1690},{name:"Ranger",tier:3,x:xl[3],y:65},{name:"Annihilator",tier:3,x:xl[3],y:130},{name:"Predator",tier:3,x:xl[3],y:195},{name:"Streamliner",tier:3,x:xl[3],y:260},{name:"Overtrapper",tier:3,x:xl[3],y:325},{name:"Skimmer",tier:3,x:xl[3],y:390},{name:"Landmine",tier:3,x:xl[3],y:455},{name:"Fighter",tier:3,x:xl[3],y:520},{name:"Rocketeer",tier:3,x:xl[3],y:585},{name:"Booster",tier:3,x:xl[3],y:650},{name:"OctoTank",tier:3,x:xl[3],y:715},{name:"GunnerTrapper",tier:3,x:xl[3],y:780},{name:"PentaShot",tier:3,x:xl[3],y:845},{name:"Hurricane",tier:3,x:xl[3],y:910},{name:"MoreGun",tier:3,x:xl[3],y:975},{name:"Spreadshot",tier:3,x:xl[3],y:1040},{name:"TriAngle",tier:3,x:xl[3],y:1105},{name:"BentHybrid",tier:3,x:xl[3],y:1170},{name:"TripleTwin",tier:3,x:xl[3],y:1235},{name:"Destroyer",tier:3,x:xl[3],y:1300},{name:"TwinFlank",tier:3,x:xl[3],y:1365},{name:"AutoSmasher",tier:3,x:xl[3],y:1430},{name:"Fortress",tier:3,x:xl[3],y:1495},{name:"Battleship",tier:3,x:xl[3],y:1560},{name:"Spike",tier:3,x:xl[3],y:1625},{name:"MegaSmasher",tier:3,x:xl[3],y:1690},{name:"Auto3",tier:3,x:xl[3],y:1755},{name:"Scout",tier:1,x:xl[1],y:2730},{name:"Cannon",tier:1,x:xl[1],y:4420},{name:"Ninja",tier:2,x:xl[2],y:2210},{name:"ScoutGhost",tier:2,x:xl[2],y:2730},{name:"Drone",tier:2,x:xl[2],y:3250},{name:"Artillery",tier:2,x:xl[2],y:3900},{name:"Railgun",tier:2,x:xl[2],y:4420},{name:"Siege",tier:2,x:xl[2],y:4940},{name:"Phantom",tier:3,x:xl[3],y:2080},{name:"Ambusher",tier:3,x:xl[3],y:2210},{name:"Spy",tier:3,x:xl[3],y:2340},{name:"Specter",tier:3,x:xl[3],y:2600},{name:"RamX",tier:3,x:xl[3],y:2730},{name:"Mine",tier:3,x:xl[3],y:2860},{name:"Swarm",tier:3,x:xl[3],y:3120},{name:"Guardian",tier:3,x:xl[3],y:3250},{name:"HunterDrone",tier:3,x:xl[3],y:3380},{name:"Howitzer",tier:3,x:xl[3],y:3770},{name:"Cassette",tier:3,x:xl[3],y:3900},{name:"Mortar",tier:3,x:xl[3],y:4030},{name:"Plasma",tier:3,x:xl[3],y:4290},{name:"EMPTank",tier:3,x:xl[3],y:4420},{name:"DualRailgun",tier:3,x:xl[3],y:4550},{name:"Citadel",tier:3,x:xl[3],y:4810},{name:"Bunker",tier:3,x:xl[3],y:4940},{name:"Tower",tier:3,x:xl[3],y:5070}],Ty=[["Basic","Assault"],["Basic","Skirmisher"],["Basic","Warlord"],["Assault","Sniper"],["Assault","MachineGun"],["Assault","FlankGuard"],["Skirmisher","Scout"],["Skirmisher","Cannon"],["Warlord","Engineer"],["Warlord","Defender"],["Sniper","Assassin"],["Sniper","Hunter"],["Sniper","Stalker"],["MachineGun","Gunner"],["MachineGun","Sprayer"],["MachineGun","TripleShot"],["FlankGuard","Twin"],["FlankGuard","QuadTank"],["FlankGuard","Smasher"],["Assassin","Ranger"],["Assassin","Annihilator"],["Assassin","Predator"],["Hunter","Streamliner"],["Hunter","Overtrapper"],["Hunter","Skimmer"],["Stalker","Landmine"],["Stalker","Fighter"],["Stalker","Rocketeer"],["Gunner","Booster"],["Gunner","OctoTank"],["Gunner","GunnerTrapper"],["Sprayer","PentaShot"],["Sprayer","Hurricane"],["Sprayer","MoreGun"],["TripleShot","Spreadshot"],["TripleShot","TriAngle"],["TripleShot","BentHybrid"],["Twin","TripleTwin"],["Twin","Destroyer"],["Twin","TwinFlank"],["QuadTank","AutoSmasher"],["QuadTank","Fortress"],["QuadTank","Battleship"],["Smasher","Spike"],["Smasher","MegaSmasher"],["Smasher","Auto3"],["Scout","Ninja"],["Scout","ScoutGhost"],["Scout","Drone"],["Cannon","Artillery"],["Cannon","Railgun"],["Cannon","Siege"],["Ninja","Phantom"],["Ninja","Ambusher"],["Ninja","Spy"],["ScoutGhost","Specter"],["ScoutGhost","RamX"],["ScoutGhost","Mine"],["Drone","Swarm"],["Drone","Guardian"],["Drone","HunterDrone"],["Artillery","Howitzer"],["Artillery","Cassette"],["Artillery","Mortar"],["Railgun","Plasma"],["Railgun","EMPTank"],["Railgun","DualRailgun"],["Siege","Citadel"],["Siege","Bunker"],["Siege","Tower"],["Engineer","Overseer"],["Engineer","Architect"],["Engineer","Commander"],["Overseer","Overlord"],["Overseer","Manager"],["Overseer","Necromancer"],["Architect","Warden"],["Architect","Outpost"],["Commander","Marshal"],["Commander","Vanguard"],["Defender","Protector"],["Defender","Stronghold"],["Defender","Rampart"],["Protector","Golem"],["Protector","Paragon"],["Stronghold","Phalanx"],["Stronghold","Garrison"],["Rampart","Redoubt"],["Rampart","Bulkhead"]],K0={0:"#44aaff",1:"#e0e0e0",2:"#22cc55",3:"#44ff88",4:"#ffdd00",5:"#ff3333"},xy={0:"Синий · Ур.1",1:"Белый · Ур.5",2:"Зелёный · Ур.15",3:"Зелёный · Ур.30",4:"Жёлтый · Ур.45",5:"Красный · Ур.60"},Ay=["rgba(50,200,100,0.04)","rgba(255,160,50,0.04)","rgba(180,80,255,0.04)"],Ey=[92,1555,3017,7700,11800],My=1700;
+}function by({availableClasses:i,onSelect:h}){if(i.length===0)return null;const o=i[0]?_t[i[0]].requiredLevel:"";return D.jsx("div",{style:{position:"absolute",bottom:20,left:0,right:0,display:"flex",justifyContent:"center",zIndex:600,pointerEvents:"none"},onPointerDown:s=>s.stopPropagation(),children:D.jsxs("div",{style:{pointerEvents:"auto",display:"flex",flexDirection:"column",alignItems:"center",gap:10,background:"rgba(0,0,0,0.62)",borderRadius:14,padding:"12px 20px 14px",backdropFilter:"blur(2px)"},children:[D.jsx("div",{style:{color:"#fff",fontFamily:"Arial",fontSize:13,fontWeight:"bold",letterSpacing:.4,opacity:.85}},void 0,"Уровень "+o+" — выберите класс:"),D.jsx("div",{style:{display:"flex",gap:8,flexWrap:"wrap",justifyContent:"center",maxWidth:640},children:i.map(s=>{const T=_t[s];return D.jsxs("button",{onPointerDown:v=>{v.stopPropagation();h(s)},style:{background:T.color+"bb",border:"2px solid "+T.color,borderRadius:8,padding:"6px 12px 8px",cursor:"pointer",color:"#fff",fontFamily:"Arial",fontWeight:"bold",fontSize:12,textShadow:"0 1px 4px #0009",display:"flex",flexDirection:"column",alignItems:"center",gap:3,minWidth:82,transition:"transform .1s"},onMouseEnter:v=>{v.currentTarget.style.transform="scale(1.08)";v.currentTarget.style.boxShadow="0 0 16px "+T.color+"99"},onMouseLeave:v=>{v.currentTarget.style.transform="";v.currentTarget.style.boxShadow=""},children:[D.jsx(Rc,{className:s,size:40,angle:-Math.PI/2}),D.jsxs("div",{style:{display:"flex",flexDirection:"column",alignItems:"center",gap:1},children:[D.jsx("span",{style:{fontSize:11,fontWeight:"bold"},children:Dc(s)}),_t[s]&&_t[s].upgradesFrom&&_t[s].upgradesFrom.length>0?D.jsx("span",{style:{fontSize:9,color:"rgba(255,255,255,0.6)"},children:"← "+(_t[s].upgradesFrom.map(p=>W1[p]||p).join("/"))}):null]})]},s)})})]})})}const xl=[55,165,295,430,590],at=19,Ou=[812,2275,3737],Oc=80;let V0=750,py=16000;function Ql(i,h){return(i*9+h*3+2)*65}function Ql3(i,h,k){return(i*9+h*3+k+1)*65}const w0=[{name:"Basic",tier:0,x:xl[0],y:910},{name:"Sniper",tier:1,x:xl[1],y:260},{name:"MachineGun",tier:1,x:xl[1],y:845},{name:"FlankGuard",tier:1,x:xl[1],y:1430},{name:"Assassin",tier:2,x:xl[2],y:130},{name:"Hunter",tier:2,x:xl[2],y:325},{name:"Stalker",tier:2,x:xl[2],y:520},{name:"Gunner",tier:2,x:xl[2],y:715},{name:"Sprayer",tier:2,x:xl[2],y:910},{name:"TripleShot",tier:2,x:xl[2],y:1105},{name:"Twin",tier:2,x:xl[2],y:1300},{name:"QuadTank",tier:2,x:xl[2],y:1495},{name:"Smasher",tier:2,x:xl[2],y:1690},{name:"Ranger",tier:3,x:xl[3],y:65},{name:"Annihilator",tier:3,x:xl[3],y:130},{name:"Predator",tier:3,x:xl[3],y:195},{name:"Streamliner",tier:3,x:xl[3],y:260},{name:"Overtrapper",tier:3,x:xl[3],y:325},{name:"Skimmer",tier:3,x:xl[3],y:390},{name:"Landmine",tier:3,x:xl[3],y:455},{name:"Fighter",tier:3,x:xl[3],y:520},{name:"Rocketeer",tier:3,x:xl[3],y:585},{name:"Booster",tier:3,x:xl[3],y:650},{name:"OctoTank",tier:3,x:xl[3],y:715},{name:"GunnerTrapper",tier:3,x:xl[3],y:780},{name:"PentaShot",tier:3,x:xl[3],y:845},{name:"Hurricane",tier:3,x:xl[3],y:910},{name:"MoreGun",tier:3,x:xl[3],y:975},{name:"Spreadshot",tier:3,x:xl[3],y:1040},{name:"TriAngle",tier:3,x:xl[3],y:1105},{name:"BentHybrid",tier:3,x:xl[3],y:1170},{name:"TripleTwin",tier:3,x:xl[3],y:1235},{name:"Destroyer",tier:3,x:xl[3],y:1300},{name:"TwinFlank",tier:3,x:xl[3],y:1365},{name:"AutoSmasher",tier:3,x:xl[3],y:1430},{name:"Fortress",tier:3,x:xl[3],y:1495},{name:"Battleship",tier:3,x:xl[3],y:1560},{name:"Spike",tier:3,x:xl[3],y:1625},{name:"MegaSmasher",tier:3,x:xl[3],y:1690},{name:"Auto3",tier:3,x:xl[3],y:1755},{name:"Scout",tier:1,x:xl[1],y:2730},{name:"Cannon",tier:1,x:xl[1],y:4420},{name:"Ninja",tier:2,x:xl[2],y:2210},{name:"ScoutGhost",tier:2,x:xl[2],y:2730},{name:"Drone",tier:2,x:xl[2],y:3250},{name:"Artillery",tier:2,x:xl[2],y:3900},{name:"Railgun",tier:2,x:xl[2],y:4420},{name:"Siege",tier:2,x:xl[2],y:4940},{name:"Phantom",tier:3,x:xl[3],y:2080},{name:"Ambusher",tier:3,x:xl[3],y:2210},{name:"Spy",tier:3,x:xl[3],y:2340},{name:"Specter",tier:3,x:xl[3],y:2600},{name:"RamX",tier:3,x:xl[3],y:2730},{name:"Mine",tier:3,x:xl[3],y:2860},{name:"Swarm",tier:3,x:xl[3],y:3120},{name:"Guardian",tier:3,x:xl[3],y:3250},{name:"HunterDrone",tier:3,x:xl[3],y:3380},{name:"Howitzer",tier:3,x:xl[3],y:3770},{name:"Cassette",tier:3,x:xl[3],y:3900},{name:"Mortar",tier:3,x:xl[3],y:4030},{name:"Plasma",tier:3,x:xl[3],y:4290},{name:"EMPTank",tier:3,x:xl[3],y:4420},{name:"DualRailgun",tier:3,x:xl[3],y:4550},{name:"Citadel",tier:3,x:xl[3],y:4810},{name:"Bunker",tier:3,x:xl[3],y:4940},{name:"Tower",tier:3,x:xl[3],y:5070}],Ty=[["Basic","Assault"],["Basic","Skirmisher"],["Basic","Warlord"],["Assault","Sniper"],["Assault","MachineGun"],["Assault","FlankGuard"],["Skirmisher","Scout"],["Skirmisher","Cannon"],["Warlord","Engineer"],["Warlord","Defender"],["Sniper","Assassin"],["Sniper","Hunter"],["Sniper","Stalker"],["MachineGun","Gunner"],["MachineGun","Sprayer"],["MachineGun","TripleShot"],["FlankGuard","Twin"],["FlankGuard","QuadTank"],["FlankGuard","Smasher"],["Assassin","Ranger"],["Assassin","Annihilator"],["Assassin","Predator"],["Hunter","Streamliner"],["Hunter","Overtrapper"],["Hunter","Skimmer"],["Stalker","Landmine"],["Stalker","Fighter"],["Stalker","Rocketeer"],["Gunner","Booster"],["Gunner","OctoTank"],["Gunner","GunnerTrapper"],["Sprayer","PentaShot"],["Sprayer","Hurricane"],["Sprayer","MoreGun"],["TripleShot","Spreadshot"],["TripleShot","TriAngle"],["TripleShot","BentHybrid"],["Twin","TripleTwin"],["Twin","Destroyer"],["Twin","TwinFlank"],["QuadTank","AutoSmasher"],["QuadTank","Fortress"],["QuadTank","Battleship"],["Smasher","Spike"],["Smasher","MegaSmasher"],["Smasher","Auto3"],["Scout","Ninja"],["Scout","ScoutGhost"],["Scout","Drone"],["Cannon","Artillery"],["Cannon","Railgun"],["Cannon","Siege"],["Ninja","Phantom"],["Ninja","Ambusher"],["Ninja","Spy"],["ScoutGhost","Specter"],["ScoutGhost","RamX"],["ScoutGhost","Mine"],["Drone","Swarm"],["Drone","Guardian"],["Drone","HunterDrone"],["Artillery","Howitzer"],["Artillery","Cassette"],["Artillery","Mortar"],["Railgun","Plasma"],["Railgun","EMPTank"],["Railgun","DualRailgun"],["Siege","Citadel"],["Siege","Bunker"],["Siege","Tower"],["Engineer","Overseer"],["Engineer","Architect"],["Engineer","Commander"],["Overseer","Overlord"],["Overseer","Manager"],["Overseer","Necromancer"],["Architect","Warden"],["Architect","Outpost"],["Commander","Marshal"],["Commander","Vanguard"],["Defender","Protector"],["Defender","Stronghold"],["Defender","Rampart"],["Protector","Golem"],["Protector","Paragon"],["Stronghold","Phalanx"],["Stronghold","Garrison"],["Rampart","Redoubt"],["Rampart","Bulkhead"]],K0={0:"#44aaff",1:"#e0e0e0",2:"#22cc55",3:"#ffdd00",4:"#ff8800",5:"#ff3333"},xy={0:"Синий · Ур.1",1:"Белый · Ур.5",2:"Зелёный · Ур.15",3:"Жёлтый · Ур.30",4:"Оранжевый · Ур.45",5:"Красный · Ур.60"},Ay=["rgba(50,200,100,0.04)","rgba(255,160,50,0.04)","rgba(180,80,255,0.04)"],Ey=[92,1555,3017,7700,11800],My=1700;
 
 ;(function addNewBranches(){
   // ── Tier-1 tanks (upgrade from Basic at level 15) ────────────────────
@@ -44,7 +44,7 @@ Error generating stack: `+e.message+`
     noBarrels:false,bodyDamageMultiplier:1.3,radiusMultiplier:1.1};
 
   // ── Tier-2 tanks — Shotgun branch (level 30) ──────────────────────────
-  _t['Blaster']={name:'Blaster',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#44ff88',
+  _t['Blaster']={name:'Blaster',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#ffdd00',
     description:'Веер из 7 стволов — сплошная стена пуль.',
     barrels:[el(-0.55,34,10,1.0,0.95,0.88,0.65,0.22),el(-0.33,38,12,1.0,1.0,0.88,0.75,0.18),
              el(-0.11,42,13,1.0,1.0,0.88,0.82,0.14),el(0,44,14,1.0,1.0,0.88,0.85,0.12),
@@ -52,30 +52,30 @@ Error generating stack: `+e.message+`
              el(0.55,34,10,1.0,0.95,0.88,0.65,0.22)],
     noBarrels:false,bodyDamageMultiplier:0.85,radiusMultiplier:1.0};
 
-  _t['Buster']={name:'Buster',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#44ff88',
+  _t['Buster']={name:'Buster',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#ffdd00',
     description:'Два тяжёлых ствола — сокрушительный двойной удар.',
     barrels:[el(-0.18,48,20,1.0,0.7,1.4,2.0),el(0.18,48,20,1.0,0.7,1.4,2.0)],
     noBarrels:false,bodyDamageMultiplier:1.1,radiusMultiplier:1.05};
 
-  _t['Riot']={name:'Riot',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#44ff88',
+  _t['Riot']={name:'Riot',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#ffdd00',
     description:'Четыре ствола крестом — огонь во все стороны.',
     barrels:[el(0,44,14,1.0,1.0,0.95,1.0),el(Math.PI/2,44,14,1.0,1.0,0.95,1.0),
              el(Math.PI,44,14,1.0,1.0,0.95,1.0),el(-Math.PI/2,44,14,1.0,1.0,0.95,1.0)],
     noBarrels:false,bodyDamageMultiplier:0.9,radiusMultiplier:1.0};
 
   // ── Tier-2 tanks — Dreadnought branch (level 30) ──────────────────────
-  _t['Colossus']={name:'Colossus',requiredLevel:30,upgradesFrom:['Dreadnought'],color:'#44ff88',
+  _t['Colossus']={name:'Colossus',requiredLevel:30,upgradesFrom:['Dreadnought'],color:'#ffdd00',
     description:'Пушка-гигант + два задних — тяжёлый ударный крейсер.',
     barrels:[el(0,56,32,1.0,0.55,1.9,3.8),
              el(Math.PI+0.22,30,11,1.0,0.8,0.9,0.7),el(Math.PI-0.22,30,11,1.0,0.8,0.9,0.7)],
     noBarrels:false,bodyDamageMultiplier:1.2,radiusMultiplier:1.3};
 
-  _t['Cruiser']={name:'Cruiser',requiredLevel:30,upgradesFrom:['Dreadnought'],color:'#44ff88',
+  _t['Cruiser']={name:'Cruiser',requiredLevel:30,upgradesFrom:['Dreadnought'],color:'#ffdd00',
     description:'Два больших смещённых ствола — крейсер двойного огня.',
     barrels:[el(-0.1,52,24,1.0,0.58,1.5,2.8),el(0.1,52,24,1.0,0.58,1.5,2.8)],
     noBarrels:false,bodyDamageMultiplier:1.1,radiusMultiplier:1.15};
 
-  _t['Brawler']={name:'Brawler',requiredLevel:30,upgradesFrom:['Dreadnought'],color:'#44ff88',
+  _t['Brawler']={name:'Brawler',requiredLevel:30,upgradesFrom:['Dreadnought'],color:'#ffdd00',
     description:'Три ствола — вперёд и по бокам, мастер ближнего боя.',
     barrels:[el(0,48,20,1.0,0.65,1.3,2.0),
              el(Math.PI/2,34,13,1.0,0.65,1.1,1.2),el(-Math.PI/2,34,13,1.0,0.65,1.1,1.2)],
@@ -147,65 +147,65 @@ Error generating stack: `+e.message+`
     barrels:[el(0,72,9,2.6,0.72,2.2,2.0)]};
 
   // T3-A: невидимость между выстрелами — засада
-  _t['Assassin']={name:'Assassin',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['Sniper'],color:'#44ff88',
+  _t['Assassin']={name:'Assassin',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['Sniper'],color:'#ffdd00',
     isInvis:true,
     description:'МЕХАНИКА: Невидим между выстрелами — атакует из темноты.',
     barrels:[el(0,82,8,2.9,0.66,2.5,2.4)]};
 
   // T3-B: двойной ствол — снайперский + поддерживающий
-  _t['Hunter']={name:'Hunter',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['Sniper'],color:'#44ff88',
+  _t['Hunter']={name:'Hunter',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['Sniper'],color:'#ffdd00',
     description:'МЕХАНИКА: Два ствола разной мощи — снайперский и средний одновременно.',
     barrels:[el(0,74,11,2.2,0.82,2.1,1.9),el(0,54,17,1.4,1.1,1.6,1.3)]};
 
   // T3-C: тройной точный залп
-  _t['Stalker']={name:'Stalker',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['Sniper'],color:'#44ff88',
+  _t['Stalker']={name:'Stalker',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['Sniper'],color:'#ffdd00',
     description:'МЕХАНИКА: Три снайперских ствола кластером — накрывает зону.',
     barrels:[el(-0.09,70,8,2.5,0.70,2.0,1.7),el(0,72,9,2.6,0.70,2.1,1.8),el(0.09,70,8,2.5,0.70,2.0,1.7)]};
 
   // T4 from Assassin — невидимость + максимальная дальность
-  _t['Ranger']={name:'Ranger',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Assassin'],color:'#ffdd00',
+  _t['Ranger']={name:'Ranger',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Assassin'],color:'#ff8800',
     isInvis:true,
     description:'Невидимый снайпер — рекордная дальность, невидим между выстрелами.',
     barrels:[el(0,96,7,3.2,0.60,2.8,3.0)]};
 
   // T4 from Assassin — колоссальный разрушительный снаряд
-  _t['Annihilator']={name:'Annihilator',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Assassin'],color:'#ffdd00',
+  _t['Annihilator']={name:'Annihilator',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Assassin'],color:'#ff8800',
     description:'Один огромный снаряд — пробивает всё, уничтожает группы врагов.',
     barrels:[el(0,58,30,2.8,2.4,0.95,3.5)]};
 
   // T4 from Assassin — три уровня дальности
-  _t['Predator']={name:'Predator',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Assassin'],color:'#ffdd00',
+  _t['Predator']={name:'Predator',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Assassin'],color:'#ff8800',
     description:'Три ствола разной длины — снайпер + средний + ближний одновременно.',
     barrels:[el(0,80,9,3.0,0.65,2.5,2.5),el(0,60,14,1.8,1.1,1.8,1.8),el(0,45,19,1.0,1.3,1.2,1.4)]};
 
   // T4 from Hunter — 5 вложенных стволов
-  _t['Streamliner']={name:'Streamliner',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Hunter'],color:'#ffdd00',
+  _t['Streamliner']={name:'Streamliner',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Hunter'],color:'#ff8800',
     description:'5 вложенных стволов — непрерывный поток снарядов на дальней дистанции.',
     barrels:[30,37,44,51,58].map(function(h,i){return el(0,h,Math.max(8,11-i),0.22,0.65,1.2,0.55);})};
 
   // T4 from Hunter — снайпер + ловушки по бокам
-  _t['Overtrapper']={name:'Overtrapper',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Hunter'],color:'#ffdd00',
+  _t['Overtrapper']={name:'Overtrapper',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Hunter'],color:'#ff8800',
     description:'МЕХАНИКА: Снайперский ствол + ловушки по бокам — блокирует отступление.',
     barrels:[el(0,52,14,1.2,1.1,1.2,1.0),Object.assign(el(2.5,34,12,0.8,0.8,1.0,1.3),{isTrap:true}),Object.assign(el(-2.5,34,12,0.8,0.8,1.0,1.3),{isTrap:true})]};
 
   // T4 from Hunter — два угловых снайперских ствола
-  _t['Skimmer']={name:'Skimmer',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Hunter'],color:'#ffdd00',
+  _t['Skimmer']={name:'Skimmer',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Hunter'],color:'#ff8800',
     description:'Два угловых ствола — перекрёстный огонь с большой дальностью.',
     barrels:[el(0.30,62,12,2.8,1.2,2.1,1.5),el(-0.30,62,12,2.8,1.2,2.1,1.5)]};
 
   // T4 from Stalker — три оси атаки
-  _t['Fighter']={name:'Fighter',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Stalker'],color:'#ffdd00',
+  _t['Fighter']={name:'Fighter',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Stalker'],color:'#ff8800',
     description:'Снайпер + два боковых ствола — тройная зона поражения.',
     barrels:[el(0,55,14,1.3,1.1,1.3,1.1),el(Math.PI/2,36,11,0.9,0.9,1.0,1.2),el(-Math.PI/2,36,11,0.9,0.9,1.0,1.2)]};
 
   // T4 from Stalker — самонаводящаяся ракета
-  _t['Rocketeer']={name:'Rocketeer',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Stalker'],color:'#ffdd00',
+  _t['Rocketeer']={name:'Rocketeer',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Stalker'],color:'#ff8800',
     isHoming:true,
     description:'МЕХАНИКА: Гигантская самонаводящаяся ракета — цель никуда не денется!',
     barrels:[el(0,58,28,0.48,3.5,2.4,2.4)]};
 
   // T4 from Stalker — невидимая мина
-  _t['Landmine']={name:'Landmine',requiredLevel:45,upgradesFrom:['Stalker'],color:'#ffdd00',
+  _t['Landmine']={name:'Landmine',requiredLevel:45,upgradesFrom:['Stalker'],color:'#ff8800',
     isInvis:true,noBarrels:true,bodyDamageMultiplier:7,radiusMultiplier:1.2,
     description:'МЕХАНИКА: Полностью невидим — огромный урон тараном, без стволов.',
     barrels:[]};
@@ -219,62 +219,62 @@ Error generating stack: `+e.message+`
     barrels:[el(0,44,17,0.50,1.0,1.0,0.72,0.07)]};
 
   // T3-A: два узких ствола — двойной пулемёт
-  _t['Gunner']={name:'Gunner',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['MachineGun'],color:'#44ff88',
+  _t['Gunner']={name:'Gunner',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['MachineGun'],color:'#ffdd00',
     description:'МЕХАНИКА: Два тонких ствола — чередующийся огонь, вдвое больше пуль.',
     barrels:[el(-0.09,46,9,0.40,0.70,1.0,0.60),el(0.09,46,9,0.40,0.70,1.0,0.60)]};
 
   // T3-B: широкий ствол с сильным разбросом
-  _t['Sprayer']={name:'Sprayer',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['MachineGun'],color:'#44ff88',
+  _t['Sprayer']={name:'Sprayer',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['MachineGun'],color:'#ffdd00',
     description:'МЕХАНИКА: Один широкий ствол — хаотичный шквал с огромным конусом.',
     barrels:[el(0,50,20,0.44,1.05,0.90,0.60,0.14)]};
 
   // T3-C: тройной веерный залп
-  _t['TripleShot']={name:'TripleShot',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['MachineGun'],color:'#44ff88',
+  _t['TripleShot']={name:'TripleShot',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['MachineGun'],color:'#ffdd00',
     description:'МЕХАНИКА: Три пули одновременно в широком конусе — покрывает весь фронт.',
     barrels:[el(0,46,14,1.4,0.9,1.0,0.88),el(-0.35,42,14,1.4,0.9,1.0,0.88),el(0.35,42,14,1.4,0.9,1.0,0.88)]};
 
   // T4 from Gunner — передний ствол + 3 реактивных задних (тяга!)
-  _t['Booster']={name:'Booster',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Gunner'],color:'#ffdd00',
+  _t['Booster']={name:'Booster',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Gunner'],color:'#ff8800',
     description:'МЕХАНИКА: Передний пулемёт + 3 реактивных задних — тяга и атака одновременно!',
     barrels:[el(0,54,14,0.88,1.0,1.0,1.0),el(Math.PI-0.3,40,12,0.55,0.8,1.1,0.8),el(Math.PI+0.3,40,12,0.55,0.8,1.1,0.8),el(Math.PI,42,12,0.48,0.8,1.2,0.88)]};
 
   // T4 from Gunner — 8 стволов во все стороны
-  _t['OctoTank']={name:'OctoTank',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Gunner'],color:'#ffdd00',
+  _t['OctoTank']={name:'OctoTank',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Gunner'],color:'#ff8800',
     description:'МЕХАНИКА: 8 стволов по 360° — непрерывный огонь в любую сторону.',
     barrels:[0,1,2,3,4,5,6,7].map(function(i){return el(i*Math.PI/4,41,12,1.7,0.82,0.96,0.78);})};
 
   // T4 from Gunner — двойной пулемёт + ловушка
-  _t['GunnerTrapper']={name:'GunnerTrapper',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Gunner'],color:'#ffdd00',
+  _t['GunnerTrapper']={name:'GunnerTrapper',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Gunner'],color:'#ff8800',
     description:'Два быстрых ствола вперёд + ловушка назад — атака и заграждение.',
     barrels:[el(-0.1,47,9,0.35,0.7,1.0,0.65),el(0.1,47,9,0.35,0.7,1.0,0.65),Object.assign(el(Math.PI,42,21,1.6,1.6,1.6,2.0),{isTrap:true})]};
 
   // T4 from Sprayer — пять стволов веером
-  _t['PentaShot']={name:'PentaShot',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Sprayer'],color:'#ffdd00',
+  _t['PentaShot']={name:'PentaShot',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Sprayer'],color:'#ff8800',
     description:'Пять стволов одновременно — широкий веер, ни одна цель не пройдёт.',
     barrels:[-.52,-.26,0,.26,.52].map(function(i){return el(i,41,12,1.1,0.85,0.92,0.85);})};
 
   // T4 from Sprayer — 6 стволов спиралью
-  _t['Hurricane']={name:'Hurricane',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Sprayer'],color:'#ffdd00',
+  _t['Hurricane']={name:'Hurricane',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Sprayer'],color:'#ff8800',
     description:'МЕХАНИКА: 6 стволов тайфуном — спиральный поток пуль со всех сторон.',
     barrels:[el(0,40,12,0.9,1.0,1.0,1.2),el(0.18,38,10,0.9,0.88,0.9,1.2),el(2.09,40,12,0.9,1.0,1.0,1.2),el(2.27,38,10,0.9,0.88,0.9,1.2),el(-2.09,40,12,0.9,1.0,1.0,1.2),el(-2.27,38,10,0.9,0.88,0.9,1.2)]};
 
   // T4 from Sprayer — четыре параллельных ствола
-  _t['MoreGun']={name:'MoreGun',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Sprayer'],color:'#ffdd00',
+  _t['MoreGun']={name:'MoreGun',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Sprayer'],color:'#ff8800',
     description:'Четыре параллельных ствола — максимальная плотность огня.',
     barrels:[el(-0.15,48,10,0.38,0.80,1.0,0.70),el(-0.05,48,10,0.38,0.80,1.0,0.70),el(0.05,48,10,0.38,0.80,1.0,0.70),el(0.15,48,10,0.38,0.80,1.0,0.70)]};
 
   // T4 from TripleShot — 7 стволов максимальный веер
-  _t['Spreadshot']={name:'Spreadshot',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['TripleShot'],color:'#ffdd00',
+  _t['Spreadshot']={name:'Spreadshot',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['TripleShot'],color:'#ff8800',
     description:'7 стволов — максимально широкий веер, покрывает весь фронт.',
     barrels:[el(0,46,14,1.0,1.0,1.0,0.9),el(0.5,42,12,1.0,0.9,0.9,1.0),el(-0.5,42,12,1.0,0.9,0.9,1.0),el(0.9,38,11,1.0,0.8,0.8,1.1),el(-0.9,38,11,1.0,0.8,0.8,1.1),el(1.2,34,10,1.0,0.7,0.7,1.2),el(-1.2,34,10,1.0,0.7,0.7,1.2)]};
 
   // T4 from TripleShot — атака + реактивная тяга назад
-  _t['TriAngle']={name:'TriAngle',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['TripleShot'],color:'#ffdd00',
+  _t['TriAngle']={name:'TriAngle',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['TripleShot'],color:'#ff8800',
     description:'МЕХАНИКА: Один вперёд + два задних реактивных — тяга разгоняет вперёд!',
     barrels:[el(0,52,14,1.2,1.1,1.2,1.0),el(2.4,38,12,0.9,0.9,1.0,1.2),el(-2.4,38,12,0.9,0.9,1.0,1.2)]};
 
   // T4 from TripleShot — три диагональных ствола
-  _t['BentHybrid']={name:'BentHybrid',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['TripleShot'],color:'#ffdd00',
+  _t['BentHybrid']={name:'BentHybrid',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['TripleShot'],color:'#ff8800',
     description:'Три угловых ствола — диагональный огонь под 45°, охват по бокам.',
     barrels:[el(0,50,16,1.0,1.2,1.2,1.2),el(0.7,43,12,0.85,1.0,1.0,1.3),el(-0.7,43,12,0.85,1.0,1.0,1.3)]};
 
@@ -287,73 +287,73 @@ Error generating stack: `+e.message+`
     barrels:[el(0,38,9,1.2,0.9,1.4,0.68)],radiusMultiplier:0.80};
 
   // T3-A: невидимость + снайперский удар из засады
-  _t['Ninja']={name:'Ninja',requiredLevel:30,upgradesFrom:['Scout'],color:'#44ff88',
+  _t['Ninja']={name:'Ninja',requiredLevel:30,upgradesFrom:['Scout'],color:'#ffdd00',
     isInvis:true,
     description:'МЕХАНИКА: Невидим стоя — резкий точный удар из засады.',
     barrels:[el(0,65,10,1.7,0.76,1.55,1.85)]};
 
   // T3-B: невидимость + огромный урон тараном
-  _t['ScoutGhost']={name:'ScoutGhost',requiredLevel:30,upgradesFrom:['Scout'],color:'#44ff88',
+  _t['ScoutGhost']={name:'ScoutGhost',requiredLevel:30,upgradesFrom:['Scout'],color:'#ffdd00',
     isInvis:true,noBarrels:true,bodyDamageMultiplier:8,radiusMultiplier:1.05,
     description:'МЕХАНИКА: Полностью невидим + огромный урон корпусом — призрак-таран.',
     barrels:[]};
 
   // T3-C: 3 самонаводящихся дрона — охотники
-  _t['Drone']={name:'Drone',requiredLevel:30,radiusMultiplier:1.15,upgradesFrom:['Scout'],color:'#44ff88',
+  _t['Drone']={name:'Drone',requiredLevel:30,radiusMultiplier:1.15,upgradesFrom:['Scout'],color:'#ffdd00',
     isDroneShooter:true,
     description:'МЕХАНИКА: 3 автономных дрона — самостоятельно охотятся на врагов.',
     barrels:[el(0,32,9,0.80,1.2,1.1,0.72),el(2.09,32,9,0.80,1.2,1.1,0.72),el(-2.09,32,9,0.80,1.2,1.1,0.72)]};
 
   // T4 from Ninja — невидимость + два быстрых ствола
-  _t['Phantom']={name:'Phantom',requiredLevel:45,upgradesFrom:['Ninja'],color:'#ffdd00',
+  _t['Phantom']={name:'Phantom',requiredLevel:45,upgradesFrom:['Ninja'],color:'#ff8800',
     isInvis:true,radiusMultiplier:1.1,
     description:'Невидимый двойной снайпер — два быстрых удара из тени.',
     barrels:[el(-0.10,62,9,1.6,0.75,1.6,1.8),el(0.10,62,9,1.6,0.75,1.6,1.8)]};
 
   // T4 from Ninja — невидимость + один мощный удар
-  _t['Ambusher']={name:'Ambusher',requiredLevel:45,upgradesFrom:['Ninja'],color:'#ffdd00',
+  _t['Ambusher']={name:'Ambusher',requiredLevel:45,upgradesFrom:['Ninja'],color:'#ff8800',
     isInvis:true,radiusMultiplier:1.1,
     description:'МЕХАНИКА: Невидим + один сокрушительный выстрел — чистый ваншот из тени.',
     barrels:[el(0,75,11,2.5,0.70,2.0,2.2)]};
 
   // T4 from Ninja — невидимый с тремя стволами в разные стороны
-  _t['Spy']={name:'Spy',requiredLevel:45,upgradesFrom:['Ninja'],color:'#ffdd00',
+  _t['Spy']={name:'Spy',requiredLevel:45,upgradesFrom:['Ninja'],color:'#ff8800',
     isInvis:true,radiusMultiplier:1.1,
     description:'Шпион — невидим, три лёгких ствола: вперёд и по сторонам.',
     barrels:[el(0,55,10,1.4,0.80,1.4,1.5),el(2.09,42,9,1.2,0.78,1.3,1.2),el(-2.09,42,9,1.2,0.78,1.3,1.2)]};
 
   // T4 from ScoutGhost — максимальный невидимый таран
-  _t['Specter']={name:'Specter',requiredLevel:45,upgradesFrom:['ScoutGhost'],color:'#ffdd00',
+  _t['Specter']={name:'Specter',requiredLevel:45,upgradesFrom:['ScoutGhost'],color:'#ff8800',
     isInvis:true,noBarrels:true,bodyDamageMultiplier:12,radiusMultiplier:1.25,
     description:'МЕХАНИКА: Макс. урон корпуса + невидимость — разрушительный призрак-таран.',
     barrels:[]};
 
   // T4 from ScoutGhost — открытый таран без невидимости, экстремальный урон
-  _t['RamX']={name:'RamX',requiredLevel:45,upgradesFrom:['ScoutGhost'],color:'#ffdd00',
+  _t['RamX']={name:'RamX',requiredLevel:45,upgradesFrom:['ScoutGhost'],color:'#ff8800',
     noBarrels:true,bodyDamageMultiplier:15,radiusMultiplier:1.35,
     description:'МЕХАНИКА: Огромный корпус без невидимости — рекордный урон тараном!',
     barrels:[]};
 
   // T4 from ScoutGhost — невидимка с ловушками
-  _t['Mine']={name:'Mine',requiredLevel:45,upgradesFrom:['ScoutGhost'],color:'#ffdd00',
+  _t['Mine']={name:'Mine',requiredLevel:45,upgradesFrom:['ScoutGhost'],color:'#ff8800',
     isInvis:true,bodyDamageMultiplier:4,radiusMultiplier:1.1,
     description:'Невидимая мина — расставляет ловушки и наносит урон корпусом.',
     barrels:[Object.assign(el(0,36,14,0.9,0.9,0.8,1.2),{isTrap:true}),Object.assign(el(Math.PI,36,14,0.9,0.9,0.8,1.2),{isTrap:true})]};
 
   // T4 from Drone — 6 дронов — рой
-  _t['Swarm']={name:'Swarm',requiredLevel:45,upgradesFrom:['Drone'],color:'#ffdd00',
+  _t['Swarm']={name:'Swarm',requiredLevel:45,upgradesFrom:['Drone'],color:'#ff8800',
     isDroneShooter:true,radiusMultiplier:1.2,
     description:'МЕХАНИКА: Рой из 6 дронов — подавляет числом, охватывает всю зону.',
     barrels:[0,1,2,3,4,5].map(function(i){return el(i*Math.PI*2/6,28,7,0.72,1.1,1.05,0.65);})};
 
   // T4 from Drone — 4 мощных дрона + корпус
-  _t['Guardian']={name:'Guardian',requiredLevel:45,upgradesFrom:['Drone'],color:'#ffdd00',
+  _t['Guardian']={name:'Guardian',requiredLevel:45,upgradesFrom:['Drone'],color:'#ff8800',
     isDroneShooter:true,radiusMultiplier:1.2,bodyDamageMultiplier:1.5,
     description:'Страж — 4 мощных дрона защищают танк + урон корпуса.',
     barrels:[0,1,2,3].map(function(i){return el(i*Math.PI/2,30,10,0.80,1.25,1.0,0.80);})};
 
   // T4 from Drone — невидимый с дронами-охотниками
-  _t['HunterDrone']={name:'HunterDrone',requiredLevel:45,upgradesFrom:['Drone'],color:'#ffdd00',
+  _t['HunterDrone']={name:'HunterDrone',requiredLevel:45,upgradesFrom:['Drone'],color:'#ff8800',
     isDroneShooter:true,isInvis:true,radiusMultiplier:1.2,
     description:'МЕХАНИКА: Невидимый охотник — дроны атакуют сами, хозяин невидим!',
     barrels:[el(-0.15,55,9,1.2,1.0,1.5,1.2),el(0,64,10,1.6,0.85,1.5,1.5),el(0.15,55,9,1.2,1.0,1.5,1.2)]};
@@ -369,7 +369,7 @@ Error generating stack: `+e.message+`
              el(0.45,38,11,1.05,0.95,0.92,0.75,0.18)]};
 
   // T3-A: 9 дробин, широкий конус — максимальный разброс
-  _t['Blaster']={name:'Blaster',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#44ff88',
+  _t['Blaster']={name:'Blaster',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#ffdd00',
     description:'МЕХАНИКА: 9 дробин в огромном конусе 70° — стена пуль в ближнем бою.',
     barrels:[el(-0.60,34,9,1.05,0.90,0.88,0.62,0.24),el(-0.38,37,11,1.05,0.95,0.88,0.70,0.20),
              el(-0.18,41,12,1.05,1.0,0.88,0.78,0.16),el(-0.06,43,13,1.05,1.0,0.88,0.82,0.13),
@@ -378,12 +378,12 @@ Error generating stack: `+e.message+`
              el(0.38,37,11,1.05,0.95,0.88,0.70,0.20),el(0.60,34,9,1.05,0.90,0.88,0.62,0.24)]};
 
   // T3-B: 3 тяжёлых снаряда — концентрированный удар
-  _t['Buster']={name:'Buster',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#44ff88',
+  _t['Buster']={name:'Buster',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#ffdd00',
     description:'МЕХАНИКА: 3 тяжёлых снаряда в узком конусе — высокий урон на чуть большей дистанции.',
     barrels:[el(-0.18,48,16,1.1,1.3,0.95,1.35,0.10),el(0,52,18,1.1,1.4,0.95,1.5,0.08),el(0.18,48,16,1.1,1.3,0.95,1.35,0.10)]};
 
   // T3-C: 3 дробины × 4 направления — круговой дробовик!
-  _t['Riot']={name:'Riot',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#44ff88',
+  _t['Riot']={name:'Riot',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#ffdd00',
     description:'МЕХАНИКА: Дробь в 4 диагональных направлениях — покрывает 360° вокруг!',
     barrels:[el(Math.PI/4,38,10,1.1,0.90,0.88,0.72,0.20),el(Math.PI/4+0.25,34,9,1.1,0.88,0.88,0.65,0.22),el(Math.PI/4-0.25,34,9,1.1,0.88,0.88,0.65,0.22),
              el(-Math.PI/4,38,10,1.1,0.90,0.88,0.72,0.20),el(-Math.PI/4+0.25,34,9,1.1,0.88,0.88,0.65,0.22),el(-Math.PI/4-0.25,34,9,1.1,0.88,0.88,0.65,0.22),
@@ -399,61 +399,61 @@ Error generating stack: `+e.message+`
     barrels:[0,1,2,3].map(function(i){return el(i*Math.PI/2,28,7,0.95,1.05,1.0,0.62);})};
 
   // T3-A: 6 дронов — расширенная армия
-  _t['Overseer']={name:'Overseer',requiredLevel:30,upgradesFrom:['Engineer'],color:'#44ff88',
+  _t['Overseer']={name:'Overseer',requiredLevel:30,upgradesFrom:['Engineer'],color:'#ffdd00',
     isDroneShooter:true,radiusMultiplier:1.15,
     description:'МЕХАНИКА: 6 дронов в армии — больше юнитов, лучше охват территории.',
     barrels:[0,1,2,3,4,5].map(function(i){return el(i*Math.PI*2/6,26,8,0.85,1.1,1.0,0.65);})};
 
   // T3-B: передний ствол + 2 боковых мины — гибрид инженера
-  _t['Architect']={name:'Architect',requiredLevel:30,upgradesFrom:['Engineer'],color:'#44ff88',
+  _t['Architect']={name:'Architect',requiredLevel:30,upgradesFrom:['Engineer'],color:'#ffdd00',
     radiusMultiplier:1.1,
     description:'МЕХАНИКА: Пушка вперёд + ловушки по бокам — атака и минирование сразу.',
     barrels:[el(0,48,14,1.1,1.0,1.1,1.0),Object.assign(el(Math.PI/2,34,12,0.85,0.9,0.9,1.1),{isTrap:true}),Object.assign(el(-Math.PI/2,34,12,0.85,0.9,0.9,1.1),{isTrap:true})]};
 
   // T3-C: 5 мощных дронов + увеличенный корпус
-  _t['Commander']={name:'Commander',requiredLevel:30,upgradesFrom:['Engineer'],color:'#44ff88',
+  _t['Commander']={name:'Commander',requiredLevel:30,upgradesFrom:['Engineer'],color:'#ffdd00',
     isDroneShooter:true,radiusMultiplier:1.2,bodyDamageMultiplier:1.8,
     description:'МЕХАНИКА: 5 мощных дронов + урон корпусом — командует армией в ближнем бою.',
     barrels:[0,1,2,3,4].map(function(i){return el(i*Math.PI*2/5,30,10,0.78,1.2,1.0,0.72);})};
 
   // T4 from Overseer — 4 огромных дрона — максимальная армия
-  _t['Overlord']={name:'Overlord',requiredLevel:45,upgradesFrom:['Overseer'],color:'#ffdd00',
+  _t['Overlord']={name:'Overlord',requiredLevel:45,upgradesFrom:['Overseer'],color:'#ff8800',
     isDroneShooter:true,radiusMultiplier:1.25,
     description:'Повелитель — 4 огромных дрона, максимальная сила каждого юнита.',
     barrels:[0,1,2,3].map(function(i){return el(i*Math.PI/2,36,14,0.68,1.4,1.0,0.95);})};
 
   // T4 from Overseer — невидимый повелитель дронов
-  _t['Manager']={name:'Manager',requiredLevel:45,upgradesFrom:['Overseer'],color:'#ffdd00',
+  _t['Manager']={name:'Manager',requiredLevel:45,upgradesFrom:['Overseer'],color:'#ff8800',
     isDroneShooter:true,isInvis:true,radiusMultiplier:1.25,
     description:'МЕХАНИКА: Невидимый повелитель — сам невидим, два больших дрона охотятся!',
     barrels:[el(0,38,14,0.72,1.35,1.0,0.90),el(Math.PI,38,14,0.72,1.35,1.0,0.90)]};
 
   // T4 from Overseer — 12 мини-дронов — рой
-  _t['Necromancer']={name:'Necromancer',requiredLevel:45,upgradesFrom:['Overseer'],color:'#ffdd00',
+  _t['Necromancer']={name:'Necromancer',requiredLevel:45,upgradesFrom:['Overseer'],color:'#ff8800',
     isDroneShooter:true,radiusMultiplier:1.3,
     description:'МЕХАНИКА: Рой из 12 мини-дронов — подавляет числом, занимает всю карту!',
     barrels:[0,1,2,3,4,5,6,7,8,9,10,11].map(function(i){return el(i*Math.PI*2/12,20,5,0.55,0.85,1.0,0.48);})};
 
   // T4 from Architect — пушка + 4 ловушки
-  _t['Warden']={name:'Warden',requiredLevel:45,upgradesFrom:['Architect'],color:'#ffdd00',
+  _t['Warden']={name:'Warden',requiredLevel:45,upgradesFrom:['Architect'],color:'#ff8800',
     radiusMultiplier:1.2,
     description:'Страж — одна мощная пушка + 4 ловушки по периметру, создаёт укреплённую зону.',
     barrels:[el(0,52,16,1.1,1.1,1.2,1.1),Object.assign(el(Math.PI/2,36,13,0.80,0.9,0.9,1.2),{isTrap:true}),Object.assign(el(-Math.PI/2,36,13,0.80,0.9,0.9,1.2),{isTrap:true}),Object.assign(el(Math.PI*0.75,32,12,0.80,0.88,0.9,1.1),{isTrap:true}),Object.assign(el(-Math.PI*0.75,32,12,0.80,0.88,0.9,1.1),{isTrap:true})]};
 
   // T4 from Architect — мини-дронов + ловушки = форпост
-  _t['Outpost']={name:'Outpost',requiredLevel:45,upgradesFrom:['Architect'],color:'#ffdd00',
+  _t['Outpost']={name:'Outpost',requiredLevel:45,upgradesFrom:['Architect'],color:'#ff8800',
     isDroneShooter:true,radiusMultiplier:1.2,
     description:'МЕХАНИКА: Дроны + ловушки — превращает зону в непроходимую крепость.',
     barrels:[Object.assign(el(Math.PI/4,30,10,0.88,1.1,1.0,0.70),{isTrap:false}),Object.assign(el(-Math.PI/4,30,10,0.88,1.1,1.0,0.70),{isTrap:false}),Object.assign(el(Math.PI*0.75,34,12,0.85,0.90,0.90,1.0),{isTrap:true}),Object.assign(el(-Math.PI*0.75,34,12,0.85,0.90,0.90,1.0),{isTrap:true}),el(0,42,13,1.05,1.0,1.05,0.90)]};
 
   // T4 from Commander — армия из 8 дронов
-  _t['Marshal']={name:'Marshal',requiredLevel:45,upgradesFrom:['Commander'],color:'#ffdd00',
+  _t['Marshal']={name:'Marshal',requiredLevel:45,upgradesFrom:['Commander'],color:'#ff8800',
     isDroneShooter:true,radiusMultiplier:1.3,bodyDamageMultiplier:2.5,
     description:'Маршал — 8 дронов + огромный корпус — армия в движении.',
     barrels:[0,1,2,3,4,5,6,7].map(function(i){return el(i*Math.PI/4,26,8,0.70,1.15,1.0,0.68);})};
 
   // T4 from Commander — 3 огромных дрона без промаха
-  _t['Vanguard']={name:'Vanguard',requiredLevel:45,upgradesFrom:['Commander'],color:'#ffdd00',
+  _t['Vanguard']={name:'Vanguard',requiredLevel:45,upgradesFrom:['Commander'],color:'#ff8800',
     isDroneShooter:true,isHoming:true,radiusMultiplier:1.25,bodyDamageMultiplier:2.0,
     description:'МЕХАНИКА: 3 самонаводящихся боевых дрона — догоняют цель автоматически!',
     barrels:[el(0,34,13,0.70,1.3,1.0,0.88),el(2.09,34,13,0.70,1.3,1.0,0.88),el(-2.09,34,13,0.70,1.3,1.0,0.88)]};
@@ -468,55 +468,55 @@ Error generating stack: `+e.message+`
     barrels:[el(0,50,16,1.4,1.2,0.9,1.4)]};
 
   // T3-A: 3 ствола + большой корпус
-  _t['Protector']={name:'Protector',requiredLevel:30,upgradesFrom:['Defender'],color:'#44ff88',
+  _t['Protector']={name:'Protector',requiredLevel:30,upgradesFrom:['Defender'],color:'#ffdd00',
     radiusMultiplier:1.50,bodyDamageMultiplier:2.8,
     description:'МЕХАНИКА: Три ствола 120° + огромный корпус — круговая защита.',
     barrels:[el(0,48,15,1.3,1.15,0.92,1.3),el(2.09,44,13,1.3,1.1,0.90,1.2),el(-2.09,44,13,1.3,1.1,0.90,1.2)]};
 
   // T3-B: 6 стволов 360° — неприступная крепость
-  _t['Stronghold']={name:'Stronghold',requiredLevel:30,upgradesFrom:['Defender'],color:'#44ff88',
+  _t['Stronghold']={name:'Stronghold',requiredLevel:30,upgradesFrom:['Defender'],color:'#ffdd00',
     radiusMultiplier:1.50,bodyDamageMultiplier:2.5,
     description:'МЕХАНИКА: 6 стволов по 360° + огромный корпус — неприступная крепость!',
     barrels:[0,1,2,3,4,5].map(function(i){return el(i*Math.PI/3,44,13,1.35,1.1,0.92,1.1);})};
 
   // T3-C: один колоссальный ствол + максимальный урон тараном
-  _t['Rampart']={name:'Rampart',requiredLevel:30,upgradesFrom:['Defender'],color:'#44ff88',
+  _t['Rampart']={name:'Rampart',requiredLevel:30,upgradesFrom:['Defender'],color:'#ffdd00',
     radiusMultiplier:1.55,bodyDamageMultiplier:4.0,
     description:'МЕХАНИКА: Одна огромная пушка + рекордный урон тараном — лобовой штурм!',
     barrels:[el(0,58,24,1.6,1.5,0.88,2.0)]};
 
   // T4 from Protector — огромный танк без стволов, максимальный таран
-  _t['Golem']={name:'Golem',requiredLevel:45,upgradesFrom:['Protector'],color:'#ffdd00',
+  _t['Golem']={name:'Golem',requiredLevel:45,upgradesFrom:['Protector'],color:'#ff8800',
     radiusMultiplier:1.65,bodyDamageMultiplier:7.0,noBarrels:true,
     description:'МЕХАНИКА: Без стволов — чистый таран! Колоссальный урон корпусом, неуязвимость.',
     barrels:[]};
 
   // T4 from Protector — 4 ствола + мощный корпус
-  _t['Paragon']={name:'Paragon',requiredLevel:45,upgradesFrom:['Protector'],color:'#ffdd00',
+  _t['Paragon']={name:'Paragon',requiredLevel:45,upgradesFrom:['Protector'],color:'#ff8800',
     radiusMultiplier:1.55,bodyDamageMultiplier:3.5,
     description:'Эталон — 4 ствола крестом + мощная броня, идеальный баланс атаки и защиты.',
     barrels:[el(0,50,15,1.3,1.15,0.92,1.3),el(Math.PI/2,46,13,1.3,1.1,0.90,1.2),el(Math.PI,48,15,1.3,1.15,0.92,1.3),el(-Math.PI/2,46,13,1.3,1.1,0.90,1.2)]};
 
   // T4 from Stronghold — 8 стволов + гигантский корпус
-  _t['Phalanx']={name:'Phalanx',requiredLevel:45,upgradesFrom:['Stronghold'],color:'#ffdd00',
+  _t['Phalanx']={name:'Phalanx',requiredLevel:45,upgradesFrom:['Stronghold'],color:'#ff8800',
     radiusMultiplier:1.60,bodyDamageMultiplier:3.0,
     description:'Фаланга — 8 стволов 360° + гигантский корпус, непреодолимая стена.',
     barrels:[0,1,2,3,4,5,6,7].map(function(i){return el(i*Math.PI/4,42,12,1.4,1.05,0.90,1.05);})};
 
   // T4 from Stronghold — три огромных ствола + экстремальный урон корпусом
-  _t['Garrison']={name:'Garrison',requiredLevel:45,upgradesFrom:['Stronghold'],color:'#ffdd00',
+  _t['Garrison']={name:'Garrison',requiredLevel:45,upgradesFrom:['Stronghold'],color:'#ff8800',
     radiusMultiplier:1.58,bodyDamageMultiplier:4.5,
     description:'Гарнизон — три тяжёлых ствола вперёд/бок + бронированный корпус-таран.',
     barrels:[el(0,54,20,1.4,1.3,0.90,1.6),el(Math.PI/2,46,16,1.4,1.2,0.88,1.4),el(-Math.PI/2,46,16,1.4,1.2,0.88,1.4)]};
 
   // T4 from Rampart — ультра-таранный без стволов  
-  _t['Redoubt']={name:'Redoubt',requiredLevel:45,upgradesFrom:['Rampart'],color:'#ffdd00',
+  _t['Redoubt']={name:'Redoubt',requiredLevel:45,upgradesFrom:['Rampart'],color:'#ff8800',
     radiusMultiplier:1.70,bodyDamageMultiplier:10.0,noBarrels:true,
     description:'МЕХАНИКА: Рекордный урон тараном — самый разрушительный корпус в игре!',
     barrels:[]};
 
   // T4 from Rampart — два колоссальных ствола + броня
-  _t['Bulkhead']={name:'Bulkhead',requiredLevel:45,upgradesFrom:['Rampart'],color:'#ffdd00',
+  _t['Bulkhead']={name:'Bulkhead',requiredLevel:45,upgradesFrom:['Rampart'],color:'#ff8800',
     radiusMultiplier:1.60,bodyDamageMultiplier:5.0,
     description:'Переборка — два огромных снаряда + экстремальный урон корпусом.',
     barrels:[el(0,60,24,1.7,1.5,0.88,2.2),el(0,44,18,1.5,1.3,0.88,1.6)]};
@@ -537,7 +537,7 @@ Error generating stack: `+e.message+`
   // ── Tier-3 — Shotgun branch (level 45) ───────────────────────────────
 
   // From Blaster
-  _t['Devastator']={name:'Devastator',requiredLevel:45,upgradesFrom:['Blaster'],color:'#ffdd00',
+  _t['Devastator']={name:'Devastator',requiredLevel:45,upgradesFrom:['Blaster'],color:'#ff8800',
     description:'Девять стволов — непробиваемая стена дроби.',
     barrels:[el(-0.65,30,9,1.0,0.95,0.85,0.55,0.25),el(-0.44,34,10,1.0,0.97,0.85,0.65,0.20),
              el(-0.22,38,12,1.0,1.0,0.85,0.75,0.16),el(-0.08,42,13,1.0,1.0,0.85,0.82,0.13),
@@ -546,7 +546,7 @@ Error generating stack: `+e.message+`
              el(0.65,30,9,1.0,0.95,0.85,0.55,0.25)],
     noBarrels:false,bodyDamageMultiplier:0.8,radiusMultiplier:1.05};
 
-  _t['Barrage']={name:'Barrage',requiredLevel:45,upgradesFrom:['Blaster'],color:'#ffdd00',
+  _t['Barrage']={name:'Barrage',requiredLevel:45,upgradesFrom:['Blaster'],color:'#ff8800',
     description:'Скорострельный шквал — 5 стволов вперёд и 2 по бокам.',
     barrels:[el(-0.3,40,11,0.7,1.1,0.85,0.78),el(-0.12,44,13,0.7,1.12,0.85,0.85),
              el(0,46,14,0.7,1.15,0.85,0.9),el(0.12,44,13,0.7,1.12,0.85,0.85),
@@ -554,34 +554,34 @@ Error generating stack: `+e.message+`
              el(Math.PI/2,32,11,0.6,0.95,0.85,0.7),el(-Math.PI/2,32,11,0.6,0.95,0.85,0.7)],
     noBarrels:false,bodyDamageMultiplier:0.82,radiusMultiplier:1.0};
 
-  _t['Canister']={name:'Canister',requiredLevel:45,upgradesFrom:['Blaster'],color:'#ffdd00',
+  _t['Canister']={name:'Canister',requiredLevel:45,upgradesFrom:['Blaster'],color:'#ff8800',
     description:'Три широких тяжёлых ствола — сокрушительная картечь.',
     barrels:[el(-0.28,42,18,1.0,0.8,1.1,1.5,0.20),el(0,46,20,1.0,0.75,1.1,1.8,0.15),
              el(0.28,42,18,1.0,0.8,1.1,1.5,0.20)],
     noBarrels:false,bodyDamageMultiplier:0.9,radiusMultiplier:1.08};
 
   // From Buster
-  _t['Juggernaut']={name:'Juggernaut',requiredLevel:45,upgradesFrom:['Buster'],color:'#ffdd00',
+  _t['Juggernaut']={name:'Juggernaut',requiredLevel:45,upgradesFrom:['Buster'],color:'#ff8800',
     description:'Три массивных ствола — неудержимый разрушитель.',
     barrels:[el(-0.22,50,24,1.0,0.65,1.5,2.5),el(0,52,26,1.0,0.6,1.5,2.8),
              el(0.22,50,24,1.0,0.65,1.5,2.5)],
     noBarrels:false,bodyDamageMultiplier:1.2,radiusMultiplier:1.15};
 
-  _t['Obliterator']={name:'Obliterator',requiredLevel:45,upgradesFrom:['Buster'],color:'#ffdd00',
+  _t['Obliterator']={name:'Obliterator',requiredLevel:45,upgradesFrom:['Buster'],color:'#ff8800',
     description:'Один сверхшироких ствол + 2 боковых — точечное уничтожение.',
     barrels:[el(0,52,30,1.0,0.55,1.8,3.5),
              el(Math.PI/2+0.15,34,14,1.0,0.75,1.1,1.2),
              el(-Math.PI/2-0.15,34,14,1.0,0.75,1.1,1.2)],
     noBarrels:false,bodyDamageMultiplier:1.3,radiusMultiplier:1.2};
 
-  _t['Breacher']={name:'Breacher',requiredLevel:45,upgradesFrom:['Buster'],color:'#ffdd00',
+  _t['Breacher']={name:'Breacher',requiredLevel:45,upgradesFrom:['Buster'],color:'#ff8800',
     description:'Два ствола вперёд и два по диагонали — пробивает любую оборону.',
     barrels:[el(-0.15,50,22,1.0,0.68,1.4,2.2),el(0.15,50,22,1.0,0.68,1.4,2.2),
              el(Math.PI/4,38,16,1.0,0.72,1.1,1.3),el(-Math.PI/4,38,16,1.0,0.72,1.1,1.3)],
     noBarrels:false,bodyDamageMultiplier:1.1,radiusMultiplier:1.1};
 
   // From Riot
-  _t['Havoc']={name:'Havoc',requiredLevel:45,upgradesFrom:['Riot'],color:'#ffdd00',
+  _t['Havoc']={name:'Havoc',requiredLevel:45,upgradesFrom:['Riot'],color:'#ff8800',
     description:'Восемь стволов во все стороны — полный контроль территории.',
     barrels:[el(0,44,14,1.0,1.0,0.92,0.95),el(Math.PI/4,42,13,1.0,1.0,0.92,0.9),
              el(Math.PI/2,44,14,1.0,1.0,0.92,0.95),el(3*Math.PI/4,42,13,1.0,1.0,0.92,0.9),
@@ -589,7 +589,7 @@ Error generating stack: `+e.message+`
              el(-Math.PI/2,44,14,1.0,1.0,0.92,0.95),el(-Math.PI/4,42,13,1.0,1.0,0.92,0.9)],
     noBarrels:false,bodyDamageMultiplier:0.85,radiusMultiplier:1.05};
 
-  _t['Tempest']={name:'Tempest',requiredLevel:45,upgradesFrom:['Riot'],color:'#ffdd00',
+  _t['Tempest']={name:'Tempest',requiredLevel:45,upgradesFrom:['Riot'],color:'#ff8800',
     description:'Шесть стволов — двойные пучки, огонь шестиугольником.',
     barrels:[el(0,46,15,0.8,1.05,0.92,1.0),el(0.15,44,14,0.8,1.0,0.92,0.95),
              el(Math.PI/2+0.08,44,14,0.8,1.0,0.92,0.95),
@@ -598,7 +598,7 @@ Error generating stack: `+e.message+`
              el(-0.15,44,14,0.8,1.0,0.92,0.95)],
     noBarrels:false,bodyDamageMultiplier:0.88,radiusMultiplier:1.0};
 
-  _t['Vortex']={name:'Vortex',requiredLevel:45,upgradesFrom:['Riot'],color:'#ffdd00',
+  _t['Vortex']={name:'Vortex',requiredLevel:45,upgradesFrom:['Riot'],color:'#ff8800',
     description:'Четыре диагональных + четыре фронтальных — вихрь огня.',
     barrels:[el(-0.35,44,12,1.0,1.0,0.9,0.88),el(0.35,44,12,1.0,1.0,0.9,0.88),
              el(Math.PI/3,40,11,1.0,1.0,0.9,0.82),el(-Math.PI/3,40,11,1.0,1.0,0.9,0.82),
@@ -609,7 +609,7 @@ Error generating stack: `+e.message+`
   // ── Tier-3 — Dreadnought branch (level 45) ───────────────────────────
 
   // From Colossus
-  _t['Titan']={name:'Titan',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ffdd00',
+  _t['Titan']={name:'Titan',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ff8800',
     description:'Сверхпушка + три кормовых стабилизатора — линкор апокалипсиса.',
     barrels:[el(0,58,36,1.0,0.5,2.1,4.5),
              el(Math.PI+0.3,32,12,1.0,0.82,0.88,0.72),
@@ -617,13 +617,13 @@ Error generating stack: `+e.message+`
              el(Math.PI-0.3,32,12,1.0,0.82,0.88,0.72)],
     noBarrels:false,bodyDamageMultiplier:1.4,radiusMultiplier:1.4};
 
-  _t['Leviathan']={name:'Leviathan',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ffdd00',
+  _t['Leviathan']={name:'Leviathan',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ff8800',
     description:'Два колоссальных ствола + 2 кормовых — морской монстр.',
     barrels:[el(-0.12,56,30,1.0,0.52,1.85,3.8),el(0.12,56,30,1.0,0.52,1.85,3.8),
              el(Math.PI+0.25,30,11,1.0,0.8,0.88,0.7),el(Math.PI-0.25,30,11,1.0,0.8,0.88,0.7)],
     noBarrels:false,bodyDamageMultiplier:1.3,radiusMultiplier:1.35};
 
-  _t['Bastion']={name:'Bastion',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ffdd00',
+  _t['Bastion']={name:'Bastion',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ff8800',
     description:'Мегапушка + четыре боковых — крепость с круговой обороной.',
     barrels:[el(0,58,34,1.0,0.5,2.0,4.2),
              el(Math.PI/2+0.1,34,13,1.0,0.78,1.0,0.9),
@@ -633,20 +633,20 @@ Error generating stack: `+e.message+`
     noBarrels:false,bodyDamageMultiplier:1.25,radiusMultiplier:1.38};
 
   // From Cruiser
-  _t['Warship']={name:'Warship',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ffdd00',
+  _t['Warship']={name:'Warship',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ff8800',
     description:'Три тяжёлых выровненных ствола — военный корабль огня.',
     barrels:[el(-0.18,52,26,1.0,0.56,1.6,3.0),el(0,54,28,1.0,0.52,1.6,3.2),
              el(0.18,52,26,1.0,0.56,1.6,3.0)],
     noBarrels:false,bodyDamageMultiplier:1.2,radiusMultiplier:1.2};
 
-  _t['Flagship']={name:'Flagship',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ffdd00',
+  _t['Flagship']={name:'Flagship',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ff8800',
     description:'Два мегаствола + два средних боковых — флагман флота.',
     barrels:[el(-0.1,54,28,1.0,0.54,1.7,3.2),el(0.1,54,28,1.0,0.54,1.7,3.2),
              el(Math.PI/2+0.2,36,14,1.0,0.76,1.05,1.0),
              el(-Math.PI/2-0.2,36,14,1.0,0.76,1.05,1.0)],
     noBarrels:false,bodyDamageMultiplier:1.15,radiusMultiplier:1.25};
 
-  _t['Ironclad']={name:'Ironclad',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ffdd00',
+  _t['Ironclad']={name:'Ironclad',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ff8800',
     description:'Два ствола + тяжёлая защита по бокам — непробиваемый броненосец.',
     barrels:[el(-0.08,52,26,1.0,0.56,1.55,2.8),el(0.08,52,26,1.0,0.56,1.55,2.8),
              el(Math.PI/2,38,18,1.0,0.72,1.1,1.3),el(-Math.PI/2,38,18,1.0,0.72,1.1,1.3),
@@ -655,7 +655,7 @@ Error generating stack: `+e.message+`
     noBarrels:false,bodyDamageMultiplier:1.5,radiusMultiplier:1.3};
 
   // From Brawler
-  _t['Behemoth']={name:'Behemoth',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ffdd00',
+  _t['Behemoth']={name:'Behemoth',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ff8800',
     description:'Огромный передний ствол + четыре боковых — чудовище ближнего боя.',
     barrels:[el(0,52,28,1.0,0.58,1.5,2.8),
              el(Math.PI/2+0.1,38,16,1.0,0.65,1.2,1.4),
@@ -664,14 +664,14 @@ Error generating stack: `+e.message+`
              el(-Math.PI/2-0.4,32,13,1.0,0.67,1.0,1.0)],
     noBarrels:false,bodyDamageMultiplier:2.8,radiusMultiplier:1.25};
 
-  _t['Rampage']={name:'Rampage',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ffdd00',
+  _t['Rampage']={name:'Rampage',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ff8800',
     description:'Два передних + три боковых — берсерк, сметающий всё.',
     barrels:[el(-0.12,50,22,1.0,0.62,1.4,2.2),el(0.12,50,22,1.0,0.62,1.4,2.2),
              el(Math.PI/2,36,15,1.0,0.65,1.1,1.2),el(-Math.PI/2,36,15,1.0,0.65,1.1,1.2),
              el(Math.PI,34,14,1.0,0.67,1.0,1.0)],
     noBarrels:false,bodyDamageMultiplier:2.5,radiusMultiplier:1.2};
 
-  _t['Bulwark']={name:'Bulwark',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ffdd00',
+  _t['Bulwark']={name:'Bulwark',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ff8800',
     description:'Мощный передний ствол + полная боковая защита — живая крепость.',
     barrels:[el(0,54,30,1.0,0.58,1.6,3.0),
              el(Math.PI/2,40,18,1.0,0.66,1.15,1.35),el(-Math.PI/2,40,18,1.0,0.66,1.15,1.35),
