@@ -370,9 +370,8 @@
         btn.style.display = 'none';
         document.body.appendChild(btn);
 
-        setInterval(function() {
-          btn.style.display = (window._gamePhase === 'playing') ? '' : 'none';
-        }, 300);
+        // Admin button permanently hidden (code preserved, button invisible)
+        // setInterval removed — display stays 'none' always
 
         /* overlay */
         var overlay = document.createElement('div');
