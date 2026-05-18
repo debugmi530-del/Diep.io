@@ -112,6 +112,216 @@ Error generating stack: `+e.message+`
   Ty.push(['Dreadnought','Brawler']);
 })();
 
+;(function addT3Branches(){
+  // ── Tier-3 — Shotgun branch (level 45) ───────────────────────────────
+
+  // From Blaster
+  _t['Devastator']={name:'Devastator',requiredLevel:45,upgradesFrom:['Blaster'],color:'#ff3333',
+    description:'Девять стволов — непробиваемая стена дроби.',
+    barrels:[el(-0.65,30,9,1.0,0.95,0.85,0.55),el(-0.44,34,10,1.0,0.97,0.85,0.65),
+             el(-0.22,38,12,1.0,1.0,0.85,0.75),el(-0.08,42,13,1.0,1.0,0.85,0.82),
+             el(0,44,14,1.0,1.0,0.85,0.88),el(0.08,42,13,1.0,1.0,0.85,0.82),
+             el(0.22,38,12,1.0,1.0,0.85,0.75),el(0.44,34,10,1.0,0.97,0.85,0.65),
+             el(0.65,30,9,1.0,0.95,0.85,0.55)],
+    noBarrels:false,bodyDamageMultiplier:0.8,radiusMultiplier:1.05};
+
+  _t['Barrage']={name:'Barrage',requiredLevel:45,upgradesFrom:['Blaster'],color:'#ff3333',
+    description:'Скорострельный шквал — 5 стволов вперёд и 2 по бокам.',
+    barrels:[el(-0.3,40,11,0.7,1.1,0.85,0.78),el(-0.12,44,13,0.7,1.12,0.85,0.85),
+             el(0,46,14,0.7,1.15,0.85,0.9),el(0.12,44,13,0.7,1.12,0.85,0.85),
+             el(0.3,40,11,0.7,1.1,0.85,0.78),
+             el(Math.PI/2,32,11,0.6,0.95,0.85,0.7),el(-Math.PI/2,32,11,0.6,0.95,0.85,0.7)],
+    noBarrels:false,bodyDamageMultiplier:0.82,radiusMultiplier:1.0};
+
+  _t['Canister']={name:'Canister',requiredLevel:45,upgradesFrom:['Blaster'],color:'#ff3333',
+    description:'Три широких тяжёлых ствола — сокрушительная картечь.',
+    barrels:[el(-0.28,42,18,1.0,0.8,1.1,1.5),el(0,46,20,1.0,0.75,1.1,1.8),
+             el(0.28,42,18,1.0,0.8,1.1,1.5)],
+    noBarrels:false,bodyDamageMultiplier:0.9,radiusMultiplier:1.08};
+
+  // From Buster
+  _t['Juggernaut']={name:'Juggernaut',requiredLevel:45,upgradesFrom:['Buster'],color:'#ff3333',
+    description:'Три массивных ствола — неудержимый разрушитель.',
+    barrels:[el(-0.22,50,24,1.0,0.65,1.5,2.5),el(0,52,26,1.0,0.6,1.5,2.8),
+             el(0.22,50,24,1.0,0.65,1.5,2.5)],
+    noBarrels:false,bodyDamageMultiplier:1.2,radiusMultiplier:1.15};
+
+  _t['Obliterator']={name:'Obliterator',requiredLevel:45,upgradesFrom:['Buster'],color:'#ff3333',
+    description:'Один сверхшироких ствол + 2 боковых — точечное уничтожение.',
+    barrels:[el(0,52,30,1.0,0.55,1.8,3.5),
+             el(Math.PI/2+0.15,34,14,1.0,0.75,1.1,1.2),
+             el(-Math.PI/2-0.15,34,14,1.0,0.75,1.1,1.2)],
+    noBarrels:false,bodyDamageMultiplier:1.3,radiusMultiplier:1.2};
+
+  _t['Breacher']={name:'Breacher',requiredLevel:45,upgradesFrom:['Buster'],color:'#ff3333',
+    description:'Два ствола вперёд и два по диагонали — пробивает любую оборону.',
+    barrels:[el(-0.15,50,22,1.0,0.68,1.4,2.2),el(0.15,50,22,1.0,0.68,1.4,2.2),
+             el(Math.PI/4,38,16,1.0,0.72,1.1,1.3),el(-Math.PI/4,38,16,1.0,0.72,1.1,1.3)],
+    noBarrels:false,bodyDamageMultiplier:1.1,radiusMultiplier:1.1};
+
+  // From Riot
+  _t['Havoc']={name:'Havoc',requiredLevel:45,upgradesFrom:['Riot'],color:'#ff3333',
+    description:'Восемь стволов во все стороны — полный контроль территории.',
+    barrels:[el(0,44,14,1.0,1.0,0.92,0.95),el(Math.PI/4,42,13,1.0,1.0,0.92,0.9),
+             el(Math.PI/2,44,14,1.0,1.0,0.92,0.95),el(3*Math.PI/4,42,13,1.0,1.0,0.92,0.9),
+             el(Math.PI,44,14,1.0,1.0,0.92,0.95),el(-3*Math.PI/4,42,13,1.0,1.0,0.92,0.9),
+             el(-Math.PI/2,44,14,1.0,1.0,0.92,0.95),el(-Math.PI/4,42,13,1.0,1.0,0.92,0.9)],
+    noBarrels:false,bodyDamageMultiplier:0.85,radiusMultiplier:1.05};
+
+  _t['Tempest']={name:'Tempest',requiredLevel:45,upgradesFrom:['Riot'],color:'#ff3333',
+    description:'Шесть стволов — двойные пучки, огонь шестиугольником.',
+    barrels:[el(0,46,15,0.8,1.05,0.92,1.0),el(0.15,44,14,0.8,1.0,0.92,0.95),
+             el(Math.PI/2+0.08,44,14,0.8,1.0,0.92,0.95),
+             el(-Math.PI/2-0.08,44,14,0.8,1.0,0.92,0.95),
+             el(Math.PI+0.08,44,14,0.8,1.0,0.92,0.95),
+             el(-0.15,44,14,0.8,1.0,0.92,0.95)],
+    noBarrels:false,bodyDamageMultiplier:0.88,radiusMultiplier:1.0};
+
+  _t['Vortex']={name:'Vortex',requiredLevel:45,upgradesFrom:['Riot'],color:'#ff3333',
+    description:'Четыре диагональных + четыре фронтальных — вихрь огня.',
+    barrels:[el(-0.35,44,12,1.0,1.0,0.9,0.88),el(0.35,44,12,1.0,1.0,0.9,0.88),
+             el(Math.PI/3,40,11,1.0,1.0,0.9,0.82),el(-Math.PI/3,40,11,1.0,1.0,0.9,0.82),
+             el(Math.PI-0.35,40,11,1.0,0.95,0.9,0.8),el(Math.PI+0.35,40,11,1.0,0.95,0.9,0.8),
+             el(Math.PI/2+0.2,38,11,1.0,0.95,0.9,0.78),el(-Math.PI/2-0.2,38,11,1.0,0.95,0.9,0.78)],
+    noBarrels:false,bodyDamageMultiplier:0.88,radiusMultiplier:1.02};
+
+  // ── Tier-3 — Dreadnought branch (level 45) ───────────────────────────
+
+  // From Colossus
+  _t['Titan']={name:'Titan',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ff3333',
+    description:'Сверхпушка + три кормовых стабилизатора — линкор апокалипсиса.',
+    barrels:[el(0,58,36,1.0,0.5,2.1,4.5),
+             el(Math.PI+0.3,32,12,1.0,0.82,0.88,0.72),
+             el(Math.PI,30,12,1.0,0.82,0.88,0.75),
+             el(Math.PI-0.3,32,12,1.0,0.82,0.88,0.72)],
+    noBarrels:false,bodyDamageMultiplier:1.4,radiusMultiplier:1.4};
+
+  _t['Leviathan']={name:'Leviathan',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ff3333',
+    description:'Два колоссальных ствола + 2 кормовых — морской монстр.',
+    barrels:[el(-0.12,56,30,1.0,0.52,1.85,3.8),el(0.12,56,30,1.0,0.52,1.85,3.8),
+             el(Math.PI+0.25,30,11,1.0,0.8,0.88,0.7),el(Math.PI-0.25,30,11,1.0,0.8,0.88,0.7)],
+    noBarrels:false,bodyDamageMultiplier:1.3,radiusMultiplier:1.35};
+
+  _t['Bastion']={name:'Bastion',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ff3333',
+    description:'Мегапушка + четыре боковых — крепость с круговой обороной.',
+    barrels:[el(0,58,34,1.0,0.5,2.0,4.2),
+             el(Math.PI/2+0.1,34,13,1.0,0.78,1.0,0.9),
+             el(-Math.PI/2-0.1,34,13,1.0,0.78,1.0,0.9),
+             el(Math.PI+0.35,30,12,1.0,0.8,0.9,0.75),
+             el(Math.PI-0.35,30,12,1.0,0.8,0.9,0.75)],
+    noBarrels:false,bodyDamageMultiplier:1.25,radiusMultiplier:1.38};
+
+  // From Cruiser
+  _t['Warship']={name:'Warship',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ff3333',
+    description:'Три тяжёлых выровненных ствола — военный корабль огня.',
+    barrels:[el(-0.18,52,26,1.0,0.56,1.6,3.0),el(0,54,28,1.0,0.52,1.6,3.2),
+             el(0.18,52,26,1.0,0.56,1.6,3.0)],
+    noBarrels:false,bodyDamageMultiplier:1.2,radiusMultiplier:1.2};
+
+  _t['Flagship']={name:'Flagship',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ff3333',
+    description:'Два мегаствола + два средних боковых — флагман флота.',
+    barrels:[el(-0.1,54,28,1.0,0.54,1.7,3.2),el(0.1,54,28,1.0,0.54,1.7,3.2),
+             el(Math.PI/2+0.2,36,14,1.0,0.76,1.05,1.0),
+             el(-Math.PI/2-0.2,36,14,1.0,0.76,1.05,1.0)],
+    noBarrels:false,bodyDamageMultiplier:1.15,radiusMultiplier:1.25};
+
+  _t['Ironclad']={name:'Ironclad',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ff3333',
+    description:'Два ствола + тяжёлая защита по бокам — непробиваемый броненосец.',
+    barrels:[el(-0.08,52,26,1.0,0.56,1.55,2.8),el(0.08,52,26,1.0,0.56,1.55,2.8),
+             el(Math.PI/2,38,18,1.0,0.72,1.1,1.3),el(-Math.PI/2,38,18,1.0,0.72,1.1,1.3),
+             el(Math.PI/2+0.3,32,14,1.0,0.74,1.0,1.0),
+             el(-Math.PI/2-0.3,32,14,1.0,0.74,1.0,1.0)],
+    noBarrels:false,bodyDamageMultiplier:1.5,radiusMultiplier:1.3};
+
+  // From Brawler
+  _t['Behemoth']={name:'Behemoth',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ff3333',
+    description:'Огромный передний ствол + четыре боковых — чудовище ближнего боя.',
+    barrels:[el(0,52,28,1.0,0.58,1.5,2.8),
+             el(Math.PI/2+0.1,38,16,1.0,0.65,1.2,1.4),
+             el(-Math.PI/2-0.1,38,16,1.0,0.65,1.2,1.4),
+             el(Math.PI/2+0.4,32,13,1.0,0.67,1.0,1.0),
+             el(-Math.PI/2-0.4,32,13,1.0,0.67,1.0,1.0)],
+    noBarrels:false,bodyDamageMultiplier:2.8,radiusMultiplier:1.25};
+
+  _t['Rampage']={name:'Rampage',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ff3333',
+    description:'Два передних + три боковых — берсерк, сметающий всё.',
+    barrels:[el(-0.12,50,22,1.0,0.62,1.4,2.2),el(0.12,50,22,1.0,0.62,1.4,2.2),
+             el(Math.PI/2,36,15,1.0,0.65,1.1,1.2),el(-Math.PI/2,36,15,1.0,0.65,1.1,1.2),
+             el(Math.PI,34,14,1.0,0.67,1.0,1.0)],
+    noBarrels:false,bodyDamageMultiplier:2.5,radiusMultiplier:1.2};
+
+  _t['Bulwark']={name:'Bulwark',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ff3333',
+    description:'Мощный передний ствол + полная боковая защита — живая крепость.',
+    barrels:[el(0,54,30,1.0,0.58,1.6,3.0),
+             el(Math.PI/2,40,18,1.0,0.66,1.15,1.35),el(-Math.PI/2,40,18,1.0,0.66,1.15,1.35),
+             el(Math.PI/2+0.35,34,14,1.0,0.68,1.0,1.0),
+             el(-Math.PI/2-0.35,34,14,1.0,0.68,1.0,1.0),
+             el(Math.PI,38,16,1.0,0.67,1.1,1.2)],
+    noBarrels:false,bodyDamageMultiplier:3.0,radiusMultiplier:1.3};
+
+  // ── Russian names ─────────────────────────────────────────────────────
+  W1['Devastator']  = 'Опустошитель';
+  W1['Barrage']     = 'Шквал';
+  W1['Canister']    = 'Картечь';
+  W1['Juggernaut']  = 'Джаггернаут';
+  W1['Obliterator'] = 'Аннигилятор';
+  W1['Breacher']    = 'Пробойник';
+  W1['Havoc']       = 'Хаос';
+  W1['Tempest']     = 'Шторм';
+  W1['Vortex']      = 'Вихрь';
+  W1['Titan']       = 'Титан';
+  W1['Leviathan']   = 'Левиафан';
+  W1['Bastion']     = 'Бастион';
+  W1['Warship']     = 'Военный корабль';
+  W1['Flagship']    = 'Флагман';
+  W1['Ironclad']    = 'Броненосец';
+  W1['Behemoth']    = 'Бегемот';
+  W1['Rampage']     = 'Берсерк';
+  W1['Bulwark']     = 'Оплот';
+
+  // ── Tree nodes (y-coords will be ×2.5 by generateT4) ─────────────────
+  // Shotgun T3 (centred on their T2 parents at y:5240, 5500, 5760)
+  w0.push({name:'Devastator',  tier:3, x:xl[3], y:5175});
+  w0.push({name:'Barrage',     tier:3, x:xl[3], y:5240});
+  w0.push({name:'Canister',    tier:3, x:xl[3], y:5305});
+  w0.push({name:'Juggernaut',  tier:3, x:xl[3], y:5435});
+  w0.push({name:'Obliterator', tier:3, x:xl[3], y:5500});
+  w0.push({name:'Breacher',    tier:3, x:xl[3], y:5565});
+  w0.push({name:'Havoc',       tier:3, x:xl[3], y:5695});
+  w0.push({name:'Tempest',     tier:3, x:xl[3], y:5760});
+  w0.push({name:'Vortex',      tier:3, x:xl[3], y:5825});
+  // Dreadnought T3 (centred on their T2 parents at y:6740, 7000, 7260)
+  w0.push({name:'Titan',       tier:3, x:xl[3], y:6675});
+  w0.push({name:'Leviathan',   tier:3, x:xl[3], y:6740});
+  w0.push({name:'Bastion',     tier:3, x:xl[3], y:6805});
+  w0.push({name:'Warship',     tier:3, x:xl[3], y:6935});
+  w0.push({name:'Flagship',    tier:3, x:xl[3], y:7000});
+  w0.push({name:'Ironclad',    tier:3, x:xl[3], y:7065});
+  w0.push({name:'Behemoth',    tier:3, x:xl[3], y:7195});
+  w0.push({name:'Rampage',     tier:3, x:xl[3], y:7260});
+  w0.push({name:'Bulwark',     tier:3, x:xl[3], y:7325});
+
+  // ── Tree edges ────────────────────────────────────────────────────────
+  Ty.push(['Blaster','Devastator']);
+  Ty.push(['Blaster','Barrage']);
+  Ty.push(['Blaster','Canister']);
+  Ty.push(['Buster','Juggernaut']);
+  Ty.push(['Buster','Obliterator']);
+  Ty.push(['Buster','Breacher']);
+  Ty.push(['Riot','Havoc']);
+  Ty.push(['Riot','Tempest']);
+  Ty.push(['Riot','Vortex']);
+  Ty.push(['Colossus','Titan']);
+  Ty.push(['Colossus','Leviathan']);
+  Ty.push(['Colossus','Bastion']);
+  Ty.push(['Cruiser','Warship']);
+  Ty.push(['Cruiser','Flagship']);
+  Ty.push(['Cruiser','Ironclad']);
+  Ty.push(['Brawler','Behemoth']);
+  Ty.push(['Brawler','Rampage']);
+  Ty.push(['Brawler','Bulwark']);
+})();
+
 ;(function generateT4(){
   // Scale all tree node y-positions x2 for proper tier-4 spacing
   w0.forEach(function(n){n.y=n.y*2.5;});
