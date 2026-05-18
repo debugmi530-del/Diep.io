@@ -1847,30 +1847,66 @@ function Dy({onStart:i,uiScale:_uiScV,setUiScale:_sUiScV}){const[h,o]=cl.useStat
 ;(function patchJoystickCleanup(){
   var _lastPhase='';
   var _lastAlive=true;
-  function _hideJoy(){
-    var canvases=document.querySelectorAll('#root canvas');
-    canvases.forEach(function(c){
-      var s=c.style;
-      if(s.zIndex==='80'||s.zIndex===80){
-        try{c.dispatchEvent(new TouchEvent('touchcancel',{bubbles:true,cancelable:true,touches:[],targetTouches:[],changedTouches:[]}));}catch(e){}
+
+  function _clearOverlays(){
+    // Remove/clear the _vOvl overlay canvases (z-index:81) appended to body by hy()
+    var bodyCanvases=document.querySelectorAll('body>canvas');
+    bodyCanvases.forEach(function(c){
+      var zi=c.style.zIndex;
+      if(zi==='81'||zi===81||zi==='80'||zi===80){
+        try{var ctx=c.getContext('2d');if(ctx)ctx.clearRect(0,0,c.width,c.height);}catch(e){}
         c.style.display='none';
-        c.style.pointerEvents='none';
       }
     });
   }
+
+  function _hideJoy(){
+    // Dispatch touchcancel + hide the z-index:80 joystick canvases in #root
+    var canvases=document.querySelectorAll('#root canvas');
+    canvases.forEach(function(c){
+      var zi=c.style.zIndex;
+      if(zi==='80'||zi===80){
+        try{c.dispatchEvent(new TouchEvent('touchcancel',{bubbles:true,cancelable:true,touches:[],targetTouches:[],changedTouches:[]}));}catch(e){}
+        try{var ctx=c.getContext('2d');if(ctx)ctx.clearRect(0,0,c.width,c.height);}catch(e){}
+        c.style.display='none';
+        c.style.pointerEvents='none';
+        // Clear and hide its _vOvl overlay if still attached
+        if(c._vOvl){
+          try{var oc=c._vOvl.getContext('2d');if(oc)oc.clearRect(0,0,c._vOvl.width,c._vOvl.height);}catch(e){}
+          c._vOvl.style.display='none';
+        }
+      }
+    });
+    // Also catch any orphaned overlays left in body after unmount
+    _clearOverlays();
+  }
+
   function _showJoy(){
     var canvases=document.querySelectorAll('#root canvas');
     canvases.forEach(function(c){
-      var s=c.style;
-      if(s.zIndex==='80'||s.zIndex===80){
+      var zi=c.style.zIndex;
+      if(zi==='80'||zi===80){
         c.style.display='block';
         c.style.pointerEvents='auto';
+        if(c._vOvl)c._vOvl.style.display='block';
       }
     });
+    // Show body overlays
+    var bodyCanvases=document.querySelectorAll('body>canvas');
+    bodyCanvases.forEach(function(c){
+      var zi=c.style.zIndex;
+      if(zi==='81'||zi===81){c.style.display='block';}
+    });
   }
+
   function _cleanJoy(){
     var phase=window._gamePhase||'menu';
     var alive=window._playerAlive!==false;
+    var shouldHide=(phase!=='playing')||(phase==='playing'&&!alive);
+    if(shouldHide){
+      // Always keep clearing overlays while dead/menu — covers React re-render delay
+      _clearOverlays();
+    }
     var wasPlaying=_lastPhase==='playing';
     var wasAlive=_lastAlive;
     if(phase!=='playing'&&wasPlaying){_hideJoy();}
@@ -1879,7 +1915,7 @@ function Dy({onStart:i,uiScale:_uiScV,setUiScale:_sUiScV}){const[h,o]=cl.useStat
     else if(phase==='playing'&&alive&&!wasAlive){_showJoy();}
     _lastPhase=phase;
     _lastAlive=alive;
-    setTimeout(_cleanJoy,150);
+    setTimeout(_cleanJoy,100);
   }
-  setTimeout(_cleanJoy,1000);
+  setTimeout(_cleanJoy,800);
 })();
