@@ -221,7 +221,7 @@ Error generating stack: `+e.message+`
   // T3-A: два узких ствола — двойной пулемёт
   _t['Gunner']={name:'Gunner',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['MachineGun'],color:'#ffdd00',
     description:'МЕХАНИКА: Два тонких ствола — чередующийся огонь, вдвое больше пуль.',
-    barrels:[el(-0.09,46,9,0.40,0.70,1.0,0.60),el(0.09,46,9,0.40,0.70,1.0,0.60)]};
+    barrels:[el(0,46,9,0.40,0.70,1.0,0.60,undefined,-7),el(0,46,9,0.40,0.70,1.0,0.60,undefined,7)]};
 
   // T3-B: широкий ствол с сильным разбросом
   _t['Sprayer']={name:'Sprayer',requiredLevel:30,radiusMultiplier:1.1,upgradesFrom:['MachineGun'],color:'#ffdd00',
@@ -236,7 +236,7 @@ Error generating stack: `+e.message+`
   // T4 from Gunner — передний ствол + 3 реактивных задних (тяга!)
   _t['Booster']={name:'Booster',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Gunner'],color:'#ff8800',
     description:'МЕХАНИКА: Передний пулемёт + 3 реактивных задних — тяга и атака одновременно!',
-    barrels:[el(0,54,14,0.88,1.0,1.0,1.0),el(Math.PI-0.3,40,12,0.55,0.8,1.1,0.8),el(Math.PI+0.3,40,12,0.55,0.8,1.1,0.8),el(Math.PI,42,12,0.48,0.8,1.2,0.88)]};
+    barrels:[el(0,54,14,0.88,1.0,1.0,1.0),el(Math.PI,40,12,0.55,0.8,1.1,0.8,undefined,-10),el(Math.PI,40,12,0.55,0.8,1.1,0.8,undefined,10),el(Math.PI,42,12,0.48,0.8,1.2,0.88)]};
 
   // T4 from Gunner — 8 стволов во все стороны
   _t['OctoTank']={name:'OctoTank',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Gunner'],color:'#ff8800',
@@ -246,7 +246,7 @@ Error generating stack: `+e.message+`
   // T4 from Gunner — двойной пулемёт + ловушка
   _t['GunnerTrapper']={name:'GunnerTrapper',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Gunner'],color:'#ff8800',
     description:'Два быстрых ствола вперёд + ловушка назад — атака и заграждение.',
-    barrels:[el(-0.1,47,9,0.35,0.7,1.0,0.65),el(0.1,47,9,0.35,0.7,1.0,0.65),Object.assign(el(Math.PI,42,21,1.6,1.6,1.6,2.0),{isTrap:true})]};
+    barrels:[el(0,47,9,0.35,0.7,1.0,0.65,undefined,-7),el(0,47,9,0.35,0.7,1.0,0.65,undefined,7),Object.assign(el(Math.PI,42,21,1.6,1.6,1.6,2.0),{isTrap:true})]};
 
   // T4 from Sprayer — пять стволов веером
   _t['PentaShot']={name:'PentaShot',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Sprayer'],color:'#ff8800',
@@ -256,12 +256,12 @@ Error generating stack: `+e.message+`
   // T4 from Sprayer — 6 стволов спиралью
   _t['Hurricane']={name:'Hurricane',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Sprayer'],color:'#ff8800',
     description:'МЕХАНИКА: 6 стволов тайфуном — спиральный поток пуль со всех сторон.',
-    barrels:[el(0,40,12,0.9,1.0,1.0,1.2),el(0.18,38,10,0.9,0.88,0.9,1.2),el(2.09,40,12,0.9,1.0,1.0,1.2),el(2.27,38,10,0.9,0.88,0.9,1.2),el(-2.09,40,12,0.9,1.0,1.0,1.2),el(-2.27,38,10,0.9,0.88,0.9,1.2)]};
+    barrels:[el(0,40,12,0.9,1.0,1.0,1.2,undefined,-8),el(0,38,10,0.9,0.88,0.9,1.2,undefined,8),el(2.09,40,12,0.9,1.0,1.0,1.2,undefined,-8),el(2.09,38,10,0.9,0.88,0.9,1.2,undefined,8),el(-2.09,40,12,0.9,1.0,1.0,1.2,undefined,-8),el(-2.09,38,10,0.9,0.88,0.9,1.2,undefined,8)]};
 
   // T4 from Sprayer — четыре параллельных ствола
   _t['MoreGun']={name:'MoreGun',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['Sprayer'],color:'#ff8800',
     description:'Четыре параллельных ствола — максимальная плотность огня.',
-    barrels:[el(-0.15,48,10,0.38,0.80,1.0,0.70),el(-0.05,48,10,0.38,0.80,1.0,0.70),el(0.05,48,10,0.38,0.80,1.0,0.70),el(0.15,48,10,0.38,0.80,1.0,0.70)]};
+    barrels:[el(0,48,10,0.38,0.80,1.0,0.70,undefined,-21),el(0,48,10,0.38,0.80,1.0,0.70,undefined,-7),el(0,48,10,0.38,0.80,1.0,0.70,undefined,7),el(0,48,10,0.38,0.80,1.0,0.70,undefined,21)]};
 
   // T4 from TripleShot — 7 стволов максимальный веер
   _t['Spreadshot']={name:'Spreadshot',requiredLevel:45,radiusMultiplier:1.2,upgradesFrom:['TripleShot'],color:'#ff8800',
@@ -1096,10 +1096,10 @@ Error generating stack: `+e.message+`
     // New: 4 directions × DOUBLE barrel — "twin-cannon cross" look.
     if(_t['OctoTank']){
       _t['OctoTank'].barrels=[
-        el(0,           44,14,0.72,1.12,0.92,0.92), el(0.16,      40,12,0.78,1.02,0.86,0.82),
-        el(Math.PI/2,   44,14,0.72,1.12,0.92,0.92), el(Math.PI/2+0.16,40,12,0.78,1.02,0.86,0.82),
-        el(Math.PI,     44,14,0.72,1.12,0.92,0.92), el(Math.PI+0.16,  40,12,0.78,1.02,0.86,0.82),
-        el(-Math.PI/2,  44,14,0.72,1.12,0.92,0.92), el(-Math.PI/2+0.16,40,12,0.78,1.02,0.86,0.82),
+        el(0,          44,14,0.72,1.12,0.92,0.92,undefined,-6), el(0,          40,12,0.78,1.02,0.86,0.82,undefined,6),
+        el(Math.PI/2,  44,14,0.72,1.12,0.92,0.92,undefined,-6), el(Math.PI/2,  40,12,0.78,1.02,0.86,0.82,undefined,6),
+        el(Math.PI,    44,14,0.72,1.12,0.92,0.92,undefined,-6), el(Math.PI,    40,12,0.78,1.02,0.86,0.82,undefined,6),
+        el(-Math.PI/2, 44,14,0.72,1.12,0.92,0.92,undefined,-6), el(-Math.PI/2, 40,12,0.78,1.02,0.86,0.82,undefined,6),
       ];
       _t['OctoTank'].description='4 направления с двойными стволами — синхронный огонь крестом.';
     }
@@ -1148,12 +1148,12 @@ Error generating stack: `+e.message+`
     // New: 3 double-barrel groups at 120° — triangle-spinner visual.
     if(_t['Hurricane']){
       _t['Hurricane'].barrels=[
-        el(0,              40,12,0.54,1.16,0.88,0.92),
-        el(0.22,           36,10,0.50,1.10,0.82,0.80),
-        el(2*Math.PI/3,    40,12,0.54,1.16,0.88,0.92),
-        el(2*Math.PI/3+0.22,36,10,0.50,1.10,0.82,0.80),
-        el(-2*Math.PI/3,   40,12,0.54,1.16,0.88,0.92),
-        el(-2*Math.PI/3+0.22,36,10,0.50,1.10,0.82,0.80),
+        el(0,            40,12,0.54,1.16,0.88,0.92,undefined,-8),
+        el(0,            36,10,0.50,1.10,0.82,0.80,undefined,8),
+        el(2*Math.PI/3,  40,12,0.54,1.16,0.88,0.92,undefined,-8),
+        el(2*Math.PI/3,  36,10,0.50,1.10,0.82,0.80,undefined,8),
+        el(-2*Math.PI/3, 40,12,0.54,1.16,0.88,0.92,undefined,-8),
+        el(-2*Math.PI/3, 36,10,0.50,1.10,0.82,0.80,undefined,8),
       ];
       _t['Hurricane'].description='Три двойных ствола через 120° — вращающийся треугольник огня.';
     }
@@ -1162,14 +1162,14 @@ Error generating stack: `+e.message+`
     // New: 6-barrel wide arc (3L + 3R) — spread-assault look very different from TwinFlank.
     if(_t['TripleTwin']){
       _t['TripleTwin'].barrels=[
-        el(-0.55, 38,11,0.76,1.00,0.85,0.86),
-        el(-0.30, 43,13,0.70,1.06,0.90,0.96),
-        el(-0.10, 46,14,0.66,1.08,0.92,1.00),
-        el( 0.10, 46,14,0.66,1.08,0.92,1.00),
-        el( 0.30, 43,13,0.70,1.06,0.90,0.96),
-        el( 0.55, 38,11,0.76,1.00,0.85,0.86),
+        el(0,           45,12,0.80,0.85,1.0,0.85,undefined,-8),
+        el(0,           45,12,0.80,0.85,1.0,0.85,undefined,8),
+        el(2*Math.PI/3, 42,12,0.80,0.85,1.0,0.85,undefined,-8),
+        el(2*Math.PI/3, 42,12,0.80,0.85,1.0,0.85,undefined,8),
+        el(4*Math.PI/3, 42,12,0.80,0.85,1.0,0.85,undefined,-8),
+        el(4*Math.PI/3, 42,12,0.80,0.85,1.0,0.85,undefined,8),
       ];
-      _t['TripleTwin'].description='6 стволов широкой дугой — мощный веер в переднем секторе.';
+      _t['TripleTwin'].description='Три пары параллельных стволов через 120° — тройной двойник.';
     }
 
     // BentHybrid: was 3 diagonal barrels (weak identity). 
@@ -1199,9 +1199,9 @@ Error generating stack: `+e.message+`
     // New: 1 wide barrel + 2 angled back jets — rocket-with-thrust visual.
     if(_t['Rocketeer']){
       _t['Rocketeer'].barrels=[
-        el(0,           58,22,3.5,0.82,0.7,3.2),
-        el(Math.PI-0.3, 32,12,0.48,1.1,0.85,0.7),
-        el(Math.PI+0.3, 32,12,0.48,1.1,0.85,0.7),
+        el(0,       58,22,3.5,0.82,0.7,3.2),
+        el(Math.PI, 32,12,0.48,1.1,0.85,0.7,undefined,-10),
+        el(Math.PI, 32,12,0.48,1.1,0.85,0.7,undefined,10),
       ];
       _t['Rocketeer'].description='Огромный снаряд вперёд + реактивный выхлоп — настоящая ракета.';
     }
