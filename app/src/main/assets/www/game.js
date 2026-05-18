@@ -1093,6 +1093,9 @@ Error generating stack: `+e.message+`
       }
     }).observe(_obsRoot,{childList:true,subtree:true});
   })();
+function _clsTier(cls){var t=_t[cls];if(!t)return 0;var rl=t.requiredLevel||1;return rl<=1?0:rl<=15?1:rl<=30?2:rl<=45?3:4;}
+function _tankStats(cls){var t=_t[cls];if(!t)return null;var bb=t.barrels||[];var n=bb.length;if(n===0)return{n:0,dmg:0,spd:0,rld:0,bod:Math.min(3,(t.bodyDamageMultiplier||1)),siz:Math.min(3,(t.radiusMultiplier||1))};var aD=bb.reduce(function(s,b){return s+(b.bulletDamageMultiplier||1);},0)/n;var aS=bb.reduce(function(s,b){return s+(b.bulletSpeedMultiplier||1);},0)/n;var aR=bb.reduce(function(s,b){return s+(b.reloadMultiplier||1);},0)/n;var aSz=bb.reduce(function(s,b){return s+(b.bulletSizeMultiplier||b[6]||1);},0)/n;return{n:n,dmg:Math.min(3,aD*Math.pow(n,0.5)*aSz),spd:Math.min(3,aS),rld:Math.min(3,1.5/aR),bod:Math.min(3,(t.bodyDamageMultiplier||1)),siz:Math.min(3,(t.radiusMultiplier||1))};}
+function _sBar(val,max,col){var pct=Math.round(Math.min(100,Math.max(0,(val/max)*100)));return D.jsxs("div",{style:{display:'flex',alignItems:'center',gap:4,marginBottom:2},children:[D.jsx("div",{style:{flex:1,height:5,background:'rgba(255,255,255,0.08)',borderRadius:3,overflow:'hidden'},children:D.jsx("div",{style:{width:pct+'%',height:'100%',background:col,borderRadius:3,transition:'width .3s'}})}),D.jsx("span",{style:{fontSize:8,color:'rgba(255,255,255,0.32)',minWidth:22,textAlign:'right'},children:pct+'%'})]});}
 function zy({onClose}){
     const[path,setPath]=cl.useState([]);
     const[preview,setPreview]=cl.useState(null);
@@ -1185,6 +1188,7 @@ function zy({onClose}){
                     const T=getTankData(cls);
                     const isSel=preview===cls;
                     const hasK=getCh(cls).length>0;
+                    const _tier=_clsTier(cls);
                     return D.jsxs("button",{
                       onPointerDown:v=>{v.stopPropagation();setPreview(p=>p===cls?null:cls);},
                       style:{...cSt(T.color||'#44aaff',isSel)},
@@ -1193,7 +1197,7 @@ function zy({onClose}){
                       children:[
                         D.jsx(Rc,{className:cls,size:36,angle:0}),
                         D.jsx("span",{style:{fontSize:10,fontWeight:'bold',textAlign:'center'},children:Dc(cls)||cls}),
-                        D.jsx("span",{style:{fontSize:8,color:'rgba(255,255,255,0.38)'},children:hasK?'▼ '+getCh(cls).length+' веток':'T4 · финал'})
+                        D.jsx("span",{style:{fontSize:8,color:'rgba(255,255,255,0.38)'},children:'T'+_tier+(hasK?' · ▼ '+getCh(cls).length+' веток':' · финал')})
                       ]
                     },cls);
                   })
@@ -1201,20 +1205,46 @@ function zy({onClose}){
               ]})
             ]}),
 
-            preview&&getTankData(preview)?D.jsxs("div",{style:{background:'rgba(18,18,46,0.95)',border:'1.5px solid '+(getTankData(preview).color||'#44aaff')+'77',borderRadius:12,padding:'12px 14px',maxWidth:400,boxSizing:'border-box',display:'flex',gap:12,alignItems:'flex-start'},children:[
-              D.jsx(Rc,{className:preview,size:48,angle:0}),
-              D.jsxs("div",{style:{flex:1,minWidth:0},children:[
-                D.jsx("div",{style:{color:getTankData(preview).color||'#44aaff',fontWeight:'bold',fontSize:13,marginBottom:4,fontFamily:'Arial'},children:Dc(preview)||preview}),
-                (_t[preview]&&_t[preview].description)?D.jsx("div",{style:{color:'rgba(255,255,255,0.65)',fontSize:10,lineHeight:1.5,fontFamily:'Arial'},children:_t[preview].description}):null,
-                prevCh.length>0?D.jsx("div",{style:{color:'rgba(255,255,255,0.3)',fontSize:9,marginTop:6,fontFamily:'Arial'},children:'Ветки: '+prevCh.map(c=>Dc(c)||c).join(', ')}):
-                D.jsx("div",{style:{color:'rgba(255,220,80,0.5)',fontSize:9,marginTop:6,fontFamily:'Arial'},children:'T4 · финальный танк'})
-              ]}),
-              prevCh.length>0?D.jsx("button",{
-                onPointerDown:v=>{v.stopPropagation();navInto(preview);},
-                style:{background:'linear-gradient(135deg,#1a44bb,#0d2d88)',border:'2px solid #3366dd',borderRadius:8,color:'#fff',fontFamily:'Arial',fontWeight:'bold',fontSize:11,padding:'8px 12px',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,boxShadow:'0 0 12px #1a44bb66'},
-                children:'Войти ▼'
-              }):null
-            ]}):null
+            preview&&getTankData(preview)?(function(){
+              var _pd=getTankData(preview);
+              var _pc=getTankData(preview).color||'#44aaff';
+              var _pt=_clsTier(preview);
+              var _st=_tankStats(preview);
+              var _td=_t[preview];
+              return D.jsxs("div",{style:{background:'rgba(18,18,46,0.95)',border:'1.5px solid '+_pc+'77',borderRadius:12,padding:'12px 14px',maxWidth:420,boxSizing:'border-box'},children:[
+                D.jsxs("div",{style:{display:'flex',gap:12,alignItems:'flex-start',marginBottom:8},children:[
+                  D.jsx(Rc,{className:preview,size:48,angle:0}),
+                  D.jsxs("div",{style:{flex:1,minWidth:0},children:[
+                    D.jsxs("div",{style:{display:'flex',alignItems:'center',gap:6,marginBottom:3},children:[
+                      D.jsx("div",{style:{color:_pc,fontWeight:'bold',fontSize:13,fontFamily:'Arial'},children:Dc(preview)||preview}),
+                      D.jsx("div",{style:{background:_pc+'33',border:'1px solid '+_pc+'66',borderRadius:4,padding:'1px 6px',color:_pc,fontSize:9,fontFamily:'Arial',fontWeight:'bold'},children:'T'+_pt})
+                    ]}),
+                    _td&&_td.requiredLevel?D.jsx("div",{style:{color:'rgba(255,255,255,0.35)',fontSize:9,fontFamily:'Arial',marginBottom:3},children:'Уровень: '+_td.requiredLevel+(_td.upgradesFrom&&_td.upgradesFrom.length?' · из: '+_td.upgradesFrom.map(function(p){return W1[p]||p;}).join(', '):'')}):null,
+                    (_td&&_td.description)?D.jsx("div",{style:{color:'rgba(255,255,255,0.65)',fontSize:10,lineHeight:1.5,fontFamily:'Arial'},children:_td.description}):null
+                  ]}),
+                  prevCh.length>0?D.jsx("button",{
+                    onPointerDown:function(v){v.stopPropagation();navInto(preview);},
+                    style:{background:'linear-gradient(135deg,#1a44bb,#0d2d88)',border:'2px solid #3366dd',borderRadius:8,color:'#fff',fontFamily:'Arial',fontWeight:'bold',fontSize:11,padding:'8px 12px',cursor:'pointer',whiteSpace:'nowrap',flexShrink:0,boxShadow:'0 0 12px #1a44bb66'},
+                    children:'Войти ▼'
+                  }):null
+                ]}),
+                _st?D.jsxs("div",{style:{borderTop:'1px solid rgba(255,255,255,0.08)',paddingTop:8},children:[
+                  D.jsxs("div",{style:{display:'flex',justifyContent:'space-between',marginBottom:6},children:[
+                    D.jsx("div",{style:{color:'rgba(255,255,255,0.4)',fontSize:9,fontFamily:'Arial',fontWeight:'bold',letterSpacing:.5},children:'ХАРАКТЕРИСТИКИ'}),
+                    D.jsx("div",{style:{color:'rgba(255,255,255,0.3)',fontSize:9,fontFamily:'Arial'},children:'Стволов: '+_st.n})
+                  ]}),
+                  D.jsxs("div",{style:{display:'grid',gridTemplateColumns:'60px 1fr',gap:'3px 6px',alignItems:'center'},children:[
+                    D.jsx("span",{style:{color:'rgba(255,200,80,0.7)',fontSize:9,fontFamily:'Arial'},children:'Урон'}),    _sBar(_st.dmg,3,'#ff6644'),
+                    D.jsx("span",{style:{color:'rgba(100,200,255,0.7)',fontSize:9,fontFamily:'Arial'},children:'Скорость'}), _sBar(_st.spd,3,'#44aaff'),
+                    D.jsx("span",{style:{color:'rgba(100,255,100,0.7)',fontSize:9,fontFamily:'Arial'},children:'Скорострел'}),_sBar(_st.rld,3,'#44ff88'),
+                    D.jsx("span",{style:{color:'rgba(255,100,100,0.7)',fontSize:9,fontFamily:'Arial'},children:'Таран'}),    _sBar(_st.bod,3,'#ff4444'),
+                    D.jsx("span",{style:{color:'rgba(200,150,255,0.7)',fontSize:9,fontFamily:'Arial'},children:'Размер'}),   _sBar(_st.siz,3,'#cc88ff')
+                  ]})
+                ]}):null,
+                prevCh.length>0?D.jsx("div",{style:{color:'rgba(255,255,255,0.25)',fontSize:9,marginTop:6,fontFamily:'Arial'},children:'Ветки: '+prevCh.map(function(c){return Dc(c)||c;}).join(', ')}):
+                D.jsx("div",{style:{color:'rgba(255,220,80,0.45)',fontSize:9,marginTop:6,fontFamily:'Arial'},children:'T'+_pt+' · финальный танк'})
+              ]});
+            })():null
 
           ]})
         })
