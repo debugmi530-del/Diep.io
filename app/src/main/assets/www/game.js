@@ -38,13 +38,13 @@ Error generating stack: `+e.message+`
              el(0.45,38,11,1.0,0.95,0.92,0.75)],
     noBarrels:false,bodyDamageMultiplier:1.0,radiusMultiplier:1.0};
 
-  _t['Dreadnought']={name:'Dreadnought',requiredLevel:15,upgradesFrom:['Basic'],color:'#22ee55',
+  _t['Dreadnought']={name:'Dreadnought',requiredLevel:15,upgradesFrom:['Basic'],color:'#ff3300',
     description:'Один колоссальный снаряд — пробивает насквозь.',
     barrels:[el(0,56,28,1.0,0.6,2.0,3.5)],
     noBarrels:false,bodyDamageMultiplier:1.3,radiusMultiplier:1.1};
 
   // ── Tier-2 tanks — Shotgun branch (level 30) ──────────────────────────
-  _t['Blaster']={name:'Blaster',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#ffee11',
+  _t['Blaster']={name:'Blaster',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#00ffbb',
     description:'Веер из 7 стволов — сплошная стена пуль.',
     barrels:[el(-0.55,34,10,1.0,0.95,0.88,0.65),el(-0.33,38,12,1.0,1.0,0.88,0.75),
              el(-0.11,42,13,1.0,1.0,0.88,0.82),el(0,44,14,1.0,1.0,0.88,0.85),
@@ -52,30 +52,30 @@ Error generating stack: `+e.message+`
              el(0.55,34,10,1.0,0.95,0.88,0.65)],
     noBarrels:false,bodyDamageMultiplier:0.85,radiusMultiplier:1.0};
 
-  _t['Buster']={name:'Buster',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#ffee11',
+  _t['Buster']={name:'Buster',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#bbff00',
     description:'Два тяжёлых ствола — сокрушительный двойной удар.',
     barrels:[el(-0.18,48,20,1.0,0.7,1.4,2.0),el(0.18,48,20,1.0,0.7,1.4,2.0)],
     noBarrels:false,bodyDamageMultiplier:1.1,radiusMultiplier:1.05};
 
-  _t['Riot']={name:'Riot',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#ffee11',
+  _t['Riot']={name:'Riot',requiredLevel:30,upgradesFrom:['Shotgun'],color:'#44ff88',
     description:'Четыре ствола крестом — огонь во все стороны.',
     barrels:[el(0,44,14,1.0,1.0,0.95,1.0),el(Math.PI/2,44,14,1.0,1.0,0.95,1.0),
              el(Math.PI,44,14,1.0,1.0,0.95,1.0),el(-Math.PI/2,44,14,1.0,1.0,0.95,1.0)],
     noBarrels:false,bodyDamageMultiplier:0.9,radiusMultiplier:1.0};
 
   // ── Tier-2 tanks — Dreadnought branch (level 30) ──────────────────────
-  _t['Colossus']={name:'Colossus',requiredLevel:30,upgradesFrom:['Dreadnought'],color:'#ffee11',
+  _t['Colossus']={name:'Colossus',requiredLevel:30,upgradesFrom:['Dreadnought'],color:'#ff0055',
     description:'Пушка-гигант + два задних — тяжёлый ударный крейсер.',
     barrels:[el(0,56,32,1.0,0.55,1.9,3.8),
              el(Math.PI+0.22,30,11,1.0,0.8,0.9,0.7),el(Math.PI-0.22,30,11,1.0,0.8,0.9,0.7)],
     noBarrels:false,bodyDamageMultiplier:1.2,radiusMultiplier:1.3};
 
-  _t['Cruiser']={name:'Cruiser',requiredLevel:30,upgradesFrom:['Dreadnought'],color:'#ffee11',
+  _t['Cruiser']={name:'Cruiser',requiredLevel:30,upgradesFrom:['Dreadnought'],color:'#ffaa00',
     description:'Два больших смещённых ствола — крейсер двойного огня.',
     barrels:[el(-0.1,52,24,1.0,0.58,1.5,2.8),el(0.1,52,24,1.0,0.58,1.5,2.8)],
     noBarrels:false,bodyDamageMultiplier:1.1,radiusMultiplier:1.15};
 
-  _t['Brawler']={name:'Brawler',requiredLevel:30,upgradesFrom:['Dreadnought'],color:'#ffee11',
+  _t['Brawler']={name:'Brawler',requiredLevel:30,upgradesFrom:['Dreadnought'],color:'#ff00aa',
     description:'Три ствола — вперёд и по бокам, мастер ближнего боя.',
     barrels:[el(0,48,20,1.0,0.65,1.3,2.0),
              el(Math.PI/2,34,13,1.0,0.65,1.1,1.2),el(-Math.PI/2,34,13,1.0,0.65,1.1,1.2)],
@@ -116,7 +116,7 @@ Error generating stack: `+e.message+`
   // ── Tier-3 — Shotgun branch (level 45) ───────────────────────────────
 
   // From Blaster
-  _t['Devastator']={name:'Devastator',requiredLevel:45,upgradesFrom:['Blaster'],color:'#ff3333',
+  _t['Devastator']={name:'Devastator',requiredLevel:45,upgradesFrom:['Blaster'],color:'#00ddaa',
     description:'Девять стволов — непробиваемая стена дроби.',
     barrels:[el(-0.65,30,9,1.0,0.95,0.85,0.55),el(-0.44,34,10,1.0,0.97,0.85,0.65),
              el(-0.22,38,12,1.0,1.0,0.85,0.75),el(-0.08,42,13,1.0,1.0,0.85,0.82),
@@ -125,7 +125,7 @@ Error generating stack: `+e.message+`
              el(0.65,30,9,1.0,0.95,0.85,0.55)],
     noBarrels:false,bodyDamageMultiplier:0.8,radiusMultiplier:1.05};
 
-  _t['Barrage']={name:'Barrage',requiredLevel:45,upgradesFrom:['Blaster'],color:'#ff3333',
+  _t['Barrage']={name:'Barrage',requiredLevel:45,upgradesFrom:['Blaster'],color:'#00ddaa',
     description:'Скорострельный шквал — 5 стволов вперёд и 2 по бокам.',
     barrels:[el(-0.3,40,11,0.7,1.1,0.85,0.78),el(-0.12,44,13,0.7,1.12,0.85,0.85),
              el(0,46,14,0.7,1.15,0.85,0.9),el(0.12,44,13,0.7,1.12,0.85,0.85),
@@ -133,34 +133,34 @@ Error generating stack: `+e.message+`
              el(Math.PI/2,32,11,0.6,0.95,0.85,0.7),el(-Math.PI/2,32,11,0.6,0.95,0.85,0.7)],
     noBarrels:false,bodyDamageMultiplier:0.82,radiusMultiplier:1.0};
 
-  _t['Canister']={name:'Canister',requiredLevel:45,upgradesFrom:['Blaster'],color:'#ff3333',
+  _t['Canister']={name:'Canister',requiredLevel:45,upgradesFrom:['Blaster'],color:'#00ddaa',
     description:'Три широких тяжёлых ствола — сокрушительная картечь.',
     barrels:[el(-0.28,42,18,1.0,0.8,1.1,1.5),el(0,46,20,1.0,0.75,1.1,1.8),
              el(0.28,42,18,1.0,0.8,1.1,1.5)],
     noBarrels:false,bodyDamageMultiplier:0.9,radiusMultiplier:1.08};
 
   // From Buster
-  _t['Juggernaut']={name:'Juggernaut',requiredLevel:45,upgradesFrom:['Buster'],color:'#ff3333',
+  _t['Juggernaut']={name:'Juggernaut',requiredLevel:45,upgradesFrom:['Buster'],color:'#aaee00',
     description:'Три массивных ствола — неудержимый разрушитель.',
     barrels:[el(-0.22,50,24,1.0,0.65,1.5,2.5),el(0,52,26,1.0,0.6,1.5,2.8),
              el(0.22,50,24,1.0,0.65,1.5,2.5)],
     noBarrels:false,bodyDamageMultiplier:1.2,radiusMultiplier:1.15};
 
-  _t['Obliterator']={name:'Obliterator',requiredLevel:45,upgradesFrom:['Buster'],color:'#ff3333',
+  _t['Obliterator']={name:'Obliterator',requiredLevel:45,upgradesFrom:['Buster'],color:'#aaee00',
     description:'Один сверхшироких ствол + 2 боковых — точечное уничтожение.',
     barrels:[el(0,52,30,1.0,0.55,1.8,3.5),
              el(Math.PI/2+0.15,34,14,1.0,0.75,1.1,1.2),
              el(-Math.PI/2-0.15,34,14,1.0,0.75,1.1,1.2)],
     noBarrels:false,bodyDamageMultiplier:1.3,radiusMultiplier:1.2};
 
-  _t['Breacher']={name:'Breacher',requiredLevel:45,upgradesFrom:['Buster'],color:'#ff3333',
+  _t['Breacher']={name:'Breacher',requiredLevel:45,upgradesFrom:['Buster'],color:'#aaee00',
     description:'Два ствола вперёд и два по диагонали — пробивает любую оборону.',
     barrels:[el(-0.15,50,22,1.0,0.68,1.4,2.2),el(0.15,50,22,1.0,0.68,1.4,2.2),
              el(Math.PI/4,38,16,1.0,0.72,1.1,1.3),el(-Math.PI/4,38,16,1.0,0.72,1.1,1.3)],
     noBarrels:false,bodyDamageMultiplier:1.1,radiusMultiplier:1.1};
 
   // From Riot
-  _t['Havoc']={name:'Havoc',requiredLevel:45,upgradesFrom:['Riot'],color:'#ff3333',
+  _t['Havoc']={name:'Havoc',requiredLevel:45,upgradesFrom:['Riot'],color:'#33ee77',
     description:'Восемь стволов во все стороны — полный контроль территории.',
     barrels:[el(0,44,14,1.0,1.0,0.92,0.95),el(Math.PI/4,42,13,1.0,1.0,0.92,0.9),
              el(Math.PI/2,44,14,1.0,1.0,0.92,0.95),el(3*Math.PI/4,42,13,1.0,1.0,0.92,0.9),
@@ -168,7 +168,7 @@ Error generating stack: `+e.message+`
              el(-Math.PI/2,44,14,1.0,1.0,0.92,0.95),el(-Math.PI/4,42,13,1.0,1.0,0.92,0.9)],
     noBarrels:false,bodyDamageMultiplier:0.85,radiusMultiplier:1.05};
 
-  _t['Tempest']={name:'Tempest',requiredLevel:45,upgradesFrom:['Riot'],color:'#ff3333',
+  _t['Tempest']={name:'Tempest',requiredLevel:45,upgradesFrom:['Riot'],color:'#33ee77',
     description:'Шесть стволов — двойные пучки, огонь шестиугольником.',
     barrels:[el(0,46,15,0.8,1.05,0.92,1.0),el(0.15,44,14,0.8,1.0,0.92,0.95),
              el(Math.PI/2+0.08,44,14,0.8,1.0,0.92,0.95),
@@ -177,7 +177,7 @@ Error generating stack: `+e.message+`
              el(-0.15,44,14,0.8,1.0,0.92,0.95)],
     noBarrels:false,bodyDamageMultiplier:0.88,radiusMultiplier:1.0};
 
-  _t['Vortex']={name:'Vortex',requiredLevel:45,upgradesFrom:['Riot'],color:'#ff3333',
+  _t['Vortex']={name:'Vortex',requiredLevel:45,upgradesFrom:['Riot'],color:'#33ee77',
     description:'Четыре диагональных + четыре фронтальных — вихрь огня.',
     barrels:[el(-0.35,44,12,1.0,1.0,0.9,0.88),el(0.35,44,12,1.0,1.0,0.9,0.88),
              el(Math.PI/3,40,11,1.0,1.0,0.9,0.82),el(-Math.PI/3,40,11,1.0,1.0,0.9,0.82),
@@ -188,7 +188,7 @@ Error generating stack: `+e.message+`
   // ── Tier-3 — Dreadnought branch (level 45) ───────────────────────────
 
   // From Colossus
-  _t['Titan']={name:'Titan',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ff3333',
+  _t['Titan']={name:'Titan',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ff0044',
     description:'Сверхпушка + три кормовых стабилизатора — линкор апокалипсиса.',
     barrels:[el(0,58,36,1.0,0.5,2.1,4.5),
              el(Math.PI+0.3,32,12,1.0,0.82,0.88,0.72),
@@ -196,13 +196,13 @@ Error generating stack: `+e.message+`
              el(Math.PI-0.3,32,12,1.0,0.82,0.88,0.72)],
     noBarrels:false,bodyDamageMultiplier:1.4,radiusMultiplier:1.4};
 
-  _t['Leviathan']={name:'Leviathan',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ff3333',
+  _t['Leviathan']={name:'Leviathan',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ff0044',
     description:'Два колоссальных ствола + 2 кормовых — морской монстр.',
     barrels:[el(-0.12,56,30,1.0,0.52,1.85,3.8),el(0.12,56,30,1.0,0.52,1.85,3.8),
              el(Math.PI+0.25,30,11,1.0,0.8,0.88,0.7),el(Math.PI-0.25,30,11,1.0,0.8,0.88,0.7)],
     noBarrels:false,bodyDamageMultiplier:1.3,radiusMultiplier:1.35};
 
-  _t['Bastion']={name:'Bastion',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ff3333',
+  _t['Bastion']={name:'Bastion',requiredLevel:45,upgradesFrom:['Colossus'],color:'#ff0044',
     description:'Мегапушка + четыре боковых — крепость с круговой обороной.',
     barrels:[el(0,58,34,1.0,0.5,2.0,4.2),
              el(Math.PI/2+0.1,34,13,1.0,0.78,1.0,0.9),
@@ -212,20 +212,20 @@ Error generating stack: `+e.message+`
     noBarrels:false,bodyDamageMultiplier:1.25,radiusMultiplier:1.38};
 
   // From Cruiser
-  _t['Warship']={name:'Warship',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ff3333',
+  _t['Warship']={name:'Warship',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ff9900',
     description:'Три тяжёлых выровненных ствола — военный корабль огня.',
     barrels:[el(-0.18,52,26,1.0,0.56,1.6,3.0),el(0,54,28,1.0,0.52,1.6,3.2),
              el(0.18,52,26,1.0,0.56,1.6,3.0)],
     noBarrels:false,bodyDamageMultiplier:1.2,radiusMultiplier:1.2};
 
-  _t['Flagship']={name:'Flagship',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ff3333',
+  _t['Flagship']={name:'Flagship',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ff9900',
     description:'Два мегаствола + два средних боковых — флагман флота.',
     barrels:[el(-0.1,54,28,1.0,0.54,1.7,3.2),el(0.1,54,28,1.0,0.54,1.7,3.2),
              el(Math.PI/2+0.2,36,14,1.0,0.76,1.05,1.0),
              el(-Math.PI/2-0.2,36,14,1.0,0.76,1.05,1.0)],
     noBarrels:false,bodyDamageMultiplier:1.15,radiusMultiplier:1.25};
 
-  _t['Ironclad']={name:'Ironclad',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ff3333',
+  _t['Ironclad']={name:'Ironclad',requiredLevel:45,upgradesFrom:['Cruiser'],color:'#ff9900',
     description:'Два ствола + тяжёлая защита по бокам — непробиваемый броненосец.',
     barrels:[el(-0.08,52,26,1.0,0.56,1.55,2.8),el(0.08,52,26,1.0,0.56,1.55,2.8),
              el(Math.PI/2,38,18,1.0,0.72,1.1,1.3),el(-Math.PI/2,38,18,1.0,0.72,1.1,1.3),
@@ -234,7 +234,7 @@ Error generating stack: `+e.message+`
     noBarrels:false,bodyDamageMultiplier:1.5,radiusMultiplier:1.3};
 
   // From Brawler
-  _t['Behemoth']={name:'Behemoth',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ff3333',
+  _t['Behemoth']={name:'Behemoth',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ee0099',
     description:'Огромный передний ствол + четыре боковых — чудовище ближнего боя.',
     barrels:[el(0,52,28,1.0,0.58,1.5,2.8),
              el(Math.PI/2+0.1,38,16,1.0,0.65,1.2,1.4),
@@ -243,14 +243,14 @@ Error generating stack: `+e.message+`
              el(-Math.PI/2-0.4,32,13,1.0,0.67,1.0,1.0)],
     noBarrels:false,bodyDamageMultiplier:2.8,radiusMultiplier:1.25};
 
-  _t['Rampage']={name:'Rampage',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ff3333',
+  _t['Rampage']={name:'Rampage',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ee0099',
     description:'Два передних + три боковых — берсерк, сметающий всё.',
     barrels:[el(-0.12,50,22,1.0,0.62,1.4,2.2),el(0.12,50,22,1.0,0.62,1.4,2.2),
              el(Math.PI/2,36,15,1.0,0.65,1.1,1.2),el(-Math.PI/2,36,15,1.0,0.65,1.1,1.2),
              el(Math.PI,34,14,1.0,0.67,1.0,1.0)],
     noBarrels:false,bodyDamageMultiplier:2.5,radiusMultiplier:1.2};
 
-  _t['Bulwark']={name:'Bulwark',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ff3333',
+  _t['Bulwark']={name:'Bulwark',requiredLevel:45,upgradesFrom:['Brawler'],color:'#ee0099',
     description:'Мощный передний ствол + полная боковая защита — живая крепость.',
     barrels:[el(0,54,30,1.0,0.58,1.6,3.0),
              el(Math.PI/2,40,18,1.0,0.66,1.15,1.35),el(-Math.PI/2,40,18,1.0,0.66,1.15,1.35),
