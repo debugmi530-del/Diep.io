@@ -406,167 +406,169 @@
           }, 1800);
         }
 
-        /* ── SHAPES TAB ─── */
-        var grid = document.getElementById('_adm-grid');
-        SHAPES.forEach(function(s) {
-          var b = document.createElement('button');
-          b.className = '_adm-shape';
-          b.style.background = SHAPE_COLORS[s.type] || '#888';
-          b.textContent = s.label;
-          b.addEventListener('click', function() {
-            window._adminSpawnQueue = window._adminSpawnQueue || [];
-            window._adminSpawnQueue.push(s.type);
-            setStatus('Заспавнено: ' + s.label);
-          });
-          grid.appendChild(b);
-        });
+        /* ── CONTENT BUILD (lazy — runs only on first open) ─── */
+        var _contentBuilt = false;
 
-        /* ── TANKS TAB ─── */
-        var tanksPane = document.getElementById('_adm-pane-tanks');
+        function buildContent() {
+          if (_contentBuilt) return;
+          _contentBuilt = true;
 
-        function spawnNpc(className, level, label) {
-          window._adminNpcQueue = window._adminNpcQueue || [];
-          window._adminNpcQueue.push({ className: className, level: level || 45 });
-          setStatus('Спавн NPC: ' + (label || className) + ' (Lv' + (level||45) + ')');
-        }
-
-        function darken(hex, amt) {
-          var r = Math.max(0, parseInt(hex.slice(1,3),16) - amt);
-          var g = Math.max(0, parseInt(hex.slice(3,5),16) - amt);
-          var b = Math.max(0, parseInt(hex.slice(5,7),16) - amt);
-          return '#' + [r,g,b].map(function(v){return v.toString(16).padStart(2,'0');}).join('');
-        }
-
-        function buildTankTree(nodes, parentColor) {
-          nodes.forEach(function(node) {
-            var col = node.color || parentColor || '#888';
-            var darkCol = darken(col, 40);
-            var wrap = document.createElement('div');
-            wrap.className = '_adm-branch';
-            wrap.style.borderColor = col + '44';
-
-            /* header row */
-            var hd = document.createElement('div');
-            hd.className = '_adm-branch-hd';
-            hd.style.background = darkCol + 'cc';
-
-            var dot = document.createElement('span');
-            dot.style.cssText = 'width:10px;height:10px;border-radius:50%;background:' + col + ';flex-shrink:0;';
-            hd.appendChild(dot);
-
-            var nameEl = document.createElement('span');
-            nameEl.className = '_adm-branch-name';
-            nameEl.textContent = node.branch;
-            hd.appendChild(nameEl);
-
-            if (node.badge) {
-              var badge = document.createElement('span');
-              badge.className = '_adm-badge';
-              badge.textContent = node.badge;
-              hd.appendChild(badge);
-            }
-
-            var lvl = node.tier === 1 ? 1 : node.tier === 2 ? 15 : 30;
-            var spawnBtn = document.createElement('button');
-            spawnBtn.className = '_adm-spawn-btn';
-            spawnBtn.style.background = col;
-            spawnBtn.textContent = '▶ NPC';
-            spawnBtn.title = 'Заспавнить NPC ' + node.branch + ' (Lv' + lvl + ')';
-            spawnBtn.addEventListener('click', function(e) {
-              e.stopPropagation();
-              spawnNpc(node.branch, lvl, node.branch);
+          /* ── SHAPES TAB ─── */
+          var grid = document.getElementById('_adm-grid');
+          SHAPES.forEach(function(s) {
+            var b = document.createElement('button');
+            b.className = '_adm-shape';
+            b.style.background = SHAPE_COLORS[s.type] || '#888';
+            b.textContent = s.label;
+            b.addEventListener('click', function() {
+              window._adminSpawnQueue = window._adminSpawnQueue || [];
+              window._adminSpawnQueue.push(s.type);
+              setStatus('Заспавнено: ' + s.label);
             });
-            hd.appendChild(spawnBtn);
-            wrap.appendChild(hd);
+            grid.appendChild(b);
+          });
 
-            if (node.desc) {
-              var descEl = document.createElement('div');
-              descEl.className = '_adm-branch-desc';
-              descEl.textContent = node.desc;
-              wrap.appendChild(descEl);
-            }
+          /* ── TANKS TAB ─── */
+          var tanksPane = document.getElementById('_adm-pane-tanks');
 
-            /* T3 children with T4 buttons */
-            if (node.children && node.children.length) {
-              var childWrap = document.createElement('div');
-              childWrap.className = '_adm-children';
+          function spawnNpc(className, level, label) {
+            window._adminNpcQueue = window._adminNpcQueue || [];
+            window._adminNpcQueue.push({ className: className, level: level || 45 });
+            setStatus('Спавн NPC: ' + (label || className) + ' (Lv' + (level||45) + ')');
+          }
 
-              if (node.children[0].t4) {
-                /* These ARE T3 nodes */
-                node.children.forEach(function(t3) {
-                  var row = document.createElement('div');
-                  row.className = '_adm-t3-row';
-                  row.style.borderLeft = '3px solid ' + (t3.color || col);
+          function darken(hex, amt) {
+            var r = Math.max(0, parseInt(hex.slice(1,3),16) - amt);
+            var g = Math.max(0, parseInt(hex.slice(3,5),16) - amt);
+            var b = Math.max(0, parseInt(hex.slice(5,7),16) - amt);
+            return '#' + [r,g,b].map(function(v){return v.toString(16).padStart(2,'0');}).join('');
+          }
 
-                  var info = document.createElement('div');
-                  info.className = '_adm-t3-info';
+          function buildTankTree(nodes, parentColor) {
+            nodes.forEach(function(node) {
+              var col = node.color || parentColor || '#888';
+              var darkCol = darken(col, 40);
+              var wrap = document.createElement('div');
+              wrap.className = '_adm-branch';
+              wrap.style.borderColor = col + '44';
 
-                  var nameRow = document.createElement('div');
-                  nameRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
+              var hd = document.createElement('div');
+              hd.className = '_adm-branch-hd';
+              hd.style.background = darkCol + 'cc';
 
-                  var t3name = document.createElement('span');
-                  t3name.className = '_adm-t3-name';
-                  t3name.textContent = t3.branch;
-                  nameRow.appendChild(t3name);
+              var dot = document.createElement('span');
+              dot.style.cssText = 'width:10px;height:10px;border-radius:50%;background:' + col + ';flex-shrink:0;';
+              hd.appendChild(dot);
 
-                  var t3spawn = document.createElement('button');
-                  t3spawn.className = '_adm-spawn-btn';
-                  t3spawn.style.background = t3.color || col;
-                  t3spawn.textContent = '▶ NPC';
-                  t3spawn.addEventListener('click', function() {
-                    spawnNpc(t3.branch, 30, t3.branch);
-                  });
-                  nameRow.appendChild(t3spawn);
-                  info.appendChild(nameRow);
+              var nameEl = document.createElement('span');
+              nameEl.className = '_adm-branch-name';
+              nameEl.textContent = node.branch;
+              hd.appendChild(nameEl);
 
-                  if (t3.desc) {
-                    var t3desc = document.createElement('div');
-                    t3desc.className = '_adm-t3-desc';
-                    t3desc.textContent = t3.desc;
-                    info.appendChild(t3desc);
-                  }
-
-                  /* T4 variant buttons */
-                  if (t3.t4 && t3.t4.length) {
-                    var t4wrap = document.createElement('div');
-                    t4wrap.className = '_adm-t4s';
-                    t3.t4.forEach(function(v) {
-                      var vbtn = document.createElement('button');
-                      vbtn.className = '_adm-t4-btn';
-                      vbtn.textContent = v.label;
-                      vbtn.title = v.name + ': ' + v.desc;
-                      vbtn.addEventListener('click', function() {
-                        spawnNpc(v.name, 45, v.label + ' ' + t3.branch);
-                      });
-                      t4wrap.appendChild(vbtn);
-                    });
-                    info.appendChild(t4wrap);
-                  }
-
-                  row.appendChild(info);
-                  childWrap.appendChild(row);
-                });
-                wrap.appendChild(childWrap);
-              } else {
-                /* These are T2 branches — recurse */
-                buildTankTree(node.children, col);
-                node.children.forEach(function(child) {
-                  childWrap.appendChild(child._el);
-                });
-                wrap.appendChild(childWrap);
+              if (node.badge) {
+                var badge = document.createElement('span');
+                badge.className = '_adm-badge';
+                badge.textContent = node.badge;
+                hd.appendChild(badge);
               }
-            }
 
-            node._el = wrap;
-            tanksPane.appendChild(wrap);
+              var lvl = node.tier === 1 ? 1 : node.tier === 2 ? 15 : 30;
+              var spawnBtn = document.createElement('button');
+              spawnBtn.className = '_adm-spawn-btn';
+              spawnBtn.style.background = col;
+              spawnBtn.textContent = '▶ NPC';
+              spawnBtn.title = 'Заспавнить NPC ' + node.branch + ' (Lv' + lvl + ')';
+              spawnBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                spawnNpc(node.branch, lvl, node.branch);
+              });
+              hd.appendChild(spawnBtn);
+              wrap.appendChild(hd);
+
+              if (node.desc) {
+                var descEl = document.createElement('div');
+                descEl.className = '_adm-branch-desc';
+                descEl.textContent = node.desc;
+                wrap.appendChild(descEl);
+              }
+
+              if (node.children && node.children.length) {
+                var childWrap = document.createElement('div');
+                childWrap.className = '_adm-children';
+
+                if (node.children[0].t4) {
+                  node.children.forEach(function(t3) {
+                    var row = document.createElement('div');
+                    row.className = '_adm-t3-row';
+                    row.style.borderLeft = '3px solid ' + (t3.color || col);
+
+                    var info = document.createElement('div');
+                    info.className = '_adm-t3-info';
+
+                    var nameRow = document.createElement('div');
+                    nameRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
+
+                    var t3name = document.createElement('span');
+                    t3name.className = '_adm-t3-name';
+                    t3name.textContent = t3.branch;
+                    nameRow.appendChild(t3name);
+
+                    var t3spawn = document.createElement('button');
+                    t3spawn.className = '_adm-spawn-btn';
+                    t3spawn.style.background = t3.color || col;
+                    t3spawn.textContent = '▶ NPC';
+                    t3spawn.addEventListener('click', function() {
+                      spawnNpc(t3.branch, 30, t3.branch);
+                    });
+                    nameRow.appendChild(t3spawn);
+                    info.appendChild(nameRow);
+
+                    if (t3.desc) {
+                      var t3desc = document.createElement('div');
+                      t3desc.className = '_adm-t3-desc';
+                      t3desc.textContent = t3.desc;
+                      info.appendChild(t3desc);
+                    }
+
+                    if (t3.t4 && t3.t4.length) {
+                      var t4wrap = document.createElement('div');
+                      t4wrap.className = '_adm-t4s';
+                      t3.t4.forEach(function(v) {
+                        var vbtn = document.createElement('button');
+                        vbtn.className = '_adm-t4-btn';
+                        vbtn.textContent = v.label;
+                        vbtn.title = v.name + ': ' + v.desc;
+                        vbtn.addEventListener('click', function() {
+                          spawnNpc(v.name, 45, v.label + ' ' + t3.branch);
+                        });
+                        t4wrap.appendChild(vbtn);
+                      });
+                      info.appendChild(t4wrap);
+                    }
+
+                    row.appendChild(info);
+                    childWrap.appendChild(row);
+                  });
+                  wrap.appendChild(childWrap);
+                } else {
+                  buildTankTree(node.children, col);
+                  node.children.forEach(function(child) {
+                    childWrap.appendChild(child._el);
+                  });
+                  wrap.appendChild(childWrap);
+                }
+              }
+
+              node._el = wrap;
+              tanksPane.appendChild(wrap);
+            });
+          }
+
+          var basicNode = TANK_TREE[0];
+          basicNode.children.forEach(function(t2node) {
+            buildTankTree([t2node], basicNode.color);
           });
         }
-
-        /* flatten Basic > T2 > T3 structure for display */
-        var basicNode = TANK_TREE[0];
-        basicNode.children.forEach(function(t2node) {
-          buildTankTree([t2node], basicNode.color);
-        });
 
         /* ── TABS ─── */
         var tabs = panel.querySelectorAll('._adm-tab');
@@ -581,7 +583,7 @@
         });
 
         /* ── OPEN / CLOSE ─── */
-        function openPanel()  { panel.style.display = 'flex'; overlay.style.display = 'block'; }
+        function openPanel()  { buildContent(); panel.style.display = 'flex'; overlay.style.display = 'block'; }
         function closePanel() { panel.style.display = 'none';  overlay.style.display = 'none'; }
 
         btn.addEventListener('click', openPanel);
