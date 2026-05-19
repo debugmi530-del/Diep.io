@@ -711,6 +711,10 @@
         btn.id = '_nm-btn';
         btn.textContent = '📝 Имена ботов';
         document.body.appendChild(btn);
+        setInterval(function() {
+          var phase = window._gamePhase || 'menu';
+          btn.style.display = (phase === 'menu') ? '' : 'none';
+        }, 200);
 
         /* ── OVERLAY ── */
         var overlay = document.createElement('div');
