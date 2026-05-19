@@ -743,6 +743,735 @@ Error generating stack: `+e.message+`
   Ty.push(['Brawler','Bulwark']);
 })();
 
+;(function addCustomBranches(){
+  // ── BRANCH 1 T1: Alchemist (level 5, from Basic) ──────────────────────────
+  _t['Alchemist']={name:'Alchemist',requiredLevel:5,upgradesFrom:['Basic'],color:'#e0e0e0',
+    description:'Алхимик — мастер особых снарядов. Ведёт к Раздробителю, Разрывнику и Дальнобойному.',
+    barrels:[el(0,46,14,1.0,1.0,1.0,1.0)]};
+  W1['Alchemist']='Алхимик';
+
+  // ── BRANCH 2 T1: Warlock (level 5, from Basic) ────────────────────────────
+  _t['Warlock']={name:'Warlock',requiredLevel:5,upgradesFrom:['Basic'],color:'#e0e0e0',
+    description:'Чернокнижник — тёмная магия. Ведёт к Вампиру, Цепному и Турельщику.',
+    barrels:[el(0,46,14,1.0,1.0,1.0,1.0)]};
+  W1['Warlock']='Чернокнижник';
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // BRANCH 1 — SPLITTER  (level 15, Раздробитель)
+  // ══════════════════════════════════════════════════════════════════════════
+  _t['Splitter']={name:'Splitter',requiredLevel:15,upgradesFrom:['Alchemist'],color:'#22cc55',
+    isSplitting:true,
+    description:'МЕХАНИКА: Пуля делится в полёте — один выстрел превращается в рой из 8 снарядов за 1 сек.',
+    barrels:[el(-0.30,40,10,1.2,0.80,1.10,0.72,0.12),el(0,44,12,1.2,0.90,1.10,0.82,0.08),el(0.30,40,10,1.2,0.80,1.10,0.72,0.12)]};
+  W1['Splitter']='Раздробитель';
+
+  _t['Fragmenter']={name:'Fragmenter',requiredLevel:30,upgradesFrom:['Splitter'],color:'#ffdd00',
+    isSplitting:true,
+    description:'Пуля дробится на 5 осколков — конус разброса 40°, снаряды уменьшаются но ускоряются.',
+    barrels:[el(-0.35,36,9,1.0,0.75,1.10,0.65,0.15),el(-0.17,40,11,1.0,0.82,1.10,0.72,0.12),
+             el(0,42,12,1.0,0.88,1.10,0.78,0.09),el(0.17,40,11,1.0,0.82,1.10,0.72,0.12),el(0.35,36,9,1.0,0.75,1.10,0.65,0.15)]};
+  W1['Fragmenter']='Фрагментатор';
+
+  _t['ScatterShot']={name:'ScatterShot',requiredLevel:30,upgradesFrom:['Splitter'],color:'#ffdd00',
+    isSplitting:true,
+    description:'Широкий рой — 7 стволов в конусе 160°, покрывает всё пространство перед собой.',
+    barrels:[el(-0.80,32,8,1.1,0.70,1.00,0.58,0.22),el(-0.50,36,10,1.1,0.78,1.00,0.65,0.18),
+             el(-0.20,40,11,1.1,0.85,1.00,0.72,0.12),el(0,42,12,1.1,0.90,1.00,0.78,0.09),
+             el(0.20,40,11,1.1,0.85,1.00,0.72,0.12),el(0.50,36,10,1.1,0.78,1.00,0.65,0.18),el(0.80,32,8,1.1,0.70,1.00,0.58,0.22)]};
+  W1['ScatterShot']='Рассеиватель';
+
+  _t['SplitMirror']={name:'SplitMirror',requiredLevel:30,upgradesFrom:['Splitter'],color:'#ffdd00',
+    isSplitting:true,
+    description:'Зеркальное деление — рой вперёд и рой назад одновременно, двойная засада.',
+    barrels:[el(-0.25,40,10,1.2,0.82,1.10,0.72,0.12),el(0,44,12,1.2,0.90,1.10,0.80,0.08),el(0.25,40,10,1.2,0.82,1.10,0.72,0.12),
+             el(Math.PI-0.20,32,9,1.2,0.78,0.95,0.62,0.12),el(Math.PI,36,11,1.2,0.85,0.95,0.70,0.08),el(Math.PI+0.20,32,9,1.2,0.78,0.95,0.62,0.12)]};
+  W1['SplitMirror']='Зеркало';
+
+  _t['ShardStorm']={name:'ShardStorm',requiredLevel:45,upgradesFrom:['Fragmenter'],color:'#ff8800',
+    isSplitting:true,
+    description:'Буря осколков — 9 стволов в широком конусе, максимальная дробь.',
+    barrels:[el(-0.65,28,7,0.90,0.70,1.0,0.55,0.25),el(-0.45,32,9,0.90,0.76,1.0,0.62,0.20),
+             el(-0.25,36,10,0.90,0.82,1.0,0.68,0.15),el(-0.08,40,11,0.90,0.87,1.0,0.73,0.11),
+             el(0,42,12,0.90,0.90,1.0,0.78,0.09),
+             el(0.08,40,11,0.90,0.87,1.0,0.73,0.11),el(0.25,36,10,0.90,0.82,1.0,0.68,0.15),
+             el(0.45,32,9,0.90,0.76,1.0,0.62,0.20),el(0.65,28,7,0.90,0.70,1.0,0.55,0.25)]};
+  W1['ShardStorm']='Буря осколков';
+
+  _t['FragCore']={name:'FragCore',requiredLevel:45,upgradesFrom:['Fragmenter'],color:'#ff8800',
+    isSplitting:true,isPiercing:true,
+    description:'Ядро-осколок — пробивающий снаряд + взрывная оболочка из 6 дробин по бокам.',
+    barrels:[el(0,52,14,1.50,0.95,1.30,1.40),
+             el(-0.40,34,8,0.80,0.72,1.00,0.60,0.18),el(-0.20,36,9,0.80,0.78,1.00,0.66,0.14),
+             el(0.20,36,9,0.80,0.78,1.00,0.66,0.14),el(0.40,34,8,0.80,0.72,1.00,0.60,0.18),
+             el(Math.PI/2,28,8,1.00,0.70,0.90,0.55),el(-Math.PI/2,28,8,1.00,0.70,0.90,0.55)]};
+  W1['FragCore']='Ядро-осколок';
+
+  _t['FragNova']={name:'FragNova',requiredLevel:45,upgradesFrom:['Fragmenter'],color:'#ff8800',
+    isSplitting:true,
+    description:'Осколочная нова — 8 стволов по кругу 360°, тотальное осколочное покрытие.',
+    barrels:[0,1,2,3,4,5,6,7].map(function(i){return el(i*Math.PI/4,30,8,0.90,0.75,1.00,0.60,0.14);})};
+  W1['FragNova']='Нова-осколок';
+
+  _t['Buckshot']={name:'Buckshot',requiredLevel:45,upgradesFrom:['ScatterShot'],color:'#ff8800',
+    isSplitting:true,
+    description:'Картечь-Икс — 11 стволов в конусе 200°, максимальная ближняя зона покрытия.',
+    barrels:[el(-1.00,26,7,1.00,0.68,0.90,0.52,0.28),el(-0.75,30,8,1.00,0.74,0.90,0.58,0.22),
+             el(-0.50,34,9,1.00,0.80,0.90,0.64,0.18),el(-0.25,38,10,1.00,0.85,0.90,0.70,0.14),
+             el(-0.08,40,11,1.00,0.88,0.90,0.74,0.11),el(0,42,12,1.00,0.90,0.90,0.77,0.09),
+             el(0.08,40,11,1.00,0.88,0.90,0.74,0.11),el(0.25,38,10,1.00,0.85,0.90,0.70,0.14),
+             el(0.50,34,9,1.00,0.80,0.90,0.64,0.18),el(0.75,30,8,1.00,0.74,0.90,0.58,0.22),
+             el(1.00,26,7,1.00,0.68,0.90,0.52,0.28)]};
+  W1['Buckshot']='Картечь-Икс';
+
+  _t['ScatterBomb']={name:'ScatterBomb',requiredLevel:45,upgradesFrom:['ScatterShot'],color:'#ff8800',
+    isSplitting:true,
+    description:'Рассеивающая бомба — 5 широких стволов вперёд + 4 боковых, охват 270°.',
+    barrels:[el(-0.50,36,12,1.00,0.82,0.95,0.75,0.16),el(-0.20,40,13,1.00,0.88,0.95,0.82,0.12),
+             el(0,44,14,1.00,0.92,0.95,0.88,0.09),el(0.20,40,13,1.00,0.88,0.95,0.82,0.12),
+             el(0.50,36,12,1.00,0.82,0.95,0.75,0.16),
+             el(Math.PI/2,32,11,1.00,0.78,0.90,0.70),el(-Math.PI/2,32,11,1.00,0.78,0.90,0.70),
+             el(Math.PI/2+0.35,28,9,1.00,0.74,0.88,0.65),el(-Math.PI/2-0.35,28,9,1.00,0.74,0.88,0.65)]};
+  W1['ScatterBomb']='Рассеивающая бомба';
+
+  _t['CloudBurst']={name:'CloudBurst',requiredLevel:45,upgradesFrom:['ScatterShot'],color:'#ff8800',
+    isSplitting:true,
+    description:'Облачный взрыв — 3 вперёд + 5 по бокам и назад, тотальное облако дроби.',
+    barrels:[el(-0.30,42,13,1.00,0.86,0.95,0.80,0.13),el(0,46,15,1.00,0.90,0.95,0.88,0.09),el(0.30,42,13,1.00,0.86,0.95,0.80,0.13),
+             el(-0.50,36,10,1.10,0.80,0.90,0.70,0.18),el(0.50,36,10,1.10,0.80,0.90,0.70,0.18),
+             el(2*Math.PI/3,28,9,1.00,0.74,0.88,0.62),el(Math.PI,28,9,1.00,0.74,0.88,0.62),el(-2*Math.PI/3,28,9,1.00,0.74,0.88,0.62)]};
+  W1['CloudBurst']='Облачный взрыв';
+
+  _t['DualFrag']={name:'DualFrag',requiredLevel:45,upgradesFrom:['SplitMirror'],color:'#ff8800',
+    isSplitting:true,
+    description:'Двойная фрагм. — 5 стволов вперёд + 3 назад, одновременный рой с обеих сторон.',
+    barrels:[el(-0.30,40,10,1.00,0.80,1.05,0.70,0.14),el(-0.12,44,12,1.00,0.88,1.05,0.78,0.10),
+             el(0,46,13,1.00,0.92,1.05,0.84,0.08),el(0.12,44,12,1.00,0.88,1.05,0.78,0.10),el(0.30,40,10,1.00,0.80,1.05,0.70,0.14),
+             el(Math.PI-0.25,32,9,1.00,0.76,0.92,0.62,0.12),el(Math.PI,36,11,1.00,0.84,0.92,0.70,0.08),el(Math.PI+0.25,32,9,1.00,0.76,0.92,0.62,0.12)]};
+  W1['DualFrag']='Двойная фрагм.';
+
+  _t['OmniFrag']={name:'OmniFrag',requiredLevel:45,upgradesFrom:['SplitMirror'],color:'#ff8800',
+    isSplitting:true,
+    description:'Омни-фрагм. — рои во всех 4 направлениях, полная зона покрытия 360°.',
+    barrels:[el(-0.20,38,10,1.10,0.82,1.00,0.72,0.12),el(0,42,12,1.10,0.88,1.00,0.78,0.09),el(0.20,38,10,1.10,0.82,1.00,0.72,0.12),
+             el(Math.PI/2-0.15,32,9,1.10,0.78,0.95,0.65,0.12),el(Math.PI/2,36,10,1.10,0.84,0.95,0.72,0.09),el(Math.PI/2+0.15,32,9,1.10,0.78,0.95,0.65,0.12),
+             el(Math.PI-0.20,30,9,1.10,0.76,0.92,0.62,0.12),el(Math.PI,34,10,1.10,0.82,0.92,0.68,0.09),el(Math.PI+0.20,30,9,1.10,0.76,0.92,0.62,0.12)]};
+  W1['OmniFrag']='Омни-фрагм.';
+
+  _t['CrossFrag']={name:'CrossFrag',requiredLevel:45,upgradesFrom:['SplitMirror'],color:'#ff8800',
+    isSplitting:true,
+    description:'Крест-фрагм. — широкий передний рой + 2 боковых залпа, три мощных потока.',
+    barrels:[el(-0.35,36,9,1.00,0.78,1.00,0.68,0.16),el(-0.15,40,11,1.00,0.85,1.00,0.75,0.12),
+             el(0,44,13,1.00,0.92,1.00,0.82,0.09),el(0.15,40,11,1.00,0.85,1.00,0.75,0.12),el(0.35,36,9,1.00,0.78,1.00,0.68,0.16),
+             el(Math.PI/2,36,12,1.20,0.82,0.95,0.72),el(-Math.PI/2,36,12,1.20,0.82,0.95,0.72)]};
+  W1['CrossFrag']='Крест-фрагм.';
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // BRANCH 1 — DETONATOR  (level 15, Разрывник)
+  // ══════════════════════════════════════════════════════════════════════════
+  _t['Detonator']={name:'Detonator',requiredLevel:15,upgradesFrom:['Alchemist'],color:'#22cc55',
+    description:'МЕХАНИКА: Липкие снаряды — прилипают к врагу и взрываются через 1.5 сек. Можно наклеить несколько.',
+    barrels:[Object.assign(el(-0.15,46,16,1.40,1.30,0.80,1.20),{isTrap:true}),
+             Object.assign(el(0.15,46,16,1.40,1.30,0.80,1.20),{isTrap:true})]};
+  W1['Detonator']='Разрывник';
+
+  _t['Primer']={name:'Primer',requiredLevel:30,upgradesFrom:['Detonator'],color:'#ffdd00',
+    description:'Капсюльный — 4 быстрых малых заряда-липучки, стрельба короткими очередями.',
+    barrels:[Object.assign(el(-0.25,40,12,1.20,1.10,0.78,1.00),{isTrap:true}),
+             Object.assign(el(-0.08,44,13,1.20,1.15,0.78,1.05),{isTrap:true}),
+             Object.assign(el(0.08,44,13,1.20,1.15,0.78,1.05),{isTrap:true}),
+             Object.assign(el(0.25,40,12,1.20,1.10,0.78,1.00),{isTrap:true})]};
+  W1['Primer']='Капсюль';
+
+  _t['Bombard']={name:'Bombard',requiredLevel:30,upgradesFrom:['Detonator'],color:'#ffdd00',
+    description:'Бомбардир — 2 огромных заряда с чудовищным взрывом при контакте.',
+    barrels:[Object.assign(el(-0.12,50,24,1.80,1.80,0.72,2.20),{isTrap:true}),
+             Object.assign(el(0.12,50,24,1.80,1.80,0.72,2.20),{isTrap:true})]};
+  W1['Bombard']='Бомбардир';
+
+  _t['Minelayer']={name:'Minelayer',requiredLevel:30,upgradesFrom:['Detonator'],color:'#ffdd00',
+    description:'Минёр — 3 мины по 360°, расставляет минное заграждение по всей зоне боя.',
+    barrels:[Object.assign(el(0,44,15,1.50,1.35,0.76,1.30),{isTrap:true}),
+             Object.assign(el(2*Math.PI/3,42,14,1.50,1.28,0.76,1.20),{isTrap:true}),
+             Object.assign(el(-2*Math.PI/3,42,14,1.50,1.28,0.76,1.20),{isTrap:true})]};
+  W1['Minelayer']='Минёр';
+
+  _t['ChargeBurst']={name:'ChargeBurst',requiredLevel:45,upgradesFrom:['Primer'],color:'#ff8800',
+    description:'Очередь зарядов — 6 быстрых зарядов-липучек в широком конусе.',
+    barrels:[Object.assign(el(-0.35,36,10,1.00,1.05,0.76,0.90),{isTrap:true}),
+             Object.assign(el(-0.14,40,11,1.00,1.10,0.76,0.95),{isTrap:true}),
+             Object.assign(el(0,42,12,1.00,1.15,0.76,1.00),{isTrap:true}),
+             Object.assign(el(0.14,40,11,1.00,1.10,0.76,0.95),{isTrap:true}),
+             Object.assign(el(0.35,36,10,1.00,1.05,0.76,0.90),{isTrap:true}),
+             Object.assign(el(Math.PI,32,10,1.20,1.00,0.72,0.80),{isTrap:true})]};
+  W1['ChargeBurst']='Очередь зарядов';
+
+  _t['StickyFlak']={name:'StickyFlak',requiredLevel:45,upgradesFrom:['Primer'],color:'#ff8800',
+    description:'Зенитные липучки — 4 вперёд + 2 боковых, перекрёстная засада из липких зарядов.',
+    barrels:[Object.assign(el(-0.22,38,11,1.10,1.08,0.76,0.92),{isTrap:true}),
+             Object.assign(el(-0.07,42,12,1.10,1.12,0.76,0.96),{isTrap:true}),
+             Object.assign(el(0.07,42,12,1.10,1.12,0.76,0.96),{isTrap:true}),
+             Object.assign(el(0.22,38,11,1.10,1.08,0.76,0.92),{isTrap:true}),
+             Object.assign(el(Math.PI/2+0.10,34,11,1.30,1.05,0.72,0.88),{isTrap:true}),
+             Object.assign(el(-Math.PI/2-0.10,34,11,1.30,1.05,0.72,0.88),{isTrap:true})]};
+  W1['StickyFlak']='Зенитная липучка';
+
+  _t['QuickFuse']={name:'QuickFuse',requiredLevel:45,upgradesFrom:['Primer'],color:'#ff8800',
+    description:'Быстрый взрыватель — 3 липких заряда с быстрой перезарядкой.',
+    barrels:[Object.assign(el(-0.12,44,13,0.80,1.20,0.78,1.10),{isTrap:true}),
+             Object.assign(el(0,48,15,0.80,1.30,0.78,1.20),{isTrap:true}),
+             Object.assign(el(0.12,44,13,0.80,1.20,0.78,1.10),{isTrap:true})]};
+  W1['QuickFuse']='Быстрый взрыватель';
+
+  _t['MegaBomb']={name:'MegaBomb',requiredLevel:45,upgradesFrom:['Bombard'],color:'#ff8800',
+    description:'Мегабомба — один колоссальный заряд. Огромный радиус взрыва, максимальный урон.',
+    barrels:[Object.assign(el(0,56,32,2.20,2.50,0.65,3.50),{isTrap:true})]};
+  W1['MegaBomb']='Мегабомба';
+
+  _t['DoubleBomb']={name:'DoubleBomb',requiredLevel:45,upgradesFrom:['Bombard'],color:'#ff8800',
+    description:'Двойная бомба — два огромных заряда + два боковых средних, перекрёстный взрыв.',
+    barrels:[Object.assign(el(-0.10,52,26,1.80,2.00,0.68,2.50),{isTrap:true}),
+             Object.assign(el(0.10,52,26,1.80,2.00,0.68,2.50),{isTrap:true}),
+             Object.assign(el(Math.PI/2,36,14,1.40,1.30,0.70,1.20),{isTrap:true}),
+             Object.assign(el(-Math.PI/2,36,14,1.40,1.30,0.70,1.20),{isTrap:true})]};
+  W1['DoubleBomb']='Двойная бомба';
+
+  _t['BombRain']={name:'BombRain',requiredLevel:45,upgradesFrom:['Bombard'],color:'#ff8800',
+    description:'Бомбовый дождь — четыре заряда по 4 сторонам, бомбардировка 360°.',
+    barrels:[Object.assign(el(0,50,22,1.60,1.80,0.68,2.20),{isTrap:true}),
+             Object.assign(el(Math.PI/2,48,20,1.60,1.70,0.68,2.00),{isTrap:true}),
+             Object.assign(el(Math.PI,50,22,1.60,1.80,0.68,2.20),{isTrap:true}),
+             Object.assign(el(-Math.PI/2,48,20,1.60,1.70,0.68,2.00),{isTrap:true})]};
+  W1['BombRain']='Бомбовый дождь';
+
+  _t['MineBelt']={name:'MineBelt',requiredLevel:45,upgradesFrom:['Minelayer'],color:'#ff8800',
+    description:'Минный пояс — 6 мин по 360°, создаёт непроходимое заграждение вокруг себя.',
+    barrels:[0,1,2,3,4,5].map(function(i){return Object.assign(el(i*Math.PI/3,42,14,1.40,1.30,0.72,1.20),{isTrap:true});})};
+  W1['MineBelt']='Минный пояс';
+
+  _t['SuperMine']={name:'SuperMine',requiredLevel:45,upgradesFrom:['Minelayer'],color:'#ff8800',
+    description:'Супермина — 3 огромных заряда по кругу + мощный броневой корпус для прикрытия.',
+    radiusMultiplier:1.20,bodyDamageMultiplier:2.00,
+    barrels:[Object.assign(el(0,52,22,1.60,1.80,0.70,2.00),{isTrap:true}),
+             Object.assign(el(2*Math.PI/3,50,20,1.60,1.70,0.70,1.80),{isTrap:true}),
+             Object.assign(el(-2*Math.PI/3,50,20,1.60,1.70,0.70,1.80),{isTrap:true})]};
+  W1['SuperMine']='Супермина';
+
+  _t['InvisibleMiner']={name:'InvisibleMiner',requiredLevel:45,upgradesFrom:['Minelayer'],color:'#ff8800',
+    isInvis:true,
+    description:'МЕХАНИКА: Невидимый минёр — расставляет мины незаметно, враги не видят угрозы.',
+    barrels:[Object.assign(el(0,46,16,1.50,1.40,0.72,1.30),{isTrap:true}),
+             Object.assign(el(2*Math.PI/3,44,14,1.50,1.30,0.72,1.20),{isTrap:true}),
+             Object.assign(el(-2*Math.PI/3,44,14,1.50,1.30,0.72,1.20),{isTrap:true}),
+             Object.assign(el(Math.PI,42,14,1.50,1.25,0.72,1.10),{isTrap:true})]};
+  W1['InvisibleMiner']='Невидимый минёр';
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // BRANCH 1 — LONGSHOT  (level 15, Дальнобойный — моя идея)
+  // ══════════════════════════════════════════════════════════════════════════
+  _t['Longshot']={name:'Longshot',requiredLevel:15,upgradesFrom:['Alchemist'],color:'#22cc55',
+    isRangeBoost:true,
+    description:'МЕХАНИКА (моя идея): Урон растёт с дистанцией полёта пули. Дальние враги получают в 3× больше.',
+    barrels:[el(0,58,10,2.00,0.80,1.80,1.20)]};
+  W1['Longshot']='Дальнобойный';
+
+  _t['Marksman']={name:'Marksman',requiredLevel:30,upgradesFrom:['Longshot'],color:'#ffdd00',
+    isRangeBoost:true,
+    description:'Меткий стрелок — сверхдальний снайпер, урон нарастает до максимума на большой дистанции.',
+    barrels:[el(0,76,8,2.80,0.62,2.20,1.40)]};
+  W1['Marksman']='Меткий стрелок';
+
+  _t['HeavyCannon']={name:'HeavyCannon',requiredLevel:30,upgradesFrom:['Longshot'],color:'#ffdd00',
+    isRangeBoost:true,
+    description:'Тяжёлая пушка — медленный колоссальный снаряд. Чем дальше — тем чудовищнее урон.',
+    barrels:[el(0,62,22,2.50,1.60,1.20,2.00)]};
+  W1['HeavyCannon']='Тяжёлая пушка';
+
+  _t['BurstRifle']={name:'BurstRifle',requiredLevel:30,upgradesFrom:['Longshot'],color:'#ffdd00',
+    isRangeBoost:true,
+    description:'Очередная винтовка — тройная очередь с нарастающим уроном от дистанции.',
+    barrels:[el(0,62,9,1.20,0.72,1.80,1.10),el(0,58,9,1.50,0.70,1.80,1.05),el(0,54,9,1.80,0.68,1.80,1.00)]};
+  W1['BurstRifle']='Очередная винтовка';
+
+  _t['LongRangeX']={name:'LongRangeX',requiredLevel:45,upgradesFrom:['Marksman'],color:'#ff8800',
+    isRangeBoost:true,
+    description:'Дальнобой-Икс — запредельная дальность, пуля ускоряется в полёте.',
+    barrels:[el(0,92,7,3.50,0.52,2.60,1.60)]};
+  W1['LongRangeX']='Дальнобой-Икс';
+
+  _t['SniperX']={name:'SniperX',requiredLevel:45,upgradesFrom:['Marksman'],color:'#ff8800',
+    isRangeBoost:true,isPiercing:true,
+    description:'Снайпер-Икс — пробивающий дальнобойный выстрел. Урон × расстояние × пробитие.',
+    barrels:[el(0,84,9,3.20,0.58,2.40,1.50)]};
+  W1['SniperX']='Снайпер-Икс';
+
+  _t['TwinRifle']={name:'TwinRifle',requiredLevel:45,upgradesFrom:['Marksman'],color:'#ff8800',
+    isRangeBoost:true,
+    description:'Двойная дальнобойная — два параллельных ствола, двойной урон от дистанции.',
+    barrels:[el(-0.06,78,8,3.00,0.58,2.20,1.40),el(0.06,78,8,3.00,0.58,2.20,1.40)]};
+  W1['TwinRifle']='Двойная дальнобойная';
+
+  _t['HeavyShell']={name:'HeavyShell',requiredLevel:45,upgradesFrom:['HeavyCannon'],color:'#ff8800',
+    isRangeBoost:true,isPiercing:true,
+    description:'Тяжёлый снаряд — колоссальный медленный снаряд, урон множится с расстоянием.',
+    barrels:[el(0,66,28,3.00,2.00,1.00,2.80)]};
+  W1['HeavyShell']='Тяжёлый снаряд';
+
+  _t['CannonBarrage']={name:'CannonBarrage',requiredLevel:45,upgradesFrom:['HeavyCannon'],color:'#ff8800',
+    isRangeBoost:true,
+    description:'Пушечный шквал — три тяжёлых снаряда в залп, нарастающий дальний урон.',
+    barrels:[el(-0.12,60,20,2.20,1.50,1.15,1.80),el(0,64,22,2.50,1.60,1.15,2.00),el(0.12,60,20,2.20,1.50,1.15,1.80)]};
+  W1['CannonBarrage']='Пушечный шквал';
+
+  _t['SiegeGun']={name:'SiegeGun',requiredLevel:45,upgradesFrom:['HeavyCannon'],color:'#ff8800',
+    isRangeBoost:true,
+    description:'Осадное орудие — широкий снаряд вперёд + 2 фланговых, зона подавления огнём.',
+    barrels:[el(0,62,24,2.50,1.70,1.10,2.20),el(Math.PI/2,40,14,1.50,1.10,0.90,1.00),el(-Math.PI/2,40,14,1.50,1.10,0.90,1.00)]};
+  W1['SiegeGun']='Осадное орудие';
+
+  _t['RapidBurst']={name:'RapidBurst',requiredLevel:45,upgradesFrom:['BurstRifle'],color:'#ff8800',
+    isRangeBoost:true,
+    description:'Скоростная очередь — 5 стволов убывающей длины, непрерывный огонь с нарастающим уроном.',
+    barrels:[el(0,72,8,0.80,0.65,2.00,1.10),el(0,66,8,1.00,0.64,2.00,1.08),el(0,60,8,1.20,0.63,2.00,1.06),el(0,54,8,1.40,0.62,2.00,1.04),el(0,48,8,1.60,0.61,2.00,1.02)]};
+  W1['RapidBurst']='Скоростная очередь';
+
+  _t['TriSnipe']={name:'TriSnipe',requiredLevel:45,upgradesFrom:['BurstRifle'],color:'#ff8800',
+    isRangeBoost:true,
+    description:'Тройной снайпер — 3 ствола треугольником, каждый с нарастающим уроном от расстояния.',
+    barrels:[el(0,70,9,2.50,0.62,2.00,1.30),el(2*Math.PI/3,68,8,2.50,0.60,2.00,1.25),el(-2*Math.PI/3,68,8,2.50,0.60,2.00,1.25)]};
+  W1['TriSnipe']='Тройной снайпер';
+
+  _t['GaussRifle']={name:'GaussRifle',requiredLevel:45,upgradesFrom:['BurstRifle'],color:'#ff8800',
+    isRangeBoost:true,isLaser:true,
+    description:'МЕХАНИКА: Гаусс-винтовка — лазерный луч нарастающего урона, бьёт на любое расстояние.',
+    barrels:[el(0,80,8,3.50,0.55,3.00,1.60)]};
+  W1['GaussRifle']='Гаусс-винтовка';
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // BRANCH 2 — VAMPIRE  (level 15, Вампир)
+  // ══════════════════════════════════════════════════════════════════════════
+  _t['Vampire']={name:'Vampire',requiredLevel:15,upgradesFrom:['Warlock'],color:'#22cc55',
+    isVampire:true,bodyDamageMultiplier:1.30,
+    description:'МЕХАНИКА: Вампиризм — каждый выстрел восстанавливает HP. Меньше HP = быстрее регенерация.',
+    barrels:[el(0,50,14,1.40,1.00,1.10,1.10)]};
+  W1['Vampire']='Вампир';
+
+  _t['BloodHunter']={name:'BloodHunter',requiredLevel:30,upgradesFrom:['Vampire'],color:'#ffdd00',
+    isVampire:true,bodyDamageMultiplier:1.60,
+    description:'Охотник крови — агрессивный вампир, быстрая перезарядка + высокий урон корпусом.',
+    barrels:[el(-0.10,52,14,1.20,1.05,1.15,1.20),el(0.10,52,14,1.20,1.05,1.15,1.20)]};
+  W1['BloodHunter']='Охотник крови';
+
+  _t['SoulDrain']={name:'SoulDrain',requiredLevel:30,upgradesFrom:['Vampire'],color:'#ffdd00',
+    isVampire:true,isDroneShooter:true,droneHits:5,radiusMultiplier:1.10,
+    description:'МЕХАНИКА: Высасывание душ — 3 вампирических дрона-охотника поглощают HP врагов автономно.',
+    barrels:[el(0,34,10,0.85,1.20,1.10,0.82),el(2.09,34,10,0.85,1.20,1.10,0.82),el(-2.09,34,10,0.85,1.20,1.10,0.82)]};
+  W1['SoulDrain']='Высасывание душ';
+
+  _t['Revenant']={name:'Revenant',requiredLevel:30,upgradesFrom:['Vampire'],color:'#ffdd00',
+    isVampire:true,isInvis:true,bodyDamageMultiplier:1.40,
+    description:'МЕХАНИКА: Ревенант — невидим + вампиризм. Восстанавливает HP из засады.',
+    barrels:[el(0,60,11,2.00,0.78,1.40,1.50)]};
+  W1['Revenant']='Ревенант';
+
+  _t['Bloodlust']={name:'Bloodlust',requiredLevel:45,upgradesFrom:['BloodHunter'],color:'#ff8800',
+    isVampire:true,bodyDamageMultiplier:1.80,
+    description:'Жажда крови — 4 ствола крестом, вампирический огонь во все стороны одновременно.',
+    barrels:[el(0,54,14,1.10,1.05,1.15,1.20),el(Math.PI/2,48,12,1.20,1.00,1.10,1.00),
+             el(Math.PI,54,14,1.10,1.05,1.15,1.20),el(-Math.PI/2,48,12,1.20,1.00,1.10,1.00)]};
+  W1['Bloodlust']='Жажда крови';
+
+  _t['DarkFangs']={name:'DarkFangs',requiredLevel:45,upgradesFrom:['BloodHunter'],color:'#ff8800',
+    isVampire:true,bodyDamageMultiplier:2.50,
+    description:'Тёмные клыки — два длинных вампирических ствола + высокий урон тараном.',
+    barrels:[el(-0.12,56,15,1.20,1.10,1.20,1.30),el(0.12,56,15,1.20,1.10,1.20,1.30)]};
+  W1['DarkFangs']='Тёмные клыки';
+
+  _t['VampireX']={name:'VampireX',requiredLevel:45,upgradesFrom:['BloodHunter'],color:'#ff8800',
+    isVampire:true,isPiercing:true,bodyDamageMultiplier:2.00,
+    description:'МЕХАНИКА: Вампир-Икс — пробивающий вампирический выстрел, поглощает HP от нескольких врагов.',
+    barrels:[el(0,62,18,2.00,1.20,1.40,1.80)]};
+  W1['VampireX']='Вампир-Икс';
+
+  _t['SoulReaper']={name:'SoulReaper',requiredLevel:45,upgradesFrom:['SoulDrain'],color:'#ff8800',
+    isVampire:true,isDroneShooter:true,droneHits:7,radiusMultiplier:1.20,
+    description:'Пожиратель душ — 5 вампирических дронов-охотников атакуют автономно.',
+    barrels:[0,1,2,3,4].map(function(i){return el(i*2*Math.PI/5,32,10,0.78,1.25,1.10,0.85);})};
+  W1['SoulReaper']='Пожиратель душ';
+
+  _t['EclipseDrain']={name:'EclipseDrain',requiredLevel:45,upgradesFrom:['SoulDrain'],color:'#ff8800',
+    isVampire:true,isDroneShooter:true,droneHits:8,isInvis:true,radiusMultiplier:1.15,
+    description:'МЕХАНИКА: Затмение-поглощение — невидимые вампирические дроны атакуют незаметно.',
+    barrels:[el(0,38,12,0.80,1.30,1.10,0.88),el(2.09,38,12,0.80,1.30,1.10,0.88),el(-2.09,38,12,0.80,1.30,1.10,0.88)]};
+  W1['EclipseDrain']='Затмение-поглощение';
+
+  _t['VoidDrain']={name:'VoidDrain',requiredLevel:45,upgradesFrom:['SoulDrain'],color:'#ff8800',
+    isVampire:true,isDroneShooter:true,droneHits:10,radiusMultiplier:1.25,
+    description:'Поглощение пустоты — 6 дронов по кругу + вампиризм, тотальный захват зоны.',
+    barrels:[0,1,2,3,4,5].map(function(i){return el(i*Math.PI/3,36,11,0.72,1.35,1.10,0.90);})};
+  W1['VoidDrain']='Поглощение пустоты';
+
+  _t['Wraith']={name:'Wraith',requiredLevel:45,upgradesFrom:['Revenant'],color:'#ff8800',
+    isVampire:true,isInvis:true,
+    description:'Призрак — невидимый вампир с двумя стволами, атакует из тени.',
+    barrels:[el(-0.10,60,10,1.80,0.80,1.50,1.60),el(0.10,60,10,1.80,0.80,1.50,1.60)]};
+  W1['Wraith']='Призрак';
+
+  _t['NightShade']={name:'NightShade',requiredLevel:45,upgradesFrom:['Revenant'],color:'#ff8800',
+    isVampire:true,isInvis:true,
+    description:'Ночная тень — невидимый вампир-снайпер, один чёрный выстрел из темноты.',
+    barrels:[el(0,74,10,2.50,0.68,1.80,2.00)]};
+  W1['NightShade']='Ночная тень';
+
+  _t['DarkReaper']={name:'DarkReaper',requiredLevel:45,upgradesFrom:['Revenant'],color:'#ff8800',
+    isVampire:true,isInvis:true,bodyDamageMultiplier:2.50,
+    description:'МЕХАНИКА: Тёмный жнец — невидим + огромный урон тараном + вампирический выстрел.',
+    barrels:[el(0,54,16,2.00,0.90,1.30,1.50)]};
+  W1['DarkReaper']='Тёмный жнец';
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // BRANCH 2 — CHAINSHOT  (level 15, Цепной)
+  // ══════════════════════════════════════════════════════════════════════════
+  _t['Chainshot']={name:'Chainshot',requiredLevel:15,upgradesFrom:['Warlock'],color:'#22cc55',
+    isChain:true,isHoming:true,
+    description:'МЕХАНИКА: Цепной — пуля прыгает на ближайшего врага (до 3 прыжков). Каждый прыжок слабее.',
+    barrels:[el(0,48,13,1.60,1.00,1.40,1.00)]};
+  W1['Chainshot']='Цепной';
+
+  _t['ArcaneBolt']={name:'ArcaneBolt',requiredLevel:30,upgradesFrom:['Chainshot'],color:'#ffdd00',
+    isChain:true,isHoming:true,
+    description:'МЕХАНИКА: Аркановый разряд — 2 цепных снаряда одновременно, поражают до 6 врагов.',
+    barrels:[el(-0.10,50,13,1.50,1.05,1.40,1.00),el(0.10,50,13,1.50,1.05,1.40,1.00)]};
+  W1['ArcaneBolt']='Аркановый разряд';
+
+  _t['Thunderchain']={name:'Thunderchain',requiredLevel:30,upgradesFrom:['Chainshot'],color:'#ffdd00',
+    isChain:true,isHoming:true,
+    description:'МЕХАНИКА: Громовая цепь — широкий снаряд прыгает широко, покрывает большую зону.',
+    barrels:[el(-0.20,46,16,1.40,1.20,1.30,1.20),el(0,50,18,1.40,1.25,1.30,1.30),el(0.20,46,16,1.40,1.20,1.30,1.20)]};
+  W1['Thunderchain']='Громовая цепь';
+
+  _t['LightningRod']={name:'LightningRod',requiredLevel:30,upgradesFrom:['Chainshot'],color:'#ffdd00',
+    isChain:true,isHoming:true,isLaser:true,
+    description:'МЕХАНИКА: Молниеотвод — лазерный цепной удар, мгновенно поражает 3 врага подряд.',
+    barrels:[el(0,60,9,2.20,0.72,2.50,1.30)]};
+  W1['LightningRod']='Молниеотвод';
+
+  _t['ArcaneStorm']={name:'ArcaneStorm',requiredLevel:45,upgradesFrom:['ArcaneBolt'],color:'#ff8800',
+    isChain:true,isHoming:true,
+    description:'Аркановый шторм — 4 цепных снаряда, 12 суммарных прыжков, магический шквал.',
+    barrels:[el(-0.25,48,12,1.40,1.00,1.30,0.95),el(-0.08,52,13,1.40,1.05,1.30,1.00),
+             el(0.08,52,13,1.40,1.05,1.30,1.00),el(0.25,48,12,1.40,1.00,1.30,0.95)]};
+  W1['ArcaneStorm']='Аркановый шторм';
+
+  _t['ChainBlast']={name:'ChainBlast',requiredLevel:45,upgradesFrom:['ArcaneBolt'],color:'#ff8800',
+    isChain:true,isHoming:true,
+    description:'Цепной взрыв — 3 снаряда вперёд + 2 назад, покрывает 270° цепными ударами.',
+    barrels:[el(0,52,14,1.30,1.05,1.35,1.00),el(Math.PI/2,46,12,1.50,1.00,1.25,0.90),
+             el(-Math.PI/2,46,12,1.50,1.00,1.25,0.90),el(Math.PI,44,11,1.60,0.95,1.20,0.88)]};
+  W1['ChainBlast']='Цепной взрыв';
+
+  _t['ArcCaster']={name:'ArcCaster',requiredLevel:45,upgradesFrom:['ArcaneBolt'],color:'#ff8800',
+    isChain:true,isHoming:true,isDroneShooter:true,droneHits:5,radiusMultiplier:1.10,
+    description:'МЕХАНИКА: Дуговой маг — 3 цепных дрона автономно прыгают между врагами.',
+    barrels:[el(0,34,11,0.82,1.20,1.10,0.80),el(2.09,34,11,0.82,1.20,1.10,0.80),el(-2.09,34,11,0.82,1.20,1.10,0.80)]};
+  W1['ArcCaster']='Дуговой маг';
+
+  _t['Thunderclap']={name:'Thunderclap',requiredLevel:45,upgradesFrom:['Thunderchain'],color:'#ff8800',
+    isChain:true,isHoming:true,
+    description:'Удар грома — широкий снаряд + 4 боковых, цепная молния в 5 направлениях.',
+    barrels:[el(0,54,20,1.60,1.30,1.30,1.40),el(Math.PI/3,38,12,1.40,1.05,1.20,1.00),
+             el(-Math.PI/3,38,12,1.40,1.05,1.20,1.00),el(2*Math.PI/3,36,11,1.60,1.00,1.15,0.88),
+             el(-2*Math.PI/3,36,11,1.60,1.00,1.15,0.88)]};
+  W1['Thunderclap']='Удар грома';
+
+  _t['StormSurge']={name:'StormSurge',requiredLevel:45,upgradesFrom:['Thunderchain'],color:'#ff8800',
+    isChain:true,isHoming:true,
+    description:'Штормовая волна — 6 широких снарядов по 360°, цепная буря вокруг.',
+    barrels:[0,1,2,3,4,5].map(function(i){return el(i*Math.PI/3,44,16,1.40,1.15,1.25,1.10);})};
+  W1['StormSurge']='Штормовая волна';
+
+  _t['Maelstrom']={name:'Maelstrom',requiredLevel:45,upgradesFrom:['Thunderchain'],color:'#ff8800',
+    isChain:true,isHoming:true,
+    description:'Мальстрём — 3 тяжёлых снаряда, каждый прыгает до 5 врагов, вихрь цепей.',
+    barrels:[el(0,52,22,1.80,1.40,1.20,1.60),el(2.09,50,20,1.80,1.35,1.20,1.50),el(-2.09,50,20,1.80,1.35,1.20,1.50)]};
+  W1['Maelstrom']='Мальстрём';
+
+  _t['PlasmaChain']={name:'PlasmaChain',requiredLevel:45,upgradesFrom:['LightningRod'],color:'#ff8800',
+    isChain:true,isHoming:true,isLaser:true,
+    description:'Плазменная цепь — лазерный цепной луч + 2 боковых разряда, 3 мгновенные цели.',
+    barrels:[el(0,68,9,2.50,0.68,2.80,1.50),el(Math.PI/3,42,8,2.00,0.65,2.50,1.10),el(-Math.PI/3,42,8,2.00,0.65,2.50,1.10)]};
+  W1['PlasmaChain']='Плазменная цепь';
+
+  _t['BallLightning']={name:'BallLightning',requiredLevel:45,upgradesFrom:['LightningRod'],color:'#ff8800',
+    isChain:true,isHoming:true,isRocket:true,
+    description:'МЕХАНИКА: Шаровая молния — самонаводящийся снаряд преследует и поражает группы врагов.',
+    barrels:[el(0,50,22,3.00,1.40,2.00,2.20)]};
+  W1['BallLightning']='Шаровая молния';
+
+  _t['VoltStrike']={name:'VoltStrike',requiredLevel:45,upgradesFrom:['LightningRod'],color:'#ff8800',
+    isChain:true,isHoming:true,isLaser:true,
+    description:'Вольтовый удар — 3 лазерных цепных луча одновременно, мгновенная гибель группы.',
+    barrels:[el(-0.12,64,8,2.20,0.65,2.60,1.40),el(0,68,9,2.40,0.66,2.60,1.50),el(0.12,64,8,2.20,0.65,2.60,1.40)]};
+  W1['VoltStrike']='Вольтовый удар';
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // BRANCH 2 — TURRET ENGINEER  (level 15, Турельщик)
+  // ══════════════════════════════════════════════════════════════════════════
+  _t['Turret']={name:'Turret',requiredLevel:15,upgradesFrom:['Warlock'],color:'#22cc55',
+    isDroneShooter:true,droneHits:5,radiusMultiplier:1.05,
+    description:'МЕХАНИКА: Турельщик — ставит 3 авто-турели. Турели автономно атакуют ближайшего врага.',
+    barrels:[el(0,30,9,0.90,1.10,1.00,0.68),el(2.09,30,9,0.90,1.10,1.00,0.68),el(-2.09,30,9,0.90,1.10,1.00,0.68)]};
+  W1['Turret']='Турельщик';
+
+  _t['TurretBattery']={name:'TurretBattery',requiredLevel:30,upgradesFrom:['Turret'],color:'#ffdd00',
+    isDroneShooter:true,droneHits:4,radiusMultiplier:1.10,
+    description:'МЕХАНИКА: Батарея турелей — 6 маленьких быстрых турелей, максимальная плотность огня.',
+    barrels:[0,1,2,3,4,5].map(function(i){return el(i*Math.PI/3,26,7,0.80,1.05,1.00,0.62);})};
+  W1['TurretBattery']='Батарея турелей';
+
+  _t['TurretHeavy']={name:'TurretHeavy',requiredLevel:30,upgradesFrom:['Turret'],color:'#ffdd00',
+    isDroneShooter:true,droneHits:8,radiusMultiplier:1.20,bodyDamageMultiplier:1.50,
+    description:'МЕХАНИКА: Тяжёлые турели — 4 мощных авто-орудия с высоким уроном.',
+    barrels:[0,1,2,3].map(function(i){return el(i*Math.PI/2,36,14,1.00,1.35,1.00,0.88);})};
+  W1['TurretHeavy']='Тяжёлые турели';
+
+  _t['TurretCannon']={name:'TurretCannon',requiredLevel:30,upgradesFrom:['Turret'],color:'#ffdd00',
+    isDroneShooter:true,droneHits:9,isHoming:true,radiusMultiplier:1.15,
+    description:'МЕХАНИКА: Пушечные турели — 2 дальнобойных самонаводящихся орудия.',
+    barrels:[el(0,44,18,1.10,1.40,1.00,0.95),el(Math.PI,44,18,1.10,1.40,1.00,0.95)]};
+  W1['TurretCannon']='Пушечные турели';
+
+  _t['TurretSwarm']={name:'TurretSwarm',requiredLevel:45,upgradesFrom:['TurretBattery'],color:'#ff8800',
+    isDroneShooter:true,droneHits:3,radiusMultiplier:1.20,
+    description:'Рой турелей — 8 быстрых маленьких орудий атакуют одновременно со всех сторон.',
+    barrels:[0,1,2,3,4,5,6,7].map(function(i){return el(i*Math.PI/4,24,6,0.65,1.00,1.00,0.58);})};
+  W1['TurretSwarm']='Рой турелей';
+
+  _t['TurretStorm']={name:'TurretStorm',requiredLevel:45,upgradesFrom:['TurretBattery'],color:'#ff8800',
+    isDroneShooter:true,droneHits:5,radiusMultiplier:1.25,bodyDamageMultiplier:1.50,
+    description:'Штормовые турели — 6 орудий + мощный таран, непрерывный огонь во все стороны.',
+    barrels:[0,1,2,3,4,5].map(function(i){return el(i*Math.PI/3,28,8,0.72,1.10,1.00,0.65);})};
+  W1['TurretStorm']='Штормовые турели';
+
+  _t['TurretFlak']={name:'TurretFlak',requiredLevel:45,upgradesFrom:['TurretBattery'],color:'#ff8800',
+    isDroneShooter:true,droneHits:6,radiusMultiplier:1.18,
+    description:'Зенитные турели — 8 орудий со всех углов, непробиваемая сеть огня.',
+    barrels:[el(0,32,10,0.78,1.15,1.00,0.70),el(Math.PI/4,30,9,0.78,1.10,1.00,0.65),
+             el(Math.PI/2,30,9,0.82,1.10,1.00,0.65),el(Math.PI,32,10,0.78,1.15,1.00,0.70),
+             el(-Math.PI/2,30,9,0.82,1.10,1.00,0.65),el(-Math.PI/4,30,9,0.78,1.10,1.00,0.65),
+             el(3*Math.PI/4,28,9,0.80,1.05,1.00,0.62),el(-3*Math.PI/4,28,9,0.80,1.05,1.00,0.62)]};
+  W1['TurretFlak']='Зенитные турели';
+
+  _t['CannonTurret']={name:'CannonTurret',requiredLevel:45,upgradesFrom:['TurretHeavy'],color:'#ff8800',
+    isDroneShooter:true,droneHits:10,radiusMultiplier:1.35,bodyDamageMultiplier:2.50,
+    description:'Орудийные турели — 4 тяжёлых орудия + мощный броневой корпус.',
+    barrels:[0,1,2,3].map(function(i){return el(i*Math.PI/2,44,18,0.88,1.50,1.00,1.00);})};
+  W1['CannonTurret']='Орудийные турели';
+
+  _t['SiegeTurret']={name:'SiegeTurret',requiredLevel:45,upgradesFrom:['TurretHeavy'],color:'#ff8800',
+    isDroneShooter:true,droneHits:12,radiusMultiplier:1.40,bodyDamageMultiplier:2.00,
+    description:'Осадные турели — 2 колоссальных орудия + 2 боковых защитных, крепость на колёсах.',
+    barrels:[el(0,50,22,1.00,1.60,1.00,1.10),el(Math.PI,50,22,1.00,1.60,1.00,1.10),
+             el(Math.PI/2,36,14,0.90,1.20,1.00,0.88),el(-Math.PI/2,36,14,0.90,1.20,1.00,0.88)]};
+  W1['SiegeTurret']='Осадные турели';
+
+  _t['WarlordTurret']={name:'WarlordTurret',requiredLevel:45,upgradesFrom:['TurretHeavy'],color:'#ff8800',
+    isDroneShooter:true,droneHits:8,isInvis:true,radiusMultiplier:1.30,
+    description:'МЕХАНИКА: Лорд турелей — невидим, 3 мощных орудия атакуют пока хозяин скрыт.',
+    barrels:[el(0,48,20,0.95,1.45,1.00,0.98),el(2.09,46,18,0.95,1.40,1.00,0.92),el(-2.09,46,18,0.95,1.40,1.00,0.92)]};
+  W1['WarlordTurret']='Лорд турелей';
+
+  _t['MissileTurret']={name:'MissileTurret',requiredLevel:45,upgradesFrom:['TurretCannon'],color:'#ff8800',
+    isDroneShooter:true,droneHits:8,isHoming:true,radiusMultiplier:1.25,
+    description:'МЕХАНИКА: Ракетные турели — 4 самонаводящихся орудия, ни одна цель не скроется.',
+    barrels:[0,1,2,3].map(function(i){return el(i*Math.PI/2,42,16,1.00,1.38,1.00,0.92);})};
+  W1['MissileTurret']='Ракетные турели';
+
+  _t['LongbowTurret']={name:'LongbowTurret',requiredLevel:45,upgradesFrom:['TurretCannon'],color:'#ff8800',
+    isDroneShooter:true,droneHits:10,isHoming:true,isRangeBoost:true,radiusMultiplier:1.20,
+    description:'МЕХАНИКА: Дальнобойные турели — 3 орудия с нарастающим уроном от расстояния.',
+    barrels:[el(0,52,16,1.10,1.40,1.00,0.95),el(2.09,50,15,1.10,1.35,1.00,0.90),el(-2.09,50,15,1.10,1.35,1.00,0.90)]};
+  W1['LongbowTurret']='Дальнобойные турели';
+
+  _t['NexusTurret']={name:'NexusTurret',requiredLevel:45,upgradesFrom:['TurretCannon'],color:'#ff8800',
+    isDroneShooter:true,droneHits:12,isHoming:true,radiusMultiplier:1.40,bodyDamageMultiplier:1.80,
+    description:'Нексус — командная башня: 4 тяжёлых + 4 лёгких орудия, полная доминация зоны.',
+    barrels:[el(0,48,18,0.90,1.45,1.00,0.98),el(Math.PI/2,48,18,0.90,1.45,1.00,0.98),
+             el(Math.PI,48,18,0.90,1.45,1.00,0.98),el(-Math.PI/2,48,18,0.90,1.45,1.00,0.98),
+             el(Math.PI/4,32,10,0.80,1.15,1.00,0.75),el(3*Math.PI/4,32,10,0.80,1.15,1.00,0.75),
+             el(-3*Math.PI/4,32,10,0.80,1.15,1.00,0.75),el(-Math.PI/4,32,10,0.80,1.15,1.00,0.75)]};
+  W1['NexusTurret']='Нексус';
+
+  // ── TREE NODES ────────────────────────────────────────────────────────────
+  // Branch 1 — tier:1 (level-15 tanks, x=xl[1]=165)
+  w0.push({name:'Splitter',     tier:1, x:xl[1], y:8000});
+  w0.push({name:'Detonator',    tier:1, x:xl[1], y:8500});
+  w0.push({name:'Longshot',     tier:1, x:xl[1], y:9000});
+  // Branch 2 — tier:1
+  w0.push({name:'Vampire',      tier:1, x:xl[1], y:10200});
+  w0.push({name:'Chainshot',    tier:1, x:xl[1], y:10700});
+  w0.push({name:'Turret',       tier:1, x:xl[1], y:11200});
+
+  // Branch 1 — tier:2 (level-30 tanks, x=xl[2]=295)
+  w0.push({name:'Fragmenter',   tier:2, x:xl[2], y:7870});
+  w0.push({name:'ScatterShot',  tier:2, x:xl[2], y:8000});
+  w0.push({name:'SplitMirror',  tier:2, x:xl[2], y:8130});
+  w0.push({name:'Primer',       tier:2, x:xl[2], y:8370});
+  w0.push({name:'Bombard',      tier:2, x:xl[2], y:8500});
+  w0.push({name:'Minelayer',    tier:2, x:xl[2], y:8630});
+  w0.push({name:'Marksman',     tier:2, x:xl[2], y:8870});
+  w0.push({name:'HeavyCannon',  tier:2, x:xl[2], y:9000});
+  w0.push({name:'BurstRifle',   tier:2, x:xl[2], y:9130});
+  // Branch 2 — tier:2
+  w0.push({name:'BloodHunter',  tier:2, x:xl[2], y:10070});
+  w0.push({name:'SoulDrain',    tier:2, x:xl[2], y:10200});
+  w0.push({name:'Revenant',     tier:2, x:xl[2], y:10330});
+  w0.push({name:'ArcaneBolt',   tier:2, x:xl[2], y:10570});
+  w0.push({name:'Thunderchain', tier:2, x:xl[2], y:10700});
+  w0.push({name:'LightningRod', tier:2, x:xl[2], y:10830});
+  w0.push({name:'TurretBattery',tier:2, x:xl[2], y:11070});
+  w0.push({name:'TurretHeavy',  tier:2, x:xl[2], y:11200});
+  w0.push({name:'TurretCannon', tier:2, x:xl[2], y:11330});
+
+  // Branch 1 — tier:3 (level-45 tanks, x=xl[3]=430) — generateT4 will add T5
+  w0.push({name:'ShardStorm',   tier:3, x:xl[3], y:7818});
+  w0.push({name:'FragCore',     tier:3, x:xl[3], y:7870});
+  w0.push({name:'FragNova',     tier:3, x:xl[3], y:7922});
+  w0.push({name:'Buckshot',     tier:3, x:xl[3], y:7948});
+  w0.push({name:'ScatterBomb',  tier:3, x:xl[3], y:8000});
+  w0.push({name:'CloudBurst',   tier:3, x:xl[3], y:8052});
+  w0.push({name:'DualFrag',     tier:3, x:xl[3], y:8078});
+  w0.push({name:'OmniFrag',     tier:3, x:xl[3], y:8130});
+  w0.push({name:'CrossFrag',    tier:3, x:xl[3], y:8182});
+  w0.push({name:'ChargeBurst',  tier:3, x:xl[3], y:8318});
+  w0.push({name:'StickyFlak',   tier:3, x:xl[3], y:8370});
+  w0.push({name:'QuickFuse',    tier:3, x:xl[3], y:8422});
+  w0.push({name:'MegaBomb',     tier:3, x:xl[3], y:8448});
+  w0.push({name:'DoubleBomb',   tier:3, x:xl[3], y:8500});
+  w0.push({name:'BombRain',     tier:3, x:xl[3], y:8552});
+  w0.push({name:'MineBelt',     tier:3, x:xl[3], y:8578});
+  w0.push({name:'SuperMine',    tier:3, x:xl[3], y:8630});
+  w0.push({name:'InvisibleMiner',tier:3,x:xl[3], y:8682});
+  w0.push({name:'LongRangeX',   tier:3, x:xl[3], y:8818});
+  w0.push({name:'SniperX',      tier:3, x:xl[3], y:8870});
+  w0.push({name:'TwinRifle',    tier:3, x:xl[3], y:8922});
+  w0.push({name:'HeavyShell',   tier:3, x:xl[3], y:8948});
+  w0.push({name:'CannonBarrage',tier:3, x:xl[3], y:9000});
+  w0.push({name:'SiegeGun',     tier:3, x:xl[3], y:9052});
+  w0.push({name:'RapidBurst',   tier:3, x:xl[3], y:9078});
+  w0.push({name:'TriSnipe',     tier:3, x:xl[3], y:9130});
+  w0.push({name:'GaussRifle',   tier:3, x:xl[3], y:9182});
+  // Branch 2 — tier:3
+  w0.push({name:'Bloodlust',    tier:3, x:xl[3], y:10018});
+  w0.push({name:'DarkFangs',    tier:3, x:xl[3], y:10070});
+  w0.push({name:'VampireX',     tier:3, x:xl[3], y:10122});
+  w0.push({name:'SoulReaper',   tier:3, x:xl[3], y:10148});
+  w0.push({name:'EclipseDrain', tier:3, x:xl[3], y:10200});
+  w0.push({name:'VoidDrain',    tier:3, x:xl[3], y:10252});
+  w0.push({name:'Wraith',       tier:3, x:xl[3], y:10278});
+  w0.push({name:'NightShade',   tier:3, x:xl[3], y:10330});
+  w0.push({name:'DarkReaper',   tier:3, x:xl[3], y:10382});
+  w0.push({name:'ArcaneStorm',  tier:3, x:xl[3], y:10518});
+  w0.push({name:'ChainBlast',   tier:3, x:xl[3], y:10570});
+  w0.push({name:'ArcCaster',    tier:3, x:xl[3], y:10622});
+  w0.push({name:'Thunderclap',  tier:3, x:xl[3], y:10648});
+  w0.push({name:'StormSurge',   tier:3, x:xl[3], y:10700});
+  w0.push({name:'Maelstrom',    tier:3, x:xl[3], y:10752});
+  w0.push({name:'PlasmaChain',  tier:3, x:xl[3], y:10778});
+  w0.push({name:'BallLightning',tier:3, x:xl[3], y:10830});
+  w0.push({name:'VoltStrike',   tier:3, x:xl[3], y:10882});
+  w0.push({name:'TurretSwarm',  tier:3, x:xl[3], y:11018});
+  w0.push({name:'TurretStorm',  tier:3, x:xl[3], y:11070});
+  w0.push({name:'TurretFlak',   tier:3, x:xl[3], y:11122});
+  w0.push({name:'CannonTurret', tier:3, x:xl[3], y:11148});
+  w0.push({name:'SiegeTurret',  tier:3, x:xl[3], y:11200});
+  w0.push({name:'WarlordTurret',tier:3, x:xl[3], y:11252});
+  w0.push({name:'MissileTurret',tier:3, x:xl[3], y:11278});
+  w0.push({name:'LongbowTurret',tier:3, x:xl[3], y:11330});
+  w0.push({name:'NexusTurret',  tier:3, x:xl[3], y:11382});
+
+  // ── TREE EDGES ────────────────────────────────────────────────────────────
+  Ty.push(['Basic','Alchemist']);
+  Ty.push(['Alchemist','Splitter']);
+  Ty.push(['Alchemist','Detonator']);
+  Ty.push(['Alchemist','Longshot']);
+  Ty.push(['Basic','Warlock']);
+  Ty.push(['Warlock','Vampire']);
+  Ty.push(['Warlock','Chainshot']);
+  Ty.push(['Warlock','Turret']);
+  Ty.push(['Splitter','Fragmenter']);
+  Ty.push(['Splitter','ScatterShot']);
+  Ty.push(['Splitter','SplitMirror']);
+  Ty.push(['Detonator','Primer']);
+  Ty.push(['Detonator','Bombard']);
+  Ty.push(['Detonator','Minelayer']);
+  Ty.push(['Longshot','Marksman']);
+  Ty.push(['Longshot','HeavyCannon']);
+  Ty.push(['Longshot','BurstRifle']);
+  Ty.push(['Fragmenter','ShardStorm']);
+  Ty.push(['Fragmenter','FragCore']);
+  Ty.push(['Fragmenter','FragNova']);
+  Ty.push(['ScatterShot','Buckshot']);
+  Ty.push(['ScatterShot','ScatterBomb']);
+  Ty.push(['ScatterShot','CloudBurst']);
+  Ty.push(['SplitMirror','DualFrag']);
+  Ty.push(['SplitMirror','OmniFrag']);
+  Ty.push(['SplitMirror','CrossFrag']);
+  Ty.push(['Primer','ChargeBurst']);
+  Ty.push(['Primer','StickyFlak']);
+  Ty.push(['Primer','QuickFuse']);
+  Ty.push(['Bombard','MegaBomb']);
+  Ty.push(['Bombard','DoubleBomb']);
+  Ty.push(['Bombard','BombRain']);
+  Ty.push(['Minelayer','MineBelt']);
+  Ty.push(['Minelayer','SuperMine']);
+  Ty.push(['Minelayer','InvisibleMiner']);
+  Ty.push(['Marksman','LongRangeX']);
+  Ty.push(['Marksman','SniperX']);
+  Ty.push(['Marksman','TwinRifle']);
+  Ty.push(['HeavyCannon','HeavyShell']);
+  Ty.push(['HeavyCannon','CannonBarrage']);
+  Ty.push(['HeavyCannon','SiegeGun']);
+  Ty.push(['BurstRifle','RapidBurst']);
+  Ty.push(['BurstRifle','TriSnipe']);
+  Ty.push(['BurstRifle','GaussRifle']);
+  Ty.push(['Vampire','BloodHunter']);
+  Ty.push(['Vampire','SoulDrain']);
+  Ty.push(['Vampire','Revenant']);
+  Ty.push(['Chainshot','ArcaneBolt']);
+  Ty.push(['Chainshot','Thunderchain']);
+  Ty.push(['Chainshot','LightningRod']);
+  Ty.push(['Turret','TurretBattery']);
+  Ty.push(['Turret','TurretHeavy']);
+  Ty.push(['Turret','TurretCannon']);
+  Ty.push(['BloodHunter','Bloodlust']);
+  Ty.push(['BloodHunter','DarkFangs']);
+  Ty.push(['BloodHunter','VampireX']);
+  Ty.push(['SoulDrain','SoulReaper']);
+  Ty.push(['SoulDrain','EclipseDrain']);
+  Ty.push(['SoulDrain','VoidDrain']);
+  Ty.push(['Revenant','Wraith']);
+  Ty.push(['Revenant','NightShade']);
+  Ty.push(['Revenant','DarkReaper']);
+  Ty.push(['ArcaneBolt','ArcaneStorm']);
+  Ty.push(['ArcaneBolt','ChainBlast']);
+  Ty.push(['ArcaneBolt','ArcCaster']);
+  Ty.push(['Thunderchain','Thunderclap']);
+  Ty.push(['Thunderchain','StormSurge']);
+  Ty.push(['Thunderchain','Maelstrom']);
+  Ty.push(['LightningRod','PlasmaChain']);
+  Ty.push(['LightningRod','BallLightning']);
+  Ty.push(['LightningRod','VoltStrike']);
+  Ty.push(['TurretBattery','TurretSwarm']);
+  Ty.push(['TurretBattery','TurretStorm']);
+  Ty.push(['TurretBattery','TurretFlak']);
+  Ty.push(['TurretHeavy','CannonTurret']);
+  Ty.push(['TurretHeavy','SiegeTurret']);
+  Ty.push(['TurretHeavy','WarlordTurret']);
+  Ty.push(['TurretCannon','MissileTurret']);
+  Ty.push(['TurretCannon','LongbowTurret']);
+  Ty.push(['TurretCannon','NexusTurret']);
+})();
+
 ;(function generateT4(){
   // Scale all tree node y-positions x2 for proper tier-4 spacing
   w0.forEach(function(n){n.y=n.y*2.5;});
