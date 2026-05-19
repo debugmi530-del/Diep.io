@@ -13,6 +13,9 @@
 
 window.BOT_NAMES = [
 
+  // ── Особые (XP ×2, охота за фигурами) ────────────────────────
+  "White Devil","SeraGON",
+
   // ── Абсурдные / мемные (EN) ───────────────────────────────────
   "i eat glue","your mom","no","ok","pls no kill",
   "NotABot","definitely human","error404","NULL","undefined",
