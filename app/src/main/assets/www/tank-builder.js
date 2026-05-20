@@ -199,7 +199,7 @@ function registerTank(def) {
     isDroneShooter: _spt === 'drone',
     isHoming:       _spt === 'homing',
     isSplitting:    _spt === 'splitting',
-    isVampir:       _spt === 'vampire',
+    isVampire:      _spt === 'vampire',
     isAutoGunner:      !!def.autoGun,
     isTurretDeployer:  !!def.turretDeploy,
     maxTurrets:        (def.turretCfg && def.turretCfg.maxTurrets) || 3,
@@ -248,9 +248,9 @@ function registerAllCustomTanks() {
 }
 
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
-  setTimeout(registerAllCustomTanks, 100);
+  setTimeout(registerAllCustomTanks, 600);
 } else {
-  window.addEventListener('DOMContentLoaded', function(){ setTimeout(registerAllCustomTanks, 100); });
+  window.addEventListener('DOMContentLoaded', function(){ setTimeout(registerAllCustomTanks, 600); });
 }
 
 /* ═══════════════════════════════════════════════════════════════
