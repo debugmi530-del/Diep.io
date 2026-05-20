@@ -483,10 +483,11 @@
                 childWrap.className = '_adm-children';
 
                 buildTankTree(node.children, col);
-                  node.children.forEach(function(child) {
-                    childWrap.appendChild(child._el);
-                  });
-                  wrap.appendChild(childWrap);
+                node.children.forEach(function(child) {
+                  childWrap.appendChild(child._el);
+                });
+                wrap.appendChild(childWrap);
+              }
 
               node._el = wrap;
               tanksPane.appendChild(wrap);
