@@ -1314,6 +1314,14 @@ Error generating stack: `+e.message+`
   W1['NexusTurret']='Нексус';
 
   // ── TREE NODES ────────────────────────────────────────────────────────────
+  // CRITICAL FIX: Alchemist and Warlock (level-5 T1 roots) were absent from
+  // w0. Engine validates tank names against w0 before offering them as upgrade
+  // options — without these entries the entire custom branch was invisible.
+  // Using x=xl[1]-55=110 to place them in a visual column between Basic and
+  // their level-15 children.
+  w0.push({name:'Alchemist', tier:1, x:xl[1]-55, y:8500});
+  w0.push({name:'Warlock',   tier:1, x:xl[1]-55, y:10700});
+
   // Branch 1 — tier:1 (level-15 tanks, x=xl[1]=165)
   w0.push({name:'Splitter',     tier:1, x:xl[1], y:8000});
   w0.push({name:'Detonator',    tier:1, x:xl[1], y:8500});
@@ -2912,17 +2920,36 @@ function Ry(){const i=cl.useRef(null),h=cl.useRef(G0()),o=cl.useRef({moveX:0,mov
 //            into i.bullets so externally spawned fragment bullets survive
 ;(function patchSplittingAndRangeBoost(){
 
-  // ── 1. isRangeBoost: 2× bullet lifetime = 2× effective firing range ────────
-  // The engine reads _t[className].bulletLifeMultiplier natively at bullet-spawn
-  // time: lifetime = Math.round(q0 * bulletLifeMultiplier)
-  // Setting 2.0 doubles every Longshot-branch bullet's travel distance.
+  // ── 1. isRangeBoost: range ÷2 (1.5× lifetime instead of old 3.0×) ──────────
+  // Speed −30% and distance-damage ×2 as requested nerf.
   Object.keys(_t).forEach(function(k){
     var td=_t[k];
     if(!td||!td.isRangeBoost)return;
-    // Guard: don't clobber if a previous patch already set a non-default value
-    if(!td.bulletLifeMultiplier||td.bulletLifeMultiplier<3.0){
-      td.bulletLifeMultiplier=3.0;
+    // Range ÷2: use 1.5× lifetime instead of 3.0×
+    if(!td.bulletLifeMultiplier||td.bulletLifeMultiplier<1.5){
+      td.bulletLifeMultiplier=1.5;
     }
+    // Distance-damage ×2: engine reads bulletDistDamageMultiplier at damage-apply
+    if(!td.bulletDistDamageMultiplier){td.bulletDistDamageMultiplier=2.0;}
+    // Speed −30%: apply once per barrel (guard with _rangeSpeedPatched flag)
+    (td.barrels||[]).forEach(function(b){
+      if(!b._rangeSpeedPatched){
+        b.bulletSpeedMultiplier=(b.bulletSpeedMultiplier||1)*0.7;
+        b._rangeSpeedPatched=true;
+      }
+    });
+  });
+
+  // BurstRifle branch fire rate ÷2 (triple-burst rifle fires way too fast at range)
+  ['BurstRifle','RapidBurst','TriSnipe','GaussRifle'].forEach(function(k){
+    var td=_t[k];
+    if(!td)return;
+    (td.barrels||[]).forEach(function(b){
+      if(!b._burstReloadPatched){
+        b.reloadMultiplier=(b.reloadMultiplier||1)*2;
+        b._burstReloadPatched=true;
+      }
+    });
   });
 
   // ── 2. isSplitting: fragment lifetime = 0.65× (close-range shrapnel feel) ──
@@ -3023,6 +3050,71 @@ function Ry(){const i=cl.useRef(null),h=cl.useRef(G0()),o=cl.useRef({moveX:0,mov
 
 })();
 
+// ── Fix 3: Turret branch — stat upgrades now scale turret stats ──────────────
+// Problem: turret bullet damage / speed / fire rate were fixed values in _t,
+// unaffected by the player's stat-point investments. Fix: intercept the engine's
+// ny(player, statName) function (called for every stat-point upgrade) and
+// re-derive all turret-deployer definitions from their saved base stats.
+;(function patchTurretStatScaling(){
+  // 1. Save base (unscaled) turret stats for every isTurretDeployer tank.
+  var _base={};
+  Object.keys(_t).forEach(function(k){
+    var td=_t[k];
+    if(!td||!td.isTurretDeployer)return;
+    _base[k]={
+      dmg: td.turretBulletDamage  || 10,
+      spd: td.turretBulletSpeed   || 8,
+      fr:  td.turretFireRate      || 50,
+      hp:  td.turretHealth        || 80
+    };
+  });
+
+  // 2. Apply scaled stats to all isTurretDeployer _t entries.
+  //    statArr = player.stats array; typical diep order:
+  //    [0]speed [1]health [2]bodyDmg [3]bulletDmg [4]bulletPen
+  //    [5]bulletSpeed [6]reload [7]invis
+  function _scaleTurrets(player){
+    if(!player||!player.stats)return;
+    var s=player.stats;
+    var dmgLv=Math.min(+(s[3])||0, 7);
+    var spdLv=Math.min(+(s[5])||0, 7);
+    var relLv=Math.min(+(s[6])||0, 7);
+    // Each stat level gives ~12% dmg, ~8% spd, ~7% fire-rate improvement.
+    var dmgM=Math.pow(1.12, dmgLv);
+    var spdM=Math.pow(1.08, spdLv);
+    var relM=Math.pow(0.93, relLv); // lower fireRate value = faster fire
+    Object.keys(_base).forEach(function(k){
+      var b=_base[k], td=_t[k];
+      if(!b||!td)return;
+      td.turretBulletDamage = Math.round(b.dmg * dmgM);
+      td.turretBulletSpeed  = +(b.spd * spdM).toFixed(2);
+      td.turretFireRate     = Math.max(5, Math.round(b.fr * relM));
+      td.turretHealth       = Math.round(b.hp * (1 + 0.08 * dmgLv));
+    });
+  }
+
+  // 3. Try to wrap the engine's ny() stat-upgrade function.
+  //    ny is a module-level var in the compiled bundle — accessible here if
+  //    declared with `var` / `function` (not `const/let`).
+  try {
+    if(typeof ny==='function'){
+      var _origNy=ny;
+      ny=function(player,statName){
+        _origNy(player,statName);
+        _scaleTurrets(player);
+      };
+    }
+  } catch(e){}
+
+  // 4. Fallback: poll via window._gs (set when game exposes internals below).
+  setInterval(function(){
+    try{
+      var gs=window._gs;
+      if(gs&&gs.player)_scaleTurrets(gs.player);
+    }catch(e){}
+  }, 800);
+})();
+
 /* ── Expose game internals so tank-builder.js can register custom tanks ──
    w0, Ty, W1 are top-level const in this script — they live in lexical scope
    but are NOT window properties. _t starts as an implicit global inside the
@@ -3032,3 +3124,7 @@ window._t = _t;
 window.w0 = w0;
 window.Ty = Ty;
 window.W1 = W1;
+// Expose game state reference so the turret-stat polling above can reach it
+// even when ny() wrapping fails (e.g. engine uses let/const for ny).
+// This is set by the engine's G0 wrapper when the game starts.
+window._gs = null; // will be populated by the engine's G0 call
