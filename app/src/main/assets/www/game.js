@@ -3128,4 +3128,72 @@ window.W1 = W1;
 // Expose game state reference so the turret-stat polling above can reach it
 // even when ny() wrapping fails (e.g. engine uses let/const for ny).
 // This is set by the engine's G0 wrapper when the game starts.
-window._gs = null; // will be populated by the engine's G0 call
+window._gs = null; // populated by G0 wrapper below
+
+// ── THRUST MECHANIC for Booster / TriAngle (and T5 variants) ─────────────────
+// Descriptions say "тяга" (thrust): rear barrels push the tank forward while
+// shooting. Implemented by wrapping fy() — the main game-loop function — to
+// apply a forward velocity impulse each frame the player is actively shooting.
+// The impulse is capped so the tank cannot accelerate indefinitely.
+;(function patchThrustMechanics(){
+  // fwd = forward velocity added per frame while shooting (pixels/frame)
+  // maxSpd = soft speed cap when thrust is active
+  var THRUST_CFG = {
+    // T4 base tanks
+    'Booster':       { fwd: 0.38, maxSpd: 7.5 },  // 3 rear barrels → strong
+    'TriAngle':      { fwd: 0.25, maxSpd: 6.2 },  // 2 rear barrels → moderate
+    // T5 Booster variants
+    'BoosterAlpha':  { fwd: 0.44, maxSpd: 8.5 },
+    'BoosterOmega':  { fwd: 0.40, maxSpd: 8.0 },
+    'BoosterPrime':  { fwd: 0.42, maxSpd: 8.2 },
+    // T5 TriAngle variants
+    'TriAngleAlpha': { fwd: 0.29, maxSpd: 7.0 },
+    'TriAngleOmega': { fwd: 0.27, maxSpd: 6.6 },
+    'TriAnglePrime': { fwd: 0.28, maxSpd: 6.8 },
+  };
+  try {
+    if(typeof fy !== 'function') return;
+    var _origFy = fy;
+    // Wrap fy so our thrust runs after every engine tick
+    fy = function(gameState, input, dt) {
+      var result = _origFy(gameState, input, dt);
+      try {
+        if(!gameState || gameState.phase !== 'playing') return result;
+        var p = gameState.player;
+        if(!p) return result;
+        var cfg = THRUST_CFG[p.className];
+        if(!cfg) return result;
+        // Thrust fires only while the player is actively shooting
+        if(input && input.shooting) {
+          var ang = p.angle;
+          // Add forward impulse (in the direction the tank is facing)
+          p.vel.x += Math.cos(ang) * cfg.fwd;
+          p.vel.y += Math.sin(ang) * cfg.fwd;
+          // Soft-cap to prevent runaway acceleration
+          var spd = Math.sqrt(p.vel.x * p.vel.x + p.vel.y * p.vel.y);
+          if(spd > cfg.maxSpd) {
+            p.vel.x *= cfg.maxSpd / spd;
+            p.vel.y *= cfg.maxSpd / spd;
+          }
+        }
+      } catch(ex) {}
+      return result;
+    };
+  } catch(e) {}
+})();
+
+// ── Expose live game-state object via window._gs ──────────────────────────────
+// G0() constructs the mutable state object that fy() updates in-place every
+// frame. Wrapping G0 lets external patches (turret scaling, future hooks) reach
+// the live player/bullet data without needing React internals.
+;(function patchExposeGameState(){
+  try {
+    if(typeof G0 !== 'function') return;
+    var _origG0 = G0;
+    G0 = function(tm, gm) {
+      var state = _origG0(tm, gm);
+      window._gs = state; // same mutable object fy() updates every tick
+      return state;
+    };
+  } catch(e) {}
+})();
