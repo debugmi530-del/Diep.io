@@ -225,30 +225,15 @@
               children: [
                 {
                   branch: 'Blaster', color: '#e05020', tier: 3,
-                  desc: '9 дробин в конусе 70° — максимальный разброс, огромный ближний урон.',
-                  t4: [
-                    { name:'BlasterAlpha', label:'Alpha', desc:'11 дробин + ускоренная перезарядка' },
-                    { name:'BlasterOmega', label:'Omega', desc:'1 гигантский взрывной снаряд' },
-                    { name:'BlasterPrime', label:'Prime', desc:'9 вперёд + 3 назад' }
-                  ]
+                  desc: '9 дробин в конусе 70° — максимальный разброс, огромный ближний урон.'
                 },
                 {
                   branch: 'Buster', color: '#c07020', tier: 3,
-                  desc: '3 тяжёлых снаряда в узком конусе — фокусированный дробовой удар.',
-                  t4: [
-                    { name:'BusterAlpha',  label:'Alpha', desc:'5 тяжёлых снарядов, быстрая серия' },
-                    { name:'BusterOmega',  label:'Omega', desc:'2 колоссальных снаряда рядом' },
-                    { name:'BusterPrime',  label:'Prime', desc:'3 вперёд + 3 сзади' }
-                  ]
+                  desc: '3 тяжёлых снаряда в узком конусе — фокусированный дробовой удар.'
                 },
                 {
                   branch: 'Riot', color: '#a03010', tier: 3,
-                  desc: '3 дробины в 4 диагональных направления — покрывает 360° вокруг.',
-                  t4: [
-                    { name:'RiotAlpha', label:'Alpha', desc:'5 дробин × 4 направления' },
-                    { name:'RiotOmega', label:'Omega', desc:'1 крупный снаряд × 4 стороны' },
-                    { name:'RiotPrime', label:'Prime', desc:'3 дробины × 8 направлений (каждые 45°)' }
-                  ]
+                  desc: '3 дробины в 4 диагональных направления — покрывает 360° вокруг.'
                 }
               ]
             },
@@ -260,30 +245,15 @@
               children: [
                 {
                   branch: 'Colossus', color: '#405060', tier: 3,
-                  desc: 'Абсолютно колоссальный ствол — наивысший разовый урон в T3.',
-                  t4: [
-                    { name:'ColossusAlpha', label:'Alpha', desc:'Ультра-ствол + 2 реактивных задних' },
-                    { name:'ColossusOmega', label:'Omega', desc:'Мегаствол — максимальный урон в игре' },
-                    { name:'ColossusPrime', label:'Prime', desc:'Вперёд + назад + 2 боковых' }
-                  ]
+                  desc: 'Абсолютно колоссальный ствол — наивысший разовый урон в T3.'
                 },
                 {
                   branch: 'Cruiser', color: '#5070a0', tier: 3,
-                  desc: 'Два тяжёлых ствола в шахмат — устойчивый двойной тяжёлый огонь.',
-                  t4: [
-                    { name:'CruiserAlpha', label:'Alpha', desc:'2 тяжёлых + 2 задних малых' },
-                    { name:'CruiserOmega', label:'Omega', desc:'1 объединённый мегаствол' },
-                    { name:'CruiserPrime', label:'Prime', desc:'4 тяжёлых ствола крестом (0°/90°/180°/270°)' }
-                  ]
+                  desc: 'Два тяжёлых ствола в шахмат — устойчивый двойной тяжёлый огонь.'
                 },
                 {
                   branch: 'Brawler', color: '#708040', tier: 3,
-                  desc: 'Средний ствол + высокий урон корпусом — стреляет и таранит.',
-                  t4: [
-                    { name:'BrawlerAlpha', label:'Alpha', desc:'Ствол + 2 боковых, быстрее' },
-                    { name:'BrawlerOmega', label:'Omega', desc:'Тяжёлый ствол + макс. bodyDamage' },
-                    { name:'BrawlerPrime', label:'Prime', desc:'3 вперёд + высокий bodyDamage + реген' }
-                  ]
+                  desc: 'Средний ствол + высокий урон корпусом — стреляет и таранит.'
                 }
               ]
             }
@@ -512,74 +482,78 @@
                 var childWrap = document.createElement('div');
                 childWrap.className = '_adm-children';
 
-                if (node.children[0].t4) {
-                  node.children.forEach(function(t3) {
-                    var row = document.createElement('div');
-                    row.className = '_adm-t3-row';
-                    row.style.borderLeft = '3px solid ' + (t3.color || col);
-
-                    var info = document.createElement('div');
-                    info.className = '_adm-t3-info';
-
-                    var nameRow = document.createElement('div');
-                    nameRow.style.cssText = 'display:flex;align-items:center;gap:6px;';
-
-                    var t3name = document.createElement('span');
-                    t3name.className = '_adm-t3-name';
-                    t3name.textContent = t3.branch;
-                    nameRow.appendChild(t3name);
-
-                    var t3spawn = document.createElement('button');
-                    t3spawn.className = '_adm-spawn-btn';
-                    t3spawn.style.background = t3.color || col;
-                    t3spawn.textContent = '▶ NPC';
-                    t3spawn.addEventListener('click', function() {
-                      spawnNpc(t3.branch, 30, t3.branch);
-                    });
-                    nameRow.appendChild(t3spawn);
-                    info.appendChild(nameRow);
-
-                    if (t3.desc) {
-                      var t3desc = document.createElement('div');
-                      t3desc.className = '_adm-t3-desc';
-                      t3desc.textContent = t3.desc;
-                      info.appendChild(t3desc);
-                    }
-
-                    if (t3.t4 && t3.t4.length) {
-                      var t4wrap = document.createElement('div');
-                      t4wrap.className = '_adm-t4s';
-                      t3.t4.forEach(function(v) {
-                        var vbtn = document.createElement('button');
-                        vbtn.className = '_adm-t4-btn';
-                        vbtn.textContent = v.label;
-                        vbtn.title = v.name + ': ' + v.desc;
-                        vbtn.addEventListener('click', function() {
-                          spawnNpc(v.name, 45, v.label + ' ' + t3.branch);
-                        });
-                        t4wrap.appendChild(vbtn);
-                      });
-                      info.appendChild(t4wrap);
-                    }
-
-                    row.appendChild(info);
-                    childWrap.appendChild(row);
-                  });
-                  wrap.appendChild(childWrap);
-                } else {
-                  buildTankTree(node.children, col);
+                buildTankTree(node.children, col);
                   node.children.forEach(function(child) {
                     childWrap.appendChild(child._el);
                   });
                   wrap.appendChild(childWrap);
-                }
-              }
 
               node._el = wrap;
               tanksPane.appendChild(wrap);
             });
           }
 
+          // ── Custom NPC spawn (any tank) ──
+          var customBlock = document.createElement('div');
+          customBlock.style.cssText = 'background:rgba(30,30,60,0.9);border:1px solid rgba(100,150,255,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;';
+
+          var customTitle = document.createElement('div');
+          customTitle.style.cssText = 'color:#aac8ff;font-size:12px;font-weight:bold;margin-bottom:8px;letter-spacing:.5px;';
+          customTitle.textContent = '🎮 Призвать любого NPC';
+          customBlock.appendChild(customTitle);
+
+          var inputRow = document.createElement('div');
+          inputRow.style.cssText = 'display:flex;gap:6px;align-items:center;margin-bottom:6px;';
+
+          var classInput = document.createElement('input');
+          classInput.type = 'text';
+          classInput.placeholder = 'Класс танка (напр. Overlord)';
+          classInput.style.cssText = 'flex:1;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:5px;color:#fff;padding:5px 8px;font-size:12px;outline:none;';
+          inputRow.appendChild(classInput);
+
+          var lvlInput = document.createElement('input');
+          lvlInput.type = 'number';
+          lvlInput.value = '45';
+          lvlInput.min = '1'; lvlInput.max = '45';
+          lvlInput.style.cssText = 'width:54px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);border-radius:5px;color:#fff;padding:5px 6px;font-size:12px;outline:none;';
+          inputRow.appendChild(lvlInput);
+
+          var customBtn = document.createElement('button');
+          customBtn.textContent = '▶ Спавн';
+          customBtn.style.cssText = 'background:rgba(60,120,220,0.8);color:#fff;border:none;border-radius:5px;padding:5px 10px;font-size:12px;cursor:pointer;white-space:nowrap;';
+          customBtn.addEventListener('click', function() {
+            var cls = classInput.value.trim();
+            if (!cls) { setStatus('Введи класс танка!', '#f88'); return; }
+            spawnNpc(cls, parseInt(lvlInput.value)||45, cls);
+          });
+          inputRow.appendChild(customBtn);
+          customBlock.appendChild(inputRow);
+
+          var qtyRow = document.createElement('div');
+          qtyRow.style.cssText = 'display:flex;gap:6px;align-items:center;';
+          var qtyLabel = document.createElement('span');
+          qtyLabel.style.cssText = 'color:rgba(255,255,255,0.5);font-size:11px;';
+          qtyLabel.textContent = 'Кол-во:';
+          qtyRow.appendChild(qtyLabel);
+          [1,3,5,10].forEach(function(n) {
+            var qb = document.createElement('button');
+            qb.textContent = n;
+            qb.style.cssText = 'background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:4px;padding:3px 8px;font-size:11px;cursor:pointer;';
+            qb.addEventListener('click', function() {
+              var cls = classInput.value.trim();
+              if (!cls) { setStatus('Введи класс танка!', '#f88'); return; }
+              for(var _i=0;_i<n;_i++) {
+                window._adminNpcQueue = window._adminNpcQueue || [];
+                window._adminNpcQueue.push({ className: cls, level: parseInt(lvlInput.value)||45 });
+              }
+              setStatus('Спавн × ' + n + ': ' + cls, '#8f8');
+            });
+            qtyRow.appendChild(qb);
+          });
+          customBlock.appendChild(qtyRow);
+          tanksPane.appendChild(customBlock);
+
+          // ── Tank tree ──
           var basicNode = TANK_TREE[0];
           basicNode.children.forEach(function(t2node) {
             buildTankTree([t2node], basicNode.color);
