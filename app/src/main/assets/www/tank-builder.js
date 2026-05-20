@@ -20,6 +20,43 @@ var BARREL_PRESETS = [
   { id:'cannon', label:'Пушка',       length:56, width:28, reload:2.8,  bSize:2.2,  bSpeed:0.95, bDmg:3.5 },
 ];
 
+var TANK_TEMPLATES = [
+  { _tpl:'sniper',  name:'Снайпер',  icon:'🎯', tier:3, color:'#45b84e', upgradesFrom:'Basic', description:'Дальний точный огонь', specialType:'normal', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:1.0, speedSlider:1.2,
+    barrels:[{id:1,label:'Длинный',angle:0,length:72,width:10,reload:2.2,bSize:0.75,bSpeed:2.1,bDmg:1.8,lateral:0,bulletType:'normal'}] },
+  { _tpl:'twin',    name:'Близнец',  icon:'⚡', tier:3, color:'#e88018', upgradesFrom:'Basic', description:'Двойной пулемёт', specialType:'normal', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:1.0, speedSlider:1.0,
+    barrels:[
+      {id:1,label:'Стандартный',angle:0,length:48,width:14,reload:1.0,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:-9,bulletType:'normal'},
+      {id:2,label:'Стандартный',angle:0,length:48,width:14,reload:1.0,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:9,bulletType:'normal'},
+    ] },
+  { _tpl:'spinner', name:'Спиннер',  icon:'🌀', tier:3, color:'#9050c0', upgradesFrom:'Basic', description:'360° веер стволов', specialType:'normal', autoGun:true, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:1.0, speedSlider:1.0,
+    barrels:[
+      {id:1,label:'Мини',angle:0,      length:30,width:9,reload:0.55,bSize:0.65,bSpeed:1.2,bDmg:0.6,lateral:0,bulletType:'normal'},
+      {id:2,label:'Мини',angle:1.5708, length:30,width:9,reload:0.55,bSize:0.65,bSpeed:1.2,bDmg:0.6,lateral:0,bulletType:'normal'},
+      {id:3,label:'Мини',angle:3.1416, length:30,width:9,reload:0.55,bSize:0.65,bSpeed:1.2,bDmg:0.6,lateral:0,bulletType:'normal'},
+      {id:4,label:'Мини',angle:-1.5708,length:30,width:9,reload:0.55,bSize:0.65,bSpeed:1.2,bDmg:0.6,lateral:0,bulletType:'normal'},
+    ] },
+  { _tpl:'cannon',  name:'Миномёт',  icon:'💣', tier:4, color:'#e09020', upgradesFrom:'Basic', description:'Мощный одиночный выстрел', specialType:'normal', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:1.5, speedSlider:0.8,
+    barrels:[{id:1,label:'Пушка',angle:0,length:56,width:28,reload:2.8,bSize:2.2,bSpeed:0.95,bDmg:3.5,lateral:0,bulletType:'normal'}] },
+  { _tpl:'miner',   name:'Минёр',    icon:'💥', tier:3, color:'#e8a000', upgradesFrom:'Basic', description:'Стреляет вперёд, разбрасывает мины назад', specialType:'normal', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:1.0, speedSlider:1.0,
+    barrels:[
+      {id:1,label:'Стандартный',angle:0,      length:48,width:14,reload:1.0,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:0,bulletType:'normal'},
+      {id:2,label:'Стандартный',angle:3.1416, length:40,width:12,reload:1.2,bSize:1.3,bSpeed:0.3,bDmg:1.2,lateral:0,bulletType:'trap'},
+    ] },
+  { _tpl:'droner',  name:'Дронер',   icon:'🤖', tier:3, color:'#4aa87c', upgradesFrom:'Basic', description:'Выпускает дронов-снарядов', specialType:'drone', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:1.2, speedSlider:0.9,
+    barrels:[
+      {id:1,label:'Стандартный',angle:0,      length:48,width:14,reload:1.5,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:0,bulletType:'normal'},
+      {id:2,label:'Стандартный',angle:3.1416, length:48,width:14,reload:1.5,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:0,bulletType:'normal'},
+    ] },
+  { _tpl:'rocket',  name:'Ракетчик', icon:'🚀', tier:4, color:'#cc4444', upgradesFrom:'Basic', description:'Запускает управляемые ракеты', specialType:'rocket', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:1.0, speedSlider:1.0,
+    barrels:[{id:1,label:'Длинный',angle:0,length:72,width:10,reload:2.0,bSize:1.2,bSpeed:1.8,bDmg:2.2,lateral:0,bulletType:'normal'}] },
+  { _tpl:'vampire', name:'Вампир',   icon:'🧛', tier:4, color:'#6633cc', upgradesFrom:'Basic', description:'Лечится при нанесении урона', specialType:'vampire', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:1.5, speedSlider:1.0,
+    barrels:[{id:1,label:'Широкий',angle:0,length:36,width:22,reload:1.0,bSize:1.5,bSpeed:0.85,bDmg:1.4,lateral:0,bulletType:'normal'}] },
+  { _tpl:'autoturret', name:'Авто-турельщик', icon:'🔫', tier:4, color:'#3399ff', upgradesFrom:'Basic', description:'Разворачивает авто-турели', specialType:'normal', autoGun:false, turretDeploy:true, turretCfg:{maxTurrets:4,fireRate:45,health:100,lifetime:720,damage:10,speed:9,size:7,homing:false}, upgradesTo:[], hpSlider:1.2, speedSlider:0.9,
+    barrels:[{id:1,label:'Стандартный',angle:0,length:48,width:14,reload:1.0,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:0,bulletType:'normal'}] },
+  { _tpl:'smasher', name:'Смэшер',   icon:'🔨', tier:4, color:'#888888', upgradesFrom:'Basic', description:'Огромный корпус, урон при столкновении', specialType:'normal', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:2.0, speedSlider:1.1,
+    barrels:[] },
+];
+
 function loadTanks() {
   try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e) { return []; }
 }
@@ -42,6 +79,10 @@ function exportTankCode(def) {
     hpSlider:     def.hpSlider,
     speedSlider:  def.speedSlider,
     specialType:  def.specialType || 'normal',
+    autoGun:      !!def.autoGun,
+    turretDeploy: !!def.turretDeploy,
+    turretCfg:    def.turretCfg || {},
+    upgradesTo:   def.upgradesTo || [],
     barrels:      (def.barrels || []).map(function(b) {
       return {
         angle:   b.angle,
@@ -85,6 +126,20 @@ function importTankCode(code) {
   def.speedSlider = Math.min(2, Math.max(0.5, parseFloat(def.speedSlider) || 1));
   var _validSpecial = ['normal','rocket','laser','drone','homing','splitting','vampire'];
   def.specialType = (_validSpecial.indexOf(def.specialType) >= 0) ? def.specialType : 'normal';
+  def.autoGun      = !!def.autoGun;
+  def.turretDeploy = !!def.turretDeploy;
+  var _tc = def.turretCfg || {};
+  def.turretCfg = {
+    maxTurrets: Math.min(8, Math.max(1, parseInt(_tc.maxTurrets)||3)),
+    fireRate:   Math.min(120, Math.max(20, parseInt(_tc.fireRate)||55)),
+    health:     Math.min(500, Math.max(20, parseInt(_tc.health)||90)),
+    lifetime:   Math.min(1500, Math.max(200, parseInt(_tc.lifetime)||700)),
+    damage:     Math.min(80, Math.max(2, parseFloat(_tc.damage)||9)),
+    speed:      Math.min(20, Math.max(3, parseFloat(_tc.speed)||8.5)),
+    size:       Math.min(25, Math.max(3, parseFloat(_tc.size)||7)),
+    homing:     !!_tc.homing,
+  };
+  def.upgradesTo = Array.isArray(def.upgradesTo) ? def.upgradesTo.filter(function(s){ return typeof s==='string'; }) : [];
   def.barrels = def.barrels.map(function(b, i) {
     return {
       id:         Date.now() + i,
@@ -145,6 +200,16 @@ function registerTank(def) {
     isHoming:       _spt === 'homing',
     isSplitting:    _spt === 'splitting',
     isVampir:       _spt === 'vampire',
+    isAutoGunner:      !!def.autoGun,
+    isTurretDeployer:  !!def.turretDeploy,
+    maxTurrets:        (def.turretCfg && def.turretCfg.maxTurrets) || 3,
+    turretFireRate:    (def.turretCfg && def.turretCfg.fireRate)    || 55,
+    turretHealth:      (def.turretCfg && def.turretCfg.health)      || 90,
+    turretLifetime:    (def.turretCfg && def.turretCfg.lifetime)    || 700,
+    turretBulletDamage:(def.turretCfg && def.turretCfg.damage)      || 9,
+    turretBulletSpeed: (def.turretCfg && def.turretCfg.speed)       || 8.5,
+    turretBulletRadius:(def.turretCfg && def.turretCfg.size)        || 7,
+    turretBulletHoming:!!(def.turretCfg && def.turretCfg.homing),
     _speedMultiplier: spdMult,
     _isCustom: true,
   };
@@ -167,6 +232,15 @@ function registerTank(def) {
      Иначе при смене родителя танк висел бы как апгрейд сразу двух родителей. */
   window.Ty = window.Ty.filter(function(e){ return e[1] !== id; });
   window.Ty.push([parent, id]);
+  /* Custom upgrade tree — tank can upgrade TO other custom tanks */
+  if (Array.isArray(def.upgradesTo)) {
+    def.upgradesTo.forEach(function(childId) {
+      if (childId && childId !== id) {
+        window.Ty = window.Ty.filter(function(e){ return !(e[0]===id && e[1]===childId); });
+        window.Ty.push([id, childId]);
+      }
+    });
+  }
 }
 
 function registerAllCustomTanks() {
@@ -206,6 +280,11 @@ function TankBuilder({ onClose }) {
       barrels: [],
       hpSlider: 1.0,
       speedSlider: 1.0,
+      specialType: 'normal',
+      autoGun: false,
+      turretDeploy: false,
+      turretCfg: { maxTurrets:3, fireRate:55, health:90, lifetime:700, damage:9, speed:8.5, size:7, homing:false },
+      upgradesTo: [],
     };
   }
   var _blank = _blankRef.current;
@@ -217,6 +296,42 @@ function TankBuilder({ onClose }) {
 
   /* ── Подтверждение удаления ─────────────────────────────────── */
   var _dp = useState(null); var deletePending = _dp[0]; var setDeletePending = _dp[1];
+  /* ── История undo/redo ─────────────────────────────────────── */
+  var historyRef    = useRef([]);
+  var historyIdxRef = useRef(-1);
+
+  /* Добавить снимок состояния в историю */
+  function pushHistory(state) {
+    var h = historyRef.current;
+    var idx = historyIdxRef.current;
+    h.splice(idx + 1);
+    h.push(JSON.stringify(state));
+    if (h.length > 60) h.shift();
+    historyIdxRef.current = h.length - 1;
+  }
+
+  /* Отмена */
+  function undo() {
+    var h = historyRef.current;
+    var idx = historyIdxRef.current;
+    if (idx <= 0) return;
+    historyIdxRef.current = idx - 1;
+    try { setEditing(JSON.parse(h[idx - 1])); } catch(e){}
+  }
+
+  /* Возврат */
+  function redo() {
+    var h = historyRef.current;
+    var idx = historyIdxRef.current;
+    if (idx >= h.length - 1) return;
+    historyIdxRef.current = idx + 1;
+    try { setEditing(JSON.parse(h[idx + 1])); } catch(e){}
+  }
+
+  var canUndoRef = useRef(false);
+  var canRedoRef = useRef(false);
+  canUndoRef.current = historyIdxRef.current > 0;
+  canRedoRef.current = historyIdxRef.current < historyRef.current.length - 1;
 
   /* ── Модал импорта/экспорта ─────────────────────────────────── */
   /* modal: null | { type:'export', code:string, defName:string } | { type:'import' } */
@@ -255,6 +370,17 @@ function TankBuilder({ onClose }) {
     v.zoom = clampZoom(v.zoom + delta);
     setViewCounter(function(c){ return c+1; });
   }
+
+  /* ── Ctrl+Z / Ctrl+Y keyboard shortcuts ────────────────────── */
+  useEffect(function() {
+    function onKey(e) {
+      if (!e.ctrlKey && !e.metaKey) return;
+      if (e.key === 'z' || e.key === 'Z') { e.preventDefault(); undo(); }
+      if (e.key === 'y' || e.key === 'Y') { e.preventDefault(); redo(); }
+    }
+    window.addEventListener('keydown', onKey);
+    return function() { window.removeEventListener('keydown', onKey); };
+  }, []);
 
   /* ── ResizeObserver: синхронизирует атрибуты canvas с CSS-размером ── */
   useEffect(function() {
@@ -502,19 +628,49 @@ function TankBuilder({ onClose }) {
   function addBarrel(preset) {
     var p = preset || BARREL_PRESETS[0];
     setEditing(function(prev) {
-      return Object.assign({}, prev, { barrels: prev.barrels.concat([Object.assign({}, p, { angle:0, lateral:0, id:Date.now(), bulletType: p.bulletType||'normal' })]) });
+      var next = Object.assign({}, prev, { barrels: prev.barrels.concat([Object.assign({}, p, { angle:0, lateral:0, id:Date.now(), bulletType: p.bulletType||'normal' })]) });
+      pushHistory(next);
+      return next;
     });
   }
   function removeBarrel(idx) {
     setEditing(function(prev) {
       var arr = prev.barrels.slice(); arr.splice(idx,1);
-      return Object.assign({}, prev, { barrels: arr });
+      var next = Object.assign({}, prev, { barrels: arr });
+      pushHistory(next);
+      return next;
     });
   }
   function updateBarrel(idx, key, val) {
     setEditing(function(prev) {
       return Object.assign({}, prev, { barrels: prev.barrels.map(function(b,i){ return i===idx ? Object.assign({},b,((function(o){o[key]=val;return o;})({})) ) : b; }) });
     });
+  }
+  function mirrorBarrel(idx) {
+    setEditing(function(prev) {
+      var b = prev.barrels[idx];
+      if (!b) return prev;
+      var mirrored = Object.assign({}, b, {
+        id: Date.now() + 1,
+        lateral: -(b.lateral || 0),
+        angle:   -( b.angle || 0),
+      });
+      var arr = prev.barrels.slice();
+      arr.splice(idx + 1, 0, mirrored);
+      var next = Object.assign({}, prev, { barrels: arr });
+      pushHistory(next);
+      return next;
+    });
+  }
+  function applyTemplate(tpl) {
+    var def = JSON.parse(JSON.stringify(tpl));
+    def.id = genId();
+    def.barrels = def.barrels.map(function(b, i){ return Object.assign({}, b, {id: Date.now()+i}); });
+    delete def._tpl;
+    pushHistory(def);
+    setEditing(def);
+    bulletsRef.current = [];
+    setPreviewing(false);
   }
 
   /* ── Экспорт / Импорт — функции ────────────────────────────── */
@@ -697,6 +853,39 @@ function TankBuilder({ onClose }) {
     exportBtn: function(col){ return { padding:'7px 14px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:'Arial',fontWeight:'bold',fontSize:11,touchAction:'manipulation',background:col||'rgba(0,140,80,0.7)',color:'#fff' }; },
   };
 
+  /* ── Расчётная статистика ─────────────────────────────────── */
+  function computeStats(ed) {
+    var barrels = ed.barrels || [];
+    if (barrels.length === 0) return null;
+    /* DPS: за условную единицу времени, reload 1.0 = 1 выстрел в сек */
+    var dps = 0;
+    var maxRange = 0;
+    barrels.forEach(function(b) {
+      var dmg    = (b.bDmg  || 1.0);
+      var reload = (b.reload || 1.0);
+      var speed  = (b.bSpeed || 1.0);
+      /* life ~80 ticks @ 60fps ≈ 1.33s, scaled by speed */
+      var range  = speed * 2.5 * 80;
+      if (range > maxRange) maxRange = range;
+      dps += dmg / reload;
+    });
+    var tier   = ed.tier || 3;
+    var preset = TIER_PRESETS[tier] || TIER_PRESETS[3];
+    var hpMult = preset.hp * (ed.hpSlider || 1);
+    var spMult = preset.speed * (ed.speedSlider || 1);
+    /* Firepower = DPS * range (normalized) */
+    var firepower = Math.round(dps * (maxRange / 200) * 10);
+    return {
+      dps:       parseFloat(dps.toFixed(2)),
+      range:     Math.round(maxRange),
+      hp:        Math.round(hpMult * 100),
+      speed:     Math.round(spMult * 100),
+      firepower: firepower,
+      barrels:   barrels.length,
+    };
+  }
+  var stats = computeStats(editing);
+
   /* ══════════════════════════════════════════════════════════════
      RENDER
      ══════════════════════════════════════════════════════════════ */
@@ -708,7 +897,23 @@ function TankBuilder({ onClose }) {
         jsx('span', { style: S.title, children: 'КОНСТРУКТОР ТАНКА' }),
         jsx('span', { style:{fontSize:10,color:'rgba(255,255,255,0.3)',marginTop:2}, children:'Beta' }),
       ]}),
-      jsx('button', { onClick: onClose, style: S.btn('rgba(180,30,30,0.6)'), children: '✕ Закрыть' }),
+      jsxs('div', { style:{display:'flex',gap:6,alignItems:'center'}, children:[
+        jsx('button', {
+          onClick: undo,
+          disabled: !canUndoRef.current,
+          title: 'Отменить (Ctrl+Z)',
+          style: Object.assign({}, S.btn('rgba(80,60,120,0.7)'), { opacity: canUndoRef.current ? 1 : 0.35 }),
+          children: '↩ Отмена',
+        }),
+        jsx('button', {
+          onClick: redo,
+          disabled: !canRedoRef.current,
+          title: 'Вернуть (Ctrl+Y)',
+          style: Object.assign({}, S.btn('rgba(40,100,140,0.7)'), { opacity: canRedoRef.current ? 1 : 0.35 }),
+          children: '↪ Возврат',
+        }),
+        jsx('button', { onClick: onClose, style: S.btn('rgba(180,30,30,0.6)'), children: '✕ Закрыть' }),
+      ]}),
     ]}),
 
     /* TABS */
@@ -841,7 +1046,7 @@ function TankBuilder({ onClose }) {
 
             /* Статы мини */
             jsx('div', { style:{fontSize:9,color:'rgba(255,255,255,0.3)',lineHeight:1.7,textAlign:'right'}, children:
-              'HP ' + hpEff + '%  Sp ' + spdEff + '%  B×' + editing.barrels.length
+              stats ? ('DPS ' + stats.dps + '  R×' + editing.barrels.length) : ('B×' + editing.barrels.length)
             }),
           ]}),
 
@@ -861,6 +1066,55 @@ function TankBuilder({ onClose }) {
 
         /* ════ Правая колонка — настройки ════ */
         jsxs('div', { style: S.rightCol, children: [
+
+          /* ── Шаблоны-стартовые точки ───────────────────────────── */
+          jsxs('div', { style: S.section, children: [
+            jsx('div', { style: S.sectionTitle, children: '📦 Шаблоны (стартовая точка)' }),
+            jsx('div', { style:{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:4}, children:
+              TANK_TEMPLATES.map(function(tpl) {
+                return jsx('button', { key:tpl._tpl, title: tpl.name + ' — ' + tpl.description,
+                  style:{padding:'6px 2px',borderRadius:7,border:'1.5px solid rgba(68,136,255,0.25)',
+                    background:'rgba(0,40,100,0.4)',color:'#aaddff',cursor:'pointer',
+                    fontFamily:'Arial',fontSize:11,fontWeight:'bold',touchAction:'manipulation',
+                    display:'flex',flexDirection:'column',alignItems:'center',gap:1},
+                  onClick: function(){ applyTemplate(tpl); },
+                  children: [tpl.icon, jsx('span',{style:{fontSize:8,opacity:0.7},children:tpl.name.split(' ')[0]})] });
+              })
+            }),
+            jsx('div', { style:{color:'rgba(255,255,255,0.25)',fontSize:10,marginTop:4},
+              children:'Нажми иконку — загрузит пресет в редактор. Имя и настройки можно изменить.' }),
+          ]}),
+
+          /* ── Расчётная статистика ──────────────────────────────── */
+          stats && jsxs('div', { style: Object.assign({}, S.section, {background:'rgba(0,60,20,0.2)',borderColor:'rgba(0,200,100,0.2)'}), children: [
+            jsx('div', { style: S.sectionTitle, children: '📊 Расчётная статистика' }),
+            jsx('div', { style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:5}, children:[
+              jsxs('div', { style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'}, children:[
+                jsx('div', { style:{color:'#ff8040',fontSize:14,fontWeight:900}, children: stats.dps }),
+                jsx('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1}, children:'DPS' }),
+              ]}),
+              jsxs('div', { style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'}, children:[
+                jsx('div', { style:{color:'#40c0ff',fontSize:14,fontWeight:900}, children: stats.range }),
+                jsx('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1}, children:'Дальность' }),
+              ]}),
+              jsxs('div', { style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'}, children:[
+                jsx('div', { style:{color:'#80ff60',fontSize:14,fontWeight:900}, children: stats.hp+'%' }),
+                jsx('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1}, children:'HP' }),
+              ]}),
+              jsxs('div', { style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'}, children:[
+                jsx('div', { style:{color:'#ffee40',fontSize:14,fontWeight:900}, children: stats.speed+'%' }),
+                jsx('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1}, children:'Скорость' }),
+              ]}),
+              jsxs('div', { style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'}, children:[
+                jsx('div', { style:{color:'#cc80ff',fontSize:14,fontWeight:900}, children: stats.barrels }),
+                jsx('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1}, children:'Стволов' }),
+              ]}),
+              jsxs('div', { style:{background:'rgba(255,200,0,0.12)',borderRadius:7,padding:'6px 8px',textAlign:'center',border:'1px solid rgba(255,200,0,0.2)'}, children:[
+                jsx('div', { style:{color:'#ffdd00',fontSize:14,fontWeight:900}, children: stats.firepower }),
+                jsx('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1}, children:'Мощь' }),
+              ]}),
+            ]}),
+          ]}),
 
           /* Имя */
           jsxs('div', { style: S.section, children: [
@@ -935,9 +1189,16 @@ function TankBuilder({ onClose }) {
               return jsxs('div', { key: b.id||bi, style: S.barrelCard, children:[
                 jsxs('div', { style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:7}, children:[
                   jsx('div', { style:{color:'#00ccff',fontWeight:'bold',fontSize:11}, children:'Ствол #'+(bi+1)+' — '+(b.label||'Custom') }),
-                  jsx('button', { onClick:function(){ removeBarrel(bi); },
-                    style:{background:'rgba(200,30,30,0.5)',border:'none',borderRadius:4,color:'#ff8888',fontSize:12,padding:'2px 7px',cursor:'pointer'},
-                    children:'✕' }),
+                  jsxs('div', { style:{display:'flex',gap:4}, children:[
+                    jsx('button', {
+                      onClick:function(){ mirrorBarrel(bi); },
+                      title:'Добавить зеркальный ствол',
+                      style:{background:'rgba(0,80,180,0.5)',border:'none',borderRadius:4,color:'#88ccff',fontSize:11,padding:'2px 7px',cursor:'pointer',touchAction:'manipulation'},
+                      children:'⇄' }),
+                    jsx('button', { onClick:function(){ removeBarrel(bi); },
+                      style:{background:'rgba(200,30,30,0.5)',border:'none',borderRadius:4,color:'#ff8888',fontSize:12,padding:'2px 7px',cursor:'pointer',touchAction:'manipulation'},
+                      children:'✕' }),
+                  ]}),
                 ]}),
                 [
                   ['angle',   'Угол',         -3.14159,3.14159,0.05,  function(v){ return Math.round(v*180/Math.PI)+'°'; }],
@@ -1010,6 +1271,122 @@ function TankBuilder({ onClose }) {
               })[editing.specialType||'normal'],
             }),
           ]}),
+
+          /* ── Авто-режим стрельбы ───────────────────────────────── */
+          jsxs('div', { style: S.section, children: [
+            jsx('div', { style: S.sectionTitle, children: '🤖 Авто-режим стрельбы' }),
+            jsxs('div', { style:{display:'flex',gap:6,flexWrap:'wrap',marginBottom:6}, children:[
+              /* Авто-стрельба */
+              jsx('button', {
+                style:{padding:'8px 12px',borderRadius:8,flex:1,border:'none',cursor:'pointer',
+                  fontFamily:'Arial',fontWeight:'bold',fontSize:11,touchAction:'manipulation',
+                  background: editing.autoGun ? 'rgba(255,140,0,0.7)' : 'rgba(255,255,255,0.07)',
+                  color: editing.autoGun ? '#fff' : 'rgba(255,255,255,0.45)'},
+                onClick: function(){
+                  setEditing(function(p){
+                    var next = Object.assign({},p,{autoGun:!p.autoGun, turretDeploy: p.autoGun?p.turretDeploy:false});
+                    pushHistory(next); return next;
+                  });
+                },
+                children: (editing.autoGun ? '✔ ' : '') + '⚡ Авто-стрельба',
+              }),
+              /* Авто-турели */
+              jsx('button', {
+                style:{padding:'8px 12px',borderRadius:8,flex:1,border:'none',cursor:'pointer',
+                  fontFamily:'Arial',fontWeight:'bold',fontSize:11,touchAction:'manipulation',
+                  background: editing.turretDeploy ? 'rgba(0,160,255,0.7)' : 'rgba(255,255,255,0.07)',
+                  color: editing.turretDeploy ? '#fff' : 'rgba(255,255,255,0.45)'},
+                onClick: function(){
+                  setEditing(function(p){
+                    var next = Object.assign({},p,{turretDeploy:!p.turretDeploy, autoGun: p.turretDeploy?p.autoGun:false});
+                    pushHistory(next); return next;
+                  });
+                },
+                children: (editing.turretDeploy ? '✔ ' : '') + '🔫 Авто-турели',
+              }),
+            ]}),
+            jsx('div', { style:{color:'rgba(255,255,255,0.25)',fontSize:10,lineHeight:1.6},
+              children: editing.autoGun
+                ? '⚡ Стволы стреляют автоматически и наводятся на врагов.'
+                : editing.turretDeploy
+                  ? '🔫 При выстреле размещает авто-турели, которые сами стреляют по врагам.'
+                  : 'Стрельба вручную — без авто-режима.' }),
+
+            /* Настройки авто-турелей */
+            editing.turretDeploy && jsxs('div', { style:{marginTop:8,borderTop:'1px solid rgba(255,255,255,0.08)',paddingTop:8,display:'flex',flexDirection:'column',gap:5}, children:[
+              jsx('div', { style:{color:'rgba(0,180,255,0.7)',fontSize:10,fontWeight:'bold',letterSpacing:.5,marginBottom:3}, children:'НАСТРОЙКИ АВТО-ТУРЕЛЕЙ:' }),
+              [
+                ['maxTurrets','Макс. турелей',  1,   8,   1,  function(v){ return v; }],
+                ['fireRate',  'Скор. огня (↓=быстрее)', 20, 120, 5, function(v){ return v; }],
+                ['health',    'HP турели',      20,  500, 10, function(v){ return v; }],
+                ['lifetime',  'Время жизни',   200, 1500,50, function(v){ return v+'ф'; }],
+                ['damage',    'Урон',            2,   80,  1, function(v){ return v; }],
+                ['speed',     'Скор. пули',      3,   20,0.5, function(v){ return v; }],
+                ['size',      'Размер пули',     3,   25,  1, function(v){ return v; }],
+              ].map(function(row){
+                var k=row[0],lbl=row[1],mn=row[2],mx=row[3],step=row[4],fmt=row[5];
+                var tc = editing.turretCfg || {};
+                var val = tc[k] !== undefined ? tc[k] : (k==='maxTurrets'?3:k==='fireRate'?55:k==='health'?90:k==='lifetime'?700:k==='damage'?9:k==='speed'?8.5:7);
+                return jsxs('div', { key:k, style: S.sliderRow, children:[
+                  jsx('div', { style:S.sliderLabel, children: lbl+': '+fmt(val) }),
+                  jsx('input', { type:'range',min:mn,max:mx,step:step,value:val,
+                    onChange:function(e){
+                      var nv = step%1!==0 ? parseFloat(e.target.value) : parseInt(e.target.value);
+                      setEditing(function(p){
+                        var tc2 = Object.assign({}, p.turretCfg||{});
+                        tc2[k] = nv;
+                        return Object.assign({},p,{turretCfg:tc2});
+                      });
+                    },
+                    style:S.slider }),
+                ]});
+              }),
+              /* Наводящиеся пули */
+              jsxs('div', { style:{display:'flex',alignItems:'center',gap:8,marginTop:4}, children:[
+                jsx('input', { type:'checkbox', id:'_tcHoming',
+                  checked: !!(editing.turretCfg && editing.turretCfg.homing),
+                  onChange: function(e){
+                    setEditing(function(p){
+                      var tc2 = Object.assign({}, p.turretCfg||{}, {homing: e.target.checked});
+                      return Object.assign({},p,{turretCfg:tc2});
+                    });
+                  } }),
+                jsx('label', { htmlFor:'_tcHoming', style:{color:'rgba(255,255,255,0.6)',fontSize:11,cursor:'pointer'}, children:'🎯 Наводящиеся снаряды турелей' }),
+              ]}),
+            ]}),
+          ]}),
+
+          /* ── Дерево кастомных апгрейдов ────────────────────────── */
+          (function(){
+            var myTanks = loadTanks().filter(function(t){ return t.id !== editing.id; });
+            if (myTanks.length === 0) return null;
+            var upgTo = editing.upgradesTo || [];
+            return jsxs('div', { style: S.section, children: [
+              jsx('div', { style: S.sectionTitle, children: '🌿 Апгрейды этого танка (Куда идёт прокачка)' }),
+              jsx('div', { style:{display:'flex',flexWrap:'wrap',gap:5}, children:
+                myTanks.map(function(t){
+                  var isOn = upgTo.indexOf(t.id) >= 0;
+                  return jsx('button', { key:t.id,
+                    style:{padding:'5px 10px',borderRadius:7,border: isOn?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.15)',
+                      background: isOn?'rgba(0,100,200,0.5)':'rgba(255,255,255,0.05)',
+                      color: isOn?'#fff':'rgba(255,255,255,0.5)',cursor:'pointer',
+                      fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},
+                    onClick: function(){
+                      setEditing(function(p){
+                        var arr = (p.upgradesTo||[]).slice();
+                        var i = arr.indexOf(t.id);
+                        if (i>=0) arr.splice(i,1); else arr.push(t.id);
+                        var next = Object.assign({},p,{upgradesTo:arr});
+                        pushHistory(next); return next;
+                      });
+                    },
+                    children: (isOn?'✔ ':'')+t.name });
+                })
+              }),
+              jsx('div', { style:{color:'rgba(255,255,255,0.25)',fontSize:10,marginTop:4,lineHeight:1.5},
+                children:'Выбери кастомные танки, в которые апгрейдится этот. Они появятся как варианты прокачки в игре.' }),
+            ]});
+          })(),
 
           /* Описание */
           jsxs('div', { style: S.section, children: [
