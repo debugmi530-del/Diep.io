@@ -109,17 +109,22 @@ function TankBuilder({ onClose }) {
   var jsxs = window.D && window.D.jsxs;
   if (!jsx || !jsxs) return null;
 
-  var _blank = {
-    id: genId(),
-    name: '',
-    tier: 3,
-    color: '#22cc55',
-    upgradesFrom: 'Basic',
-    description: '',
-    barrels: [],
-    hpSlider: 1.0,
-    speedSlider: 1.0,
-  };
+  /* _blank хранится в ref чтобы избежать нового genId() на каждый рендер */
+  var _blankRef = useRef(null);
+  if (!_blankRef.current) {
+    _blankRef.current = {
+      id: genId(),
+      name: '',
+      tier: 3,
+      color: '#22cc55',
+      upgradesFrom: 'Basic',
+      description: '',
+      barrels: [],
+      hpSlider: 1.0,
+      speedSlider: 1.0,
+    };
+  }
+  var _blank = _blankRef.current;
 
   var _s   = useState(null);       var selectedDef = _s[0];  var setSelectedDef = _s[1];
   var _e   = useState(_blank);     var editing     = _e[0];  var setEditing     = _e[1];
@@ -134,9 +139,10 @@ function TankBuilder({ onClose }) {
   /* Счётчик для принудительного обновления отображения zoom% */
   var _vc = useState(0); var setViewCounter = _vc[1];
 
-  var canvasRef   = useRef(null);
-  var animRef     = useRef(null);
-  var bulletsRef  = useRef([]);
+  var canvasRef      = useRef(null);
+  var canvasWrapRef  = useRef(null);
+  var animRef        = useRef(null);
+  var bulletsRef     = useRef([]);
   /* Состояние drag/pinch */
   var dragRef     = useRef({ active: false, lastX: 0, lastY: 0 });
   var pinchRef    = useRef({ active: false, lastDist: 0 });
@@ -156,6 +162,25 @@ function TankBuilder({ onClose }) {
     setViewCounter(function(c){ return c+1; });
   }
 
+  /* ── ResizeObserver: синхронизирует атрибуты canvas с CSS-размером ── */
+  useEffect(function() {
+    var cvs  = canvasRef.current;
+    var wrap = canvasWrapRef.current;
+    if (!cvs || !wrap || typeof ResizeObserver === 'undefined') return;
+    var ro = new ResizeObserver(function(entries) {
+      var entry = entries[0];
+      if (!entry) return;
+      var w = Math.round(entry.contentRect.width);
+      var h = Math.round(entry.contentRect.height);
+      if (w > 0 && h > 0 && (cvs.width !== w || cvs.height !== h)) {
+        cvs.width  = w;
+        cvs.height = h;
+      }
+    });
+    ro.observe(wrap);
+    return function() { ro.disconnect(); };
+  }, []);
+
   /* ── Canvas pointer / touch events ─────────────────────────── */
   useEffect(function() {
     var cvs = canvasRef.current;
@@ -163,8 +188,9 @@ function TankBuilder({ onClose }) {
 
     function onPointerDown(e) {
       if (viewLocked) return;
-      if (e.touches && e.touches.length === 2) {
-        /* Pinch start */
+      if (e.touches && e.touches.length >= 2) {
+        /* Pinch start — preventDefault чтобы не было page-scroll */
+        e.preventDefault();
         var dx = e.touches[0].clientX - e.touches[1].clientX;
         var dy = e.touches[0].clientY - e.touches[1].clientY;
         pinchRef.current = { active: true, lastDist: Math.sqrt(dx*dx+dy*dy) };
@@ -180,7 +206,8 @@ function TankBuilder({ onClose }) {
       if (viewLocked) return;
 
       /* Pinch zoom */
-      if (e.touches && e.touches.length === 2 && pinchRef.current.active) {
+      if (e.touches && e.touches.length >= 2 && pinchRef.current.active) {
+        e.preventDefault();
         var dx = e.touches[0].clientX - e.touches[1].clientX;
         var dy = e.touches[0].clientY - e.touches[1].clientY;
         var dist = Math.sqrt(dx*dx+dy*dy);
@@ -203,7 +230,7 @@ function TankBuilder({ onClose }) {
     }
 
     function onPointerUp() {
-      dragRef.current.active = false;
+      dragRef.current.active  = false;
       pinchRef.current.active = false;
     }
 
@@ -211,10 +238,11 @@ function TankBuilder({ onClose }) {
       if (viewLocked) return;
       e.preventDefault();
       var delta = e.deltaY > 0 ? -0.12 : 0.12;
-      /* Zoom to cursor position */
+      /* Zoom to cursor — используем rect.width/height (реальные CSS-пиксели),
+         а не cvs.width/height (логические), чтобы центр совпадал при CSS-масштабировании */
       var rect = cvs.getBoundingClientRect();
-      var mx = (e.clientX - rect.left) - cvs.width/2;
-      var my = (e.clientY - rect.top)  - cvs.height/2;
+      var mx = (e.clientX - rect.left) - rect.width  / 2;
+      var my = (e.clientY - rect.top)  - rect.height / 2;
       var v = viewRef.current;
       var oldZoom = v.zoom;
       var newZoom = clampZoom(oldZoom + delta);
@@ -225,11 +253,12 @@ function TankBuilder({ onClose }) {
       setViewCounter(function(c){ return c+1; });
     }
 
+    /* touchstart НЕ passive — нужен preventDefault для щупа */
     cvs.addEventListener('mousedown',  onPointerDown);
     cvs.addEventListener('mousemove',  onPointerMove);
     cvs.addEventListener('mouseup',    onPointerUp);
     cvs.addEventListener('mouseleave', onPointerUp);
-    cvs.addEventListener('touchstart', onPointerDown, { passive: true });
+    cvs.addEventListener('touchstart', onPointerDown, { passive: false });
     cvs.addEventListener('touchmove',  onPointerMove, { passive: false });
     cvs.addEventListener('touchend',   onPointerUp);
     cvs.addEventListener('wheel',      onWheel,       { passive: false });
@@ -444,9 +473,6 @@ function TankBuilder({ onClose }) {
     listCard: { background:'rgba(255,255,255,0.04)',borderRadius:10,border:'1px solid rgba(255,255,255,0.1)',padding:'11px',marginBottom:9,display:'flex',alignItems:'center',gap:11 },
     dot: function(col){ return { width:14,height:14,borderRadius:'50%',background:col,flexShrink:0 }; },
     saveBtn: { width:'100%',padding:'13px',fontSize:14,fontWeight:'bold',borderRadius:11,border:'none',cursor:'pointer',fontFamily:'Arial',touchAction:'manipulation',background:'linear-gradient(90deg,#0088cc,#44b4e0)',color:'#fff',boxShadow:'0 4px 14px rgba(0,150,220,0.35)' },
-    statsBox: { background:'rgba(0,0,0,0.35)',borderRadius:8,padding:'7px 10px',fontSize:10,display:'grid',gridTemplateColumns:'1fr 1fr',gap:'4px 12px' },
-    statItem: function(col){ return { display:'flex',justifyContent:'space-between',color:'rgba(255,255,255,0.45)' }; },
-    statVal: function(col){ return { color:col,fontWeight:'bold' }; },
   };
 
   /* ══════════════════════════════════════════════════════════════
@@ -506,7 +532,7 @@ function TankBuilder({ onClose }) {
         jsxs('div', { style: S.leftCol, children: [
 
           /* Холст — занимает всё свободное пространство */
-          jsxs('div', { style: S.canvasWrap, children: [
+          jsxs('div', { ref: canvasWrapRef, style: S.canvasWrap, children: [
             jsx('canvas', {
               ref: canvasRef,
               width: 260,
