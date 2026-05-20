@@ -1062,6 +1062,11 @@ function mountBuilderButton() {
       return function(){ clearInterval(t); };
     }, []);
 
+    useEffect(function() {
+      window._openTankBuilder = function(){ setOpen(true); };
+      return function(){ window._openTankBuilder = null; };
+    }, [setOpen]);
+
     /* Проверки после хуков */
     if (!window.D || !window.D.jsx) return null;
     var jsx  = window.D.jsx;
@@ -1070,19 +1075,7 @@ function mountBuilderButton() {
     if (!visible && !open) return null;
 
     return jsxs('div', { style:{position:'fixed',inset:0,zIndex:1999,pointerEvents:'none'}, children:[
-      !open && visible && jsx('button', {
-        style:{
-          position:'fixed',bottom:68,left:20,zIndex:2000,
-          padding:'12px 18px',borderRadius:14,
-          border:'1.5px solid rgba(0,180,255,0.5)',
-          background:'rgba(0,30,80,0.95)',color:'#00ccff',
-          fontSize:13,fontWeight:'bold',cursor:'pointer',
-          touchAction:'manipulation',pointerEvents:'auto',
-          boxShadow:'0 4px 16px rgba(0,100,200,0.4)',
-        },
-        onClick: function(){ setOpen(true); },
-        children: '⚙ Конструктор',
-      }),
+
       open && jsx('div', { style:{pointerEvents:'auto'},
         children: React.createElement(TankBuilder, { onClose: function(){ setOpen(false); } })
       }),
