@@ -41,6 +41,7 @@ function exportTankCode(def) {
     description:  def.description || '',
     hpSlider:     def.hpSlider,
     speedSlider:  def.speedSlider,
+    specialType:  def.specialType || 'normal',
     barrels:      (def.barrels || []).map(function(b) {
       return {
         angle:   b.angle,
@@ -82,18 +83,21 @@ function importTankCode(code) {
   def.tier        = Math.min(5, Math.max(1, parseInt(def.tier)    || 3));
   def.hpSlider    = Math.min(2, Math.max(0.4, parseFloat(def.hpSlider)    || 1));
   def.speedSlider = Math.min(2, Math.max(0.5, parseFloat(def.speedSlider) || 1));
+  var _validSpecial = ['normal','rocket','laser','drone','homing','splitting','vampire'];
+  def.specialType = (_validSpecial.indexOf(def.specialType) >= 0) ? def.specialType : 'normal';
   def.barrels = def.barrels.map(function(b, i) {
     return {
-      id:      Date.now() + i,
-      label:   b.label  || 'Custom',
-      angle:   isFinite(b.angle)  ? b.angle  : 0,
-      length:  Math.min(100, Math.max(20,  parseInt(b.length) || 48)),
-      width:   Math.min(36,  Math.max(5,   parseInt(b.width)  || 14)),
-      lateral: Math.min(30,  Math.max(-30, parseInt(b.lateral)|| 0)),
-      reload:  Math.min(5,   Math.max(0.2, parseFloat(b.reload) || 1)),
-      bSpeed:  Math.min(4,   Math.max(0.3, parseFloat(b.bSpeed) || 1)),
-      bDmg:    Math.min(5,   Math.max(0.2, parseFloat(b.bDmg)   || 1)),
-      bSize:   Math.min(3,   Math.max(0.3, parseFloat(b.bSize)  || 1)),
+      id:         Date.now() + i,
+      label:      b.label  || 'Custom',
+      angle:      isFinite(b.angle)  ? b.angle  : 0,
+      length:     Math.min(100, Math.max(20,  parseInt(b.length) || 48)),
+      width:      Math.min(36,  Math.max(5,   parseInt(b.width)  || 14)),
+      lateral:    Math.min(30,  Math.max(-30, parseInt(b.lateral)|| 0)),
+      reload:     Math.min(5,   Math.max(0.2, parseFloat(b.reload) || 1)),
+      bSpeed:     Math.min(4,   Math.max(0.3, parseFloat(b.bSpeed) || 1)),
+      bDmg:       Math.min(5,   Math.max(0.2, parseFloat(b.bDmg)   || 1)),
+      bSize:      Math.min(3,   Math.max(0.3, parseFloat(b.bSize)  || 1)),
+      bulletType: ['normal','trap'].indexOf(b.bulletType) >= 0 ? b.bulletType : 'normal',
     };
   });
   return def;
@@ -117,6 +121,7 @@ function registerTank(def) {
       bulletSpeedMultiplier: b.bSpeed,
       bulletDamageMultiplier: b.bDmg > 1 ? 1 + (b.bDmg - 1) * 0.65 : b.bDmg,
       lateralOffset: b.lateral || 0,
+      isTrap: b.bulletType === 'trap',
     };
   });
   if (barrels.length === 0) {
@@ -124,6 +129,7 @@ function registerTank(def) {
                  bulletSizeMultiplier:1.0,bulletSpeedMultiplier:1.0,bulletDamageMultiplier:1.0,lateralOffset:0 }];
   }
 
+  var _spt = def.specialType || 'normal';
   window._t[id] = {
     name: def.name,
     requiredLevel: preset.requiredLevel,
@@ -131,9 +137,14 @@ function registerTank(def) {
     color: def.color || preset.color,
     description: def.description || 'Кастомный танк',
     barrels: barrels,
-    radiusMultiplier: preset.radiusMultiplier || 1.0,
-    bodyDamageMultiplier: 1.0,
-    _hpMultiplier: hpMult,
+    radiusMultiplier: (preset.radiusMultiplier || 1.0) * Math.sqrt(def.hpSlider || 1),
+    bodyDamageMultiplier: Math.round((def.hpSlider || 1) * 3),
+    isRocket:       _spt === 'rocket',
+    isLaser:        _spt === 'laser',
+    isDroneShooter: _spt === 'drone',
+    isHoming:       _spt === 'homing',
+    isSplitting:    _spt === 'splitting',
+    isVampir:       _spt === 'vampire',
     _speedMultiplier: spdMult,
     _isCustom: true,
   };
@@ -203,6 +214,9 @@ function TankBuilder({ onClose }) {
   var _e   = useState(_blank);     var editing     = _e[0];  var setEditing     = _e[1];
   var _tab = useState('editor');   var tab         = _tab[0]; var setTab        = _tab[1];
   var _prv = useState(false);      var previewing  = _prv[0]; var setPreviewing = _prv[1];
+
+  /* ── Подтверждение удаления ─────────────────────────────────── */
+  var _dp = useState(null); var deletePending = _dp[0]; var setDeletePending = _dp[1];
 
   /* ── Модал импорта/экспорта ─────────────────────────────────── */
   /* modal: null | { type:'export', code:string, defName:string } | { type:'import' } */
@@ -402,13 +416,15 @@ function TankBuilder({ onClose }) {
         var wid = (b.width  || 14) * zoom * 0.55;
         var lat = (b.lateral|| 0)  * zoom * 0.55;
         ctx.save();
-        ctx.translate(cx + Math.sin(ang + Math.PI/2)*lat, cy - Math.cos(ang + Math.PI/2)*lat);
+        /* Lateral: перпендикулярно направлению ствола (исправленный расчёт) */
+        ctx.translate(cx - Math.sin(ang)*lat, cy + Math.cos(ang)*lat);
         ctx.rotate(ang);
+        /* Ствол вдоль +X, чтобы совпадало с направлением пули cos(ang)/sin(ang) */
         ctx.fillStyle   = '#aaaaaa';
         ctx.strokeStyle = '#888888';
         ctx.lineWidth   = 1.5;
         ctx.beginPath();
-        ctx.rect(-wid/2, -radius*0.6, wid, len);
+        ctx.rect(radius*0.55, -wid/2, len, wid);
         ctx.fill();
         ctx.stroke();
         ctx.restore();
@@ -429,15 +445,25 @@ function TankBuilder({ onClose }) {
       /* Превью пуль */
       if (previewing) {
         var now = ts || 0;
+        /* Спавн строго раз в цикл — без искажений при любом reload */
+        if (!bulletsRef.current._cyc) bulletsRef.current._cyc = {};
         editing.barrels.forEach(function(b, bi) {
-          var phase = (now / (600 * (b.reload||1)) + bi * 0.3) % 1;
-          if (phase < 0.025) {
+          var period = Math.round(600 * (b.reload || 1));
+          var cycIdx = Math.floor((now + bi * 200) / period);
+          if (cycIdx !== bulletsRef.current._cyc[bi]) {
+            bulletsRef.current._cyc[bi] = cycIdx;
             var ang = b.angle || 0;
+            var lat = (b.lateral || 0) * zoom * 0.55;
+            var bLen = (b.length || 48) * zoom * 0.55;
+            /* Позиция — дальний конец ствола */
+            var bsx = (cx - Math.sin(ang)*lat) + Math.cos(ang) * (radius*0.55 + bLen);
+            var bsy = (cy + Math.cos(ang)*lat) + Math.sin(ang) * (radius*0.55 + bLen);
             var bSpd = (b.bSpeed || 1.0) * 3.5 * zoom;
             bulletsRef.current.push({
-              x: cx, y: cy,
+              x: bsx, y: bsy,
               vx: Math.cos(ang)*bSpd, vy: Math.sin(ang)*bSpd,
               r: (b.bSize||1.0) * 5 * zoom,
+              isTrap: b.bulletType === 'trap',
               life: 80, maxLife: 80,
             });
           }
@@ -446,10 +472,20 @@ function TankBuilder({ onClose }) {
         bulletsRef.current.forEach(function(blt) {
           blt.x += blt.vx; blt.y += blt.vy; blt.life--;
           var alpha = blt.life / blt.maxLife;
-          ctx.beginPath();
-          ctx.arc(blt.x, blt.y, blt.r, 0, Math.PI*2);
-          ctx.fillStyle = 'rgba(255,220,80,' + alpha + ')';
-          ctx.fill();
+          if (blt.isTrap) {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = '#e8a000'; ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (var _ti=0;_ti<8;_ti++){ var _ta=_ti*Math.PI/4; _ti===0?ctx.moveTo(blt.x+Math.cos(_ta)*blt.r,blt.y+Math.sin(_ta)*blt.r):ctx.lineTo(blt.x+Math.cos(_ta)*blt.r,blt.y+Math.sin(_ta)*blt.r); }
+            ctx.closePath(); ctx.fill(); ctx.stroke();
+            ctx.restore();
+          } else {
+            ctx.beginPath();
+            ctx.arc(blt.x, blt.y, blt.r, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(255,220,80,' + alpha + ')';
+            ctx.fill();
+          }
         });
       } else {
         bulletsRef.current = [];
@@ -466,7 +502,7 @@ function TankBuilder({ onClose }) {
   function addBarrel(preset) {
     var p = preset || BARREL_PRESETS[0];
     setEditing(function(prev) {
-      return Object.assign({}, prev, { barrels: prev.barrels.concat([Object.assign({}, p, { angle:0, lateral:0, id:Date.now() })]) });
+      return Object.assign({}, prev, { barrels: prev.barrels.concat([Object.assign({}, p, { angle:0, lateral:0, id:Date.now(), bulletType: p.bulletType||'normal' })]) });
     });
   }
   function removeBarrel(idx) {
@@ -571,14 +607,15 @@ function TankBuilder({ onClose }) {
     alert('Танк "' + def.name + '" сохранён и добавлен в дерево прокачки!');
   }
   function deleteTank(id) {
-    if (!confirm('Удалить этот танк?')) return;
+    setDeletePending(id);
+  }
+  function confirmDelete(id) {
     saveTanks(loadTanks().filter(function(t){ return t.id !== id; }));
     if (window._t) delete window._t[id];
     if (window.w0) window.w0 = window.w0.filter(function(n){ return n.name !== id; });
     if (window.Ty) window.Ty = window.Ty.filter(function(e){ return e[0]!==id && e[1]!==id; });
+    setDeletePending(null);
     setTab('list');
-    /* Сбрасываем редактор ТОЛЬКО если удаляем тот танк, что сейчас открыт.
-       Иначе несохранённая работа в редакторе пропадала бы при удалении другого танка. */
     if (editing.id === id) {
       setEditing(Object.assign({}, _blank, { id: genId() }));
       setSelectedDef(null);
@@ -595,7 +632,17 @@ function TankBuilder({ onClose }) {
 
   var tankList = loadTanks();
   var parentOptions = ['Basic'];
-  if (window._t) Object.keys(window._t).sort().forEach(function(k){ if (k!=='Basic' && parentOptions.indexOf(k)<0) parentOptions.push(k); });
+  if (window._t) {
+    var _bOrder = ['Sniper','MachineGun','FlankGuard','Assassin','Hunter','TripleShot',
+      'Quad','Penta','Spread','Streamliner','Stalker','Ranger','Predator',
+      'Overlord','Overseer','Necromancer','Manager','Fighter','Booster',
+      'Annihilator','Triplet','Auto5','AutoGunner','Smasher','Landmine','MegaSmasher',
+      'Destroyer','Hybrid','Gunner','Rocketeer','Battleship','Skimmer','Spike',
+      'Auto3','Laser','Railgun','Shotgun','Dreadnought','Blaster','Buster','Riot',
+      'Colossus','Cruiser','Brawler','Assault'];
+    _bOrder.forEach(function(k){ if (window._t[k] && parentOptions.indexOf(k)<0) parentOptions.push(k); });
+    Object.keys(window._t).sort().forEach(function(k){ if (k!=='Basic' && parentOptions.indexOf(k)<0) parentOptions.push(k); });
+  }
 
   var tier   = editing.tier || 3;
   var preset = TIER_PRESETS[tier] || TIER_PRESETS[3];
@@ -911,7 +958,56 @@ function TankBuilder({ onClose }) {
                       style:S.slider }),
                   ]});
                 }),
+                /* Тип снаряда ствола */
+                jsxs('div', { style:{marginTop:7}, children:[
+                  jsx('div', { style:{color:'rgba(255,255,255,0.45)',fontSize:10,marginBottom:5,fontWeight:'bold',letterSpacing:.5}, children:'ТИП СНАРЯДА:' }),
+                  jsx('div', { style:{display:'flex',gap:5,flexWrap:'wrap'}, children:
+                    [['normal','🔵 Пуля'],['trap','🟡 Мина']].map(function(p2){
+                      var v2=p2[0],l2=p2[1],a2=(b.bulletType||'normal')===v2;
+                      return jsx('button',{key:v2,
+                        style:{padding:'5px 10px',borderRadius:6,
+                          border:a2?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.18)',
+                          background:a2?'rgba(0,100,200,0.5)':'rgba(255,255,255,0.05)',
+                          color:a2?'#fff':'rgba(255,255,255,0.5)',cursor:'pointer',
+                          fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},
+                        onClick:function(){ updateBarrel(bi,'bulletType',v2); },
+                        children:l2});
+                    })
+                  }),
+                ]}),
               ]});
+            }),
+          ]}),
+
+          /* Тип снаряда / стиль стрельбы */
+          jsxs('div', { style: S.section, children: [
+            jsx('div', { style: S.sectionTitle, children: 'ТИП СНАРЯДА / СТИЛЬ' }),
+            jsx('div', { style:{display:'flex',flexWrap:'wrap',gap:5,marginBottom:6}, children:
+              [['normal','🔵 Обычный'],['rocket','🚀 Ракета'],['laser','⚡ Лазер'],
+               ['drone','🤖 Дрон'],['homing','🎯 Наводящийся'],['splitting','💥 Дробовой'],
+               ['vampire','🧛 Вампиризм']].map(function(pair) {
+                var val=pair[0], lbl=pair[1];
+                var act=(editing.specialType||'normal')===val;
+                return jsx('button',{key:val,
+                  style:{padding:'6px 10px',borderRadius:8,
+                    border:act?'2px solid #00ccff':'2px solid rgba(255,255,255,0.15)',
+                    background:act?'rgba(0,100,200,0.55)':'rgba(255,255,255,0.05)',
+                    color:act?'#fff':'rgba(255,255,255,0.55)',cursor:'pointer',
+                    fontFamily:'Arial',fontSize:11,fontWeight:'bold',touchAction:'manipulation'},
+                  onClick:function(){ setEditing(function(p){ return Object.assign({},p,{specialType:val}); }); },
+                  children:lbl});
+              })
+            }),
+            jsx('div', { style:{color:'rgba(255,255,255,0.25)',fontSize:10,marginTop:3,lineHeight:1.6},
+              children: ({
+                normal:'Стандартные пули.',
+                rocket:'Снаряды как ракеты — треугольная форма.',
+                laser:'Лазерные лучи — мгновенные, прямые.',
+                drone:'Дроны — летят к ближайшему врагу.',
+                homing:'Самонаводящиеся снаряды.',
+                splitting:'Снаряды разлетаются на осколки.',
+                vampire:'Снаряды лечат при нанесении урона.',
+              })[editing.specialType||'normal'],
             }),
           ]}),
 
@@ -939,6 +1035,29 @@ function TankBuilder({ onClose }) {
       ]}),
 
     ]}), /* body */
+
+    /* ══ МОДАЛ УДАЛЕНИЯ ════════════════════════════════════════ */
+    deletePending && jsx('div', { style: S.modalOverlay, onClick: function(){ setDeletePending(null); }, children:
+      jsx('div', { style: Object.assign({}, S.modalBox, {maxWidth:340,gap:12}), onClick: function(e){ e.stopPropagation(); }, children:
+        jsxs('div', { style:{display:'flex',flexDirection:'column',gap:14}, children:[
+          jsx('div', { style:{color:'#ff6060',fontSize:15,fontWeight:900}, children:'🗑 Удалить танк?' }),
+          jsx('div', { style:{color:'rgba(255,255,255,0.6)',fontSize:13,lineHeight:1.6},
+            children:'Этот танк будет удалён из коллекции и дерева прокачки. Необратимо.' }),
+          jsxs('div', { style:{display:'flex',gap:8}, children:[
+            jsx('button', { onClick: function(){ confirmDelete(deletePending); },
+              style:{flex:1,padding:'11px',borderRadius:9,border:'none',cursor:'pointer',
+                fontFamily:'Arial',fontWeight:'bold',fontSize:13,
+                background:'rgba(200,30,30,0.85)',color:'#fff',touchAction:'manipulation'},
+              children:'🗑 Удалить' }),
+            jsx('button', { onClick: function(){ setDeletePending(null); },
+              style:{flex:1,padding:'11px',borderRadius:9,border:'none',cursor:'pointer',
+                fontFamily:'Arial',fontWeight:'bold',fontSize:13,
+                background:'rgba(60,60,80,0.8)',color:'rgba(255,255,255,0.7)',touchAction:'manipulation'},
+              children:'Отмена' }),
+          ]}),
+        ]})
+      })
+    }),
 
     /* ══ МОДАЛ ЭКСПОРТА / ИМПОРТА ══════════════════════════════ */
     modal && jsx('div', { style: S.modalOverlay, onClick: closeModal, children:
