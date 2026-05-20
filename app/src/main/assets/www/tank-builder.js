@@ -152,8 +152,10 @@ function registerTank(def) {
 
   if (!window.Ty) window.Ty = [];
   var parent = def.upgradesFrom || 'Basic';
-  var edgeExists = window.Ty.some(function(e){ return e[0]===parent && e[1]===id; });
-  if (!edgeExists) window.Ty.push([parent, id]);
+  /* Удаляем все старые рёбра, ведущие К этому танку (e[1]===id).
+     Иначе при смене родителя танк висел бы как апгрейд сразу двух родителей. */
+  window.Ty = window.Ty.filter(function(e){ return e[1] !== id; });
+  window.Ty.push([parent, id]);
 }
 
 function registerAllCustomTanks() {
