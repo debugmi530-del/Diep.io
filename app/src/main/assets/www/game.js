@@ -3025,9 +3025,10 @@ function Ry(){const i=cl.useRef(null),h=cl.useRef(G0()),o=cl.useRef({moveX:0,mov
 
 /* ── Expose game internals so tank-builder.js can register custom tanks ──
    w0, Ty, W1 are top-level const in this script — they live in lexical scope
-   but are NOT window properties. _t is an implicit global (no keyword) so it
-   already works. We expose the others here so that push/assign in
-   tank-builder.js mutates the exact same arrays/objects the game uses.      */
+   but are NOT window properties. _t starts as an implicit global inside the
+   minified bundle but may not be accessible as window._t in strict-mode
+   contexts (separate scripts). We expose it explicitly here.                */
+window._t = _t;
 window.w0 = w0;
 window.Ty = Ty;
 window.W1 = W1;
