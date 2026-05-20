@@ -70,6 +70,12 @@ function importTankCode(code) {
   try { def = JSON.parse(json); } catch(e) { throw new Error('Ошибка разбора JSON. Код повреждён.'); }
   if (!def.name || typeof def.name !== 'string') throw new Error('В коде нет имени танка.');
   if (!Array.isArray(def.barrels))               throw new Error('В коде нет данных о стволах.');
+  /* Санируем строковые поля чтобы не допустить мусор в CSS/глобалах */
+  if (typeof def.color !== 'string' || !/^#[0-9a-fA-F]{3,8}$/.test(def.color)) def.color = '#44aaff';
+  if (typeof def.upgradesFrom !== 'string' || !def.upgradesFrom.trim()) def.upgradesFrom = 'Basic';
+  def.upgradesFrom = def.upgradesFrom.trim().slice(0, 32);
+  def.name = def.name.trim().slice(0, 18);
+  def.description = (typeof def.description === 'string') ? def.description.trim().slice(0, 80) : '';
   /* Присваиваем новый id чтобы не перетереть оригинал */
   def.id = genId();
   /* Санируем числовые поля */
@@ -332,18 +338,20 @@ function TankBuilder({ onClose }) {
     cvs.addEventListener('mouseleave', onPointerUp);
     cvs.addEventListener('touchstart', onPointerDown, { passive: false });
     cvs.addEventListener('touchmove',  onPointerMove, { passive: false });
-    cvs.addEventListener('touchend',   onPointerUp);
-    cvs.addEventListener('wheel',      onWheel,       { passive: false });
+    cvs.addEventListener('touchend',    onPointerUp);
+    cvs.addEventListener('touchcancel', onPointerUp);   /* прерывание жеста (звонок, уведомление) */
+    cvs.addEventListener('wheel',       onWheel,       { passive: false });
 
     return function() {
-      cvs.removeEventListener('mousedown',  onPointerDown);
-      cvs.removeEventListener('mousemove',  onPointerMove);
-      cvs.removeEventListener('mouseup',    onPointerUp);
-      cvs.removeEventListener('mouseleave', onPointerUp);
-      cvs.removeEventListener('touchstart', onPointerDown);
-      cvs.removeEventListener('touchmove',  onPointerMove);
-      cvs.removeEventListener('touchend',   onPointerUp);
-      cvs.removeEventListener('wheel',      onWheel);
+      cvs.removeEventListener('mousedown',   onPointerDown);
+      cvs.removeEventListener('mousemove',   onPointerMove);
+      cvs.removeEventListener('mouseup',     onPointerUp);
+      cvs.removeEventListener('mouseleave',  onPointerUp);
+      cvs.removeEventListener('touchstart',  onPointerDown);
+      cvs.removeEventListener('touchmove',   onPointerMove);
+      cvs.removeEventListener('touchend',    onPointerUp);
+      cvs.removeEventListener('touchcancel', onPointerUp);
+      cvs.removeEventListener('wheel',       onWheel);
     };
   }, [viewLocked]);
 
@@ -496,21 +504,28 @@ function TankBuilder({ onClose }) {
       navigator.clipboard.writeText(code).then(function() {
         setCopied(true);
         setTimeout(function(){ setCopied(false); }, 2000);
+      }).catch(function() {
+        /* Clipboard API недоступен (нет разрешения) — падаем на execCommand */
+        doCopyFallback(code);
       });
     } else {
-      /* Fallback для WebView без clipboard API */
-      try {
-        var ta = document.createElement('textarea');
-        ta.value = code;
-        ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        setCopied(true);
-        setTimeout(function(){ setCopied(false); }, 2000);
-      } catch(e) { alert('Скопируй код вручную'); }
+      doCopyFallback(code);
     }
+  }
+
+  function doCopyFallback(code) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = code;
+      ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(function(){ setCopied(false); }, 2000);
+    } catch(e) { alert('Скопируй код вручную из поля выше'); }
   }
 
   function doImport() {
@@ -609,7 +624,6 @@ function TankBuilder({ onClose }) {
     sliderRow: { display:'flex',alignItems:'center',gap:7,marginBottom:5 },
     sliderLabel: { color:'rgba(255,255,255,0.5)',fontSize:10,minWidth:108 },
     slider: { flex:1,accentColor:'#00b2e1',cursor:'pointer' },
-    sliderVal: { color:'#00ccff',fontSize:10,minWidth:30,textAlign:'right' },
     presetGrid: { display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:5,marginBottom:7 },
     presetBtn: { padding:'6px 3px',borderRadius:6,border:'1.5px solid rgba(68,136,255,0.3)',background:'rgba(0,50,120,0.4)',color:'#88ccff',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation' },
     listCard: { background:'rgba(255,255,255,0.04)',borderRadius:10,border:'1px solid rgba(255,255,255,0.1)',padding:'11px',marginBottom:9,display:'flex',alignItems:'center',gap:11 },
@@ -617,7 +631,7 @@ function TankBuilder({ onClose }) {
     saveBtn: { width:'100%',padding:'13px',fontSize:14,fontWeight:'bold',borderRadius:11,border:'none',cursor:'pointer',fontFamily:'Arial',touchAction:'manipulation',background:'linear-gradient(90deg,#0088cc,#44b4e0)',color:'#fff',boxShadow:'0 4px 14px rgba(0,150,220,0.35)' },
     /* Модал */
     modalOverlay: { position:'fixed',inset:0,zIndex:3000,background:'rgba(0,0,0,0.75)',display:'flex',alignItems:'center',justifyContent:'center',padding:16 },
-    modalBox: { background:'#0e1228',border:'1.5px solid rgba(68,136,255,0.4)',borderRadius:16,padding:'20px 18px',width:'100%',maxWidth:480,maxHeight:'90vh',display:'flex',flexDirection:'column',gap:14,boxShadow:'0 16px 60px rgba(0,0,0,0.8)' },
+    modalBox: { background:'#0e1228',border:'1.5px solid rgba(68,136,255,0.4)',borderRadius:16,padding:'20px 18px',width:'100%',maxWidth:480,maxHeight:'90vh',overflowY:'auto',display:'flex',flexDirection:'column',gap:14,boxShadow:'0 16px 60px rgba(0,0,0,0.8)' },
     modalTitle: { color:'#00ccff',fontSize:15,fontWeight:900,letterSpacing:1 },
     modalCode: { width:'100%',minHeight:90,background:'rgba(255,255,255,0.04)',border:'1.5px solid rgba(68,136,255,0.3)',borderRadius:8,color:'#a0d8ff',fontFamily:'monospace',fontSize:11,padding:'10px',boxSizing:'border-box',resize:'vertical',outline:'none',wordBreak:'break-all',lineHeight:1.5 },
     modalImportArea: { width:'100%',minHeight:90,background:'rgba(255,255,255,0.04)',border:'1.5px solid rgba(68,136,255,0.3)',borderRadius:8,color:'#fff',fontFamily:'monospace',fontSize:11,padding:'10px',boxSizing:'border-box',resize:'vertical',outline:'none',wordBreak:'break-all',lineHeight:1.5 },
@@ -649,13 +663,13 @@ function TankBuilder({ onClose }) {
         children: ['📋 Мои танки', tankList.length > 0 ? ' (' + tankList.length + ')' : ''] }),
     ]}),
 
-    /* BODY */
-    jsx('div', { style: S.body, children:
-
-      tab === 'list' ?
+    /* BODY — список и редактор всегда в DOM; скрываем CSS чтобы рефы на canvas
+       не становились null при переключении вкладок. Иначе rAF-цикл продолжает
+       рисовать на отмонтированный canvas и новый canvas остаётся пустым. */
+    jsxs('div', { style: S.body, children:[
 
       /* ── LIST TAB ───────────────────────────────────────────── */
-      jsxs('div', { style:{flex:1,overflowY:'auto',padding:14}, children:[
+      jsxs('div', { style:Object.assign({flex:1,overflowY:'auto',padding:14}, tab!=='list'?{display:'none'}:{}), children:[
         /* Шапка: счётчик + импорт + создать */
         jsxs('div', { style:{display:'flex',gap:6,alignItems:'center',marginBottom:14,flexWrap:'wrap'}, children:[
           jsx('div', { style:{color:'rgba(255,255,255,0.6)',fontSize:13,flex:1,minWidth:60},
@@ -687,10 +701,10 @@ function TankBuilder({ onClose }) {
             ]}),
           ]});
         }),
-      ]}) :
+      ]}),
 
       /* ── EDITOR TAB ─────────────────────────────────────────── */
-      jsxs('div', { style: S.body, children: [
+      jsxs('div', { style: Object.assign({}, S.body, tab!=='editor'?{display:'none'}:{}), children: [
 
         /* ════ Левая колонка — холст с навигацией ════ */
         jsxs('div', { style: S.leftCol, children: [
@@ -913,9 +927,9 @@ function TankBuilder({ onClose }) {
           jsx('div', { style:{height:20} }),
 
         ]}),
-      ]})
+      ]}),
 
-    }), /* body */
+    ]}), /* body */
 
     /* ══ МОДАЛ ЭКСПОРТА / ИМПОРТА ══════════════════════════════ */
     modal && jsx('div', { style: S.modalOverlay, onClick: closeModal, children:
@@ -1025,6 +1039,7 @@ function mountBuilderButton() {
   function BuilderRoot() {
     var useState  = React.useState;
     var useEffect = React.useEffect;
+    if (!window.D || !window.D.jsx) return null;
     var jsx  = window.D.jsx;
     var jsxs = window.D.jsxs;
 
