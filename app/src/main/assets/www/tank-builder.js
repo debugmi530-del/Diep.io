@@ -141,7 +141,7 @@ function registerTank(def) {
   if (window.W1) window.W1[id] = def.name;
 
   var xl = [55, 165, 295, 430, 590];
-  var tierIdx = Math.min(tier, 4);
+  var tierIdx = Math.min(tier - 1, 4); /* tier 1→0, 2→1, 3→2, 4→3, 5→4 */
   var allTanks = loadTanks();
   var defIdx = allTanks.findIndex(function(t){ return t.id === id; });
   var yBase = 8000 + (defIdx >= 0 ? defIdx : allTanks.length) * 260;
@@ -574,7 +574,13 @@ function TankBuilder({ onClose }) {
     if (window._t) delete window._t[id];
     if (window.w0) window.w0 = window.w0.filter(function(n){ return n.name !== id; });
     if (window.Ty) window.Ty = window.Ty.filter(function(e){ return e[0]!==id && e[1]!==id; });
-    setTab('list'); setEditing(Object.assign({}, _blank, { id: genId() }));
+    setTab('list');
+    /* Сбрасываем редактор ТОЛЬКО если удаляем тот танк, что сейчас открыт.
+       Иначе несохранённая работа в редакторе пропадала бы при удалении другого танка. */
+    if (editing.id === id) {
+      setEditing(Object.assign({}, _blank, { id: genId() }));
+      setSelectedDef(null);
+    }
   }
   function startNew() {
     setEditing(Object.assign({}, _blank, { id: genId() }));
