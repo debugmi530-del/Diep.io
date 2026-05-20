@@ -624,6 +624,7 @@ function TankBuilder({ onClose }) {
     sliderRow: { display:'flex',alignItems:'center',gap:7,marginBottom:5 },
     sliderLabel: { color:'rgba(255,255,255,0.5)',fontSize:10,minWidth:108 },
     slider: { flex:1,accentColor:'#00b2e1',cursor:'pointer' },
+    sliderVal: { color:'#00ccff',fontSize:10,minWidth:30,textAlign:'right',flexShrink:0 },
     presetGrid: { display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:5,marginBottom:7 },
     presetBtn: { padding:'6px 3px',borderRadius:6,border:'1.5px solid rgba(68,136,255,0.3)',background:'rgba(0,50,120,0.4)',color:'#88ccff',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation' },
     listCard: { background:'rgba(255,255,255,0.04)',borderRadius:10,border:'1px solid rgba(255,255,255,0.1)',padding:'11px',marginBottom:9,display:'flex',alignItems:'center',gap:11 },
@@ -1039,10 +1040,9 @@ function mountBuilderButton() {
   function BuilderRoot() {
     var useState  = React.useState;
     var useEffect = React.useEffect;
-    if (!window.D || !window.D.jsx) return null;
-    var jsx  = window.D.jsx;
-    var jsxs = window.D.jsxs;
 
+    /* Хуки ВСЕГДА вызываются первыми — до любых условных return.
+       Rules of Hooks: количество вызовов должно быть одинаковым на каждый рендер. */
     var _o = useState(false); var open    = _o[0]; var setOpen    = _o[1];
     var _v = useState(false); var visible = _v[0]; var setVisible = _v[1];
 
@@ -1053,6 +1053,11 @@ function mountBuilderButton() {
       }, 150);
       return function(){ clearInterval(t); };
     }, []);
+
+    /* Проверки после хуков */
+    if (!window.D || !window.D.jsx) return null;
+    var jsx  = window.D.jsx;
+    var jsxs = window.D.jsxs;
 
     if (!visible && !open) return null;
 
