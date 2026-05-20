@@ -1714,36 +1714,72 @@ Error generating stack: `+e.message+`
     ];
 
   const _customT3=new Set(["Phantom","Ambusher","Spy","Specter","RamX","Mine","Swarm","Guardian","HunterDrone","Howitzer","Cassette","Mortar","Plasma","EMPTank","DualRailgun","Citadel","Bunker","Tower"]);
-  const t3keys=Object.keys(_t).filter(k=>_t[k].requiredLevel===45&&!_customT3.has(k));
-    for(const k of t3keys){
-      const t=_t[k];
-      const _br=_T4BRANCH[(t.upgradesFrom && t.upgradesFrom[0])]||'flank';
-      for(let vi=0;vi<3;vi++){
-        const v=variants[vi],nk=k+v.suf;
-        const tr=v.transform(t,_br,k);
-        const extraBdm=tr.bdm||1, extraRm=tr.rm||1;
-        _t[nk]={
-          name:nk,requiredLevel:60,upgradesFrom:[k],
-          color:t.color,
-          description:t.description+' '+v.getLabel(_br),
-          barrels:tr.barrels,
-          noBarrels:tr.noBarrels||false,
-          bodyDamageMultiplier:(t.bodyDamageMultiplier||1)*v.bdm*extraBdm,
-          radiusMultiplier:(t.radiusMultiplier||1)*v.rm*extraRm,
-          bodySides:v.suf==='Alpha'?5:v.suf==='Omega'?3:8,
-          t5Style:v.suf==='Alpha'?'alpha':v.suf==='Omega'?'omega':'prime'
-        };
-        W1[nk]=(W1[k]||k)+'·'+v.ru;
-      }
-    }
 
-  // Tier-4 nodes — bigger radius (r:17 instead of r:9)
-  const t3nodes=w0.filter(n=>n.tier===3&&!_customT3.has(n.name));
-  for(const p of t3nodes){
+  // T5 generation: covers BOTH original-game T3 tanks (tier:3 in w0, level 45)
+  // AND custom-branch T4 tanks (tier:4 in w0, level 45 — Alchemist/Warlock branches).
+  // Original T3 → T5 nodes placed at xl[4] (existing column, tier:4 in tree).
+  // Custom T4   → T5 nodes placed at xl[4]+160 (new column, tier:5 in tree),
+  //               parent barrels are preserved and stats are boosted.
+  const _xl5=xl[4]+160;
+  const _ruSufT5=[' [Альфа: мастер боя]',' [Омега: крушитель]',' [Прайм: абсолютная форма]'];
+  const _bdmBoosts=[1.15,1.25,1.40],_rmBoosts=[1.08,1.10,1.15];
+
+  const t5Candidates=w0.filter(n=>_t[n.name]&&_t[n.name].requiredLevel===45&&!_customT3.has(n.name));
+  for(const p of t5Candidates){
+    const k=p.name;
+    const t=_t[k];
+    const isCustomBranch=(p.tier===4); // custom-branch parent already sits at deepest column
+    const _br=_T4BRANCH[(t.upgradesFrom&&t.upgradesFrom[0])]||'flank';
+    const t5x=isCustomBranch?_xl5:xl[4];
+    const t5tier=isCustomBranch?5:4;
     for(let vi=0;vi<3;vi++){
-      const nk=p.name+variants[vi].suf;
-      w0.push({name:nk,tier:4,x:xl[4],y:p.y+(vi-1)*72,r:19});
-      Ty.push([p.name,nk]);
+      const v=variants[vi],nk=k+v.suf;
+      let tr;
+      if(isCustomBranch){
+        // Keep the parent's barrel layout intact; only boost body stats.
+        tr={barrels:t.barrels||[],noBarrels:!!t.noBarrels,bdm:_bdmBoosts[vi],rm:_rmBoosts[vi]};
+      }else{
+        tr=v.transform(t,_br,k);
+      }
+      const extraBdm=tr.bdm||1,extraRm=tr.rm||1;
+      _t[nk]={
+        name:nk,requiredLevel:60,upgradesFrom:[k],
+        color:t.color,
+        description:t.description+(isCustomBranch?_ruSufT5[vi]:' '+v.getLabel(_br)),
+        barrels:tr.barrels,
+        noBarrels:!!tr.noBarrels,
+        bodyDamageMultiplier:(t.bodyDamageMultiplier||1)*v.bdm*extraBdm,
+        radiusMultiplier:(t.radiusMultiplier||1)*v.rm*extraRm,
+        bodySides:v.suf==='Alpha'?5:v.suf==='Omega'?3:8,
+        t5Style:v.suf==='Alpha'?'alpha':v.suf==='Omega'?'omega':'prime',
+        // ── Inherit ALL branch-mechanic flags from the parent tank ──────────
+        isInvis:        !!t.isInvis,
+        isHoming:       !!t.isHoming,
+        isPiercing:     !!t.isPiercing,
+        isVampire:      !!t.isVampire,
+        isChain:        !!t.isChain,
+        isSplitting:    !!t.isSplitting,
+        isTurretDeployer: !!t.isTurretDeployer,
+        isDroneShooter: !!t.isDroneShooter,
+        isRangeBoost:   !!t.isRangeBoost,
+        isLaser:        !!t.isLaser,
+        isRocket:       !!t.isRocket,
+        ...(t.bulletLifeMultiplier&&t.bulletLifeMultiplier!==1?{bulletLifeMultiplier:t.bulletLifeMultiplier}:{}),
+        ...(t.droneHits?{droneHits:t.droneHits+2}:{}),
+        ...(t.isTurretDeployer?{
+          maxTurrets:         (t.maxTurrets||3)+2,
+          turretFireRate:     t.turretFireRate,
+          turretHealth:       Math.round((t.turretHealth||80)*1.25),
+          turretLifetime:     t.turretLifetime,
+          turretBulletDamage: Math.round((t.turretBulletDamage||10)*1.30),
+          turretBulletSpeed:  t.turretBulletSpeed,
+          turretBulletRadius: t.turretBulletRadius,
+          turretBulletHoming: !!t.turretBulletHoming
+        }:{})
+      };
+      W1[nk]=(W1[k]||k)+'·'+v.ru;
+      w0.push({name:nk,tier:t5tier,x:t5x,y:p.y+(vi-1)*72,r:19});
+      Ty.push([k,nk]);
     }
   }
 
@@ -1815,8 +1851,29 @@ Error generating stack: `+e.message+`
       noBarrels:_ce.noBarrels||false,
       bodyDamageMultiplier:(_pt.bodyDamageMultiplier||1)*(_ce.bdm||1),
       radiusMultiplier:(_pt.radiusMultiplier||1)*(_ce.rm||1),
-      isHoming:!!_ce.isHoming,
-      isInvis:!!_ce.isInvis
+      // Inherit entry-level flags first, then fall back to parent
+      isHoming:      !!(_ce.isHoming      || _pt.isHoming),
+      isInvis:       !!(_ce.isInvis       || _pt.isInvis),
+      isPiercing:    !!(_ce.isPiercing    || _pt.isPiercing),
+      isVampire:     !!(_ce.isVampire     || _pt.isVampire),
+      isChain:       !!(_ce.isChain       || _pt.isChain),
+      isSplitting:   !!(_ce.isSplitting   || _pt.isSplitting),
+      isDroneShooter:!!(_ce.isDroneShooter|| _pt.isDroneShooter),
+      isRangeBoost:  !!(_ce.isRangeBoost  || _pt.isRangeBoost),
+      isLaser:       !!(_ce.isLaser       || _pt.isLaser),
+      isRocket:      !!(_ce.isRocket      || _pt.isRocket),
+      ...((_ce.droneHits||_pt.droneHits)?{droneHits:_ce.droneHits||_pt.droneHits}:{}),
+      ...((_ce.isTurretDeployer||_pt.isTurretDeployer)?{
+        isTurretDeployer:true,
+        maxTurrets:        _ce.maxTurrets        || _pt.maxTurrets,
+        turretFireRate:    _ce.turretFireRate    || _pt.turretFireRate,
+        turretHealth:      _ce.turretHealth      || _pt.turretHealth,
+        turretLifetime:    _ce.turretLifetime    || _pt.turretLifetime,
+        turretBulletDamage:_ce.turretBulletDamage|| _pt.turretBulletDamage,
+        turretBulletSpeed: _ce.turretBulletSpeed || _pt.turretBulletSpeed,
+        turretBulletRadius:_ce.turretBulletRadius|| _pt.turretBulletRadius,
+        turretBulletHoming:!!(_ce.turretBulletHoming||_pt.turretBulletHoming)
+      }:{})
     };
     W1[_ce.name]=_ce.ru;
   }
@@ -2032,8 +2089,10 @@ Error generating stack: `+e.message+`
     else if(rl<=15)  color='#22cc55'; // T2 green
     else if(rl<=30)  color='#ffdd00'; // T3 yellow
     else if(rl<=45)  color='#ff8800'; // T4 orange
-    else if(k.endsWith('Prime')) color='#ff3333'; // T5 red (Prime = top tier)
-    else             color='#ff8800'; // T4+ orange
+    else if(k.endsWith('Prime')) color='#ff3333'; // T5 Prime — top tier red
+    else if(k.endsWith('Alpha')) color='#ff6600'; // T5 Alpha — deep orange
+    else if(k.endsWith('Omega')) color='#ffaa00'; // T5 Omega — amber
+    else             color='#ff8800'; // T4+ fallback
     tank.color=color;
   });
 })();
@@ -2051,7 +2110,7 @@ Error generating stack: `+e.message+`
   var t1s=(childMap['Basic']||[]).slice().sort(function(a,b){
     return((nodeMap[a]&&nodeMap[a].y)||0)-((nodeMap[b]&&nodeMap[b].y)||0);
   });
-  var cw=xl[4]-xl[0]+200;
+  var cw=xl[4]+160-xl[0]+200; // extended to accommodate T5 column at xl[4]+160
   var rowGap=90;
   var curY=0;
   var rightT1Set=new Set();
@@ -2104,10 +2163,10 @@ Error generating stack: `+e.message+`
     var cur=queue.shift();
     (childMap[cur]||[]).forEach(function(c){if(!branch.has(c)){branch.add(c);queue.push(c);}});
   }
-  // Include T4 nodes whose name starts with a Sniper-branch T3 name
+  // Include T4 and T5 nodes whose name starts with a Sniper-branch T3 name
   var branchArr=Array.from(branch);
   w0.forEach(function(n){
-    if(n.tier===4){
+    if(n.tier===4||n.tier===5){
       for(var i=0;i<branchArr.length;i++){
         if(n.name.indexOf(branchArr[i])===0){branch.add(n.name);break;}
       }
@@ -2138,7 +2197,7 @@ Error generating stack: `+e.message+`
     var descArr=Array.from(desc);
     w0.forEach(function(nd){
       if(desc.has(nd.name)){nd.y+=delta;return;}
-      if(nd.tier===4){
+      if(nd.tier===4||nd.tier===5){
         for(var j=0;j<descArr.length;j++){
           if(nd.name.indexOf(descArr[j])===0){nd.y+=delta;break;}
         }
