@@ -28,6 +28,71 @@ function saveTanks(arr) {
 }
 function genId() { return 'custom_' + Date.now() + '_' + Math.floor(Math.random()*9999); }
 
+/* ── Экспорт / Импорт ──────────────────────────────────────── */
+var EXPORT_PREFIX = 'DIEPTANK1_';
+
+function exportTankCode(def) {
+  /* Берём только игровые поля, убираем UI-служебные */
+  var clean = {
+    name:         def.name,
+    tier:         def.tier,
+    color:        def.color,
+    upgradesFrom: def.upgradesFrom,
+    description:  def.description || '',
+    hpSlider:     def.hpSlider,
+    speedSlider:  def.speedSlider,
+    barrels:      (def.barrels || []).map(function(b) {
+      return {
+        angle:   b.angle,
+        length:  b.length,
+        width:   b.width,
+        lateral: b.lateral,
+        reload:  b.reload,
+        bSpeed:  b.bSpeed,
+        bDmg:    b.bDmg,
+        bSize:   b.bSize,
+        label:   b.label,
+      };
+    }),
+  };
+  try {
+    return EXPORT_PREFIX + btoa(unescape(encodeURIComponent(JSON.stringify(clean))));
+  } catch(e) { return null; }
+}
+
+function importTankCode(code) {
+  var raw = (code || '').trim();
+  if (raw.indexOf(EXPORT_PREFIX) !== 0) throw new Error('Неверный формат кода. Код должен начинаться с "' + EXPORT_PREFIX + '"');
+  var b64 = raw.slice(EXPORT_PREFIX.length);
+  var json;
+  try { json = decodeURIComponent(escape(atob(b64))); } catch(e) { throw new Error('Ошибка декодирования. Код повреждён.'); }
+  var def;
+  try { def = JSON.parse(json); } catch(e) { throw new Error('Ошибка разбора JSON. Код повреждён.'); }
+  if (!def.name || typeof def.name !== 'string') throw new Error('В коде нет имени танка.');
+  if (!Array.isArray(def.barrels))               throw new Error('В коде нет данных о стволах.');
+  /* Присваиваем новый id чтобы не перетереть оригинал */
+  def.id = genId();
+  /* Санируем числовые поля */
+  def.tier        = Math.min(5, Math.max(1, parseInt(def.tier)    || 3));
+  def.hpSlider    = Math.min(2, Math.max(0.4, parseFloat(def.hpSlider)    || 1));
+  def.speedSlider = Math.min(2, Math.max(0.5, parseFloat(def.speedSlider) || 1));
+  def.barrels = def.barrels.map(function(b, i) {
+    return {
+      id:      Date.now() + i,
+      label:   b.label  || 'Custom',
+      angle:   isFinite(b.angle)  ? b.angle  : 0,
+      length:  Math.min(100, Math.max(20,  parseInt(b.length) || 48)),
+      width:   Math.min(36,  Math.max(5,   parseInt(b.width)  || 14)),
+      lateral: Math.min(30,  Math.max(-30, parseInt(b.lateral)|| 0)),
+      reload:  Math.min(5,   Math.max(0.2, parseFloat(b.reload) || 1)),
+      bSpeed:  Math.min(4,   Math.max(0.3, parseFloat(b.bSpeed) || 1)),
+      bDmg:    Math.min(5,   Math.max(0.2, parseFloat(b.bDmg)   || 1)),
+      bSize:   Math.min(3,   Math.max(0.3, parseFloat(b.bSize)  || 1)),
+    };
+  });
+  return def;
+}
+
 function registerTank(def) {
   if (!window._t) return;
   var id = def.id;
@@ -130,6 +195,13 @@ function TankBuilder({ onClose }) {
   var _e   = useState(_blank);     var editing     = _e[0];  var setEditing     = _e[1];
   var _tab = useState('editor');   var tab         = _tab[0]; var setTab        = _tab[1];
   var _prv = useState(false);      var previewing  = _prv[0]; var setPreviewing = _prv[1];
+
+  /* ── Модал импорта/экспорта ─────────────────────────────────── */
+  /* modal: null | { type:'export', code:string, defName:string } | { type:'import' } */
+  var _mod = useState(null); var modal = _mod[0]; var setModal = _mod[1];
+  var _imp = useState('');   var importCode = _imp[0]; var setImportCode = _imp[1];
+  var _impErr = useState(''); var importErr = _impErr[0]; var setImportErr = _impErr[1];
+  var _copied = useState(false); var copied = _copied[0]; var setCopied = _copied[1];
 
   /* ── Вид холста ────────────────────────────────────────────── */
   /* viewRef хранит текущее состояние вида без ре-рендера */
@@ -399,6 +471,76 @@ function TankBuilder({ onClose }) {
     });
   }
 
+  /* ── Экспорт / Импорт — функции ────────────────────────────── */
+  function openExport(def) {
+    var code = exportTankCode(def);
+    if (!code) { alert('Не удалось экспортировать танк'); return; }
+    setModal({ type: 'export', code: code, defName: def.name });
+    setCopied(false);
+  }
+
+  function openImport() {
+    setImportCode('');
+    setImportErr('');
+    setModal({ type: 'import' });
+  }
+
+  function closeModal() {
+    setModal(null);
+    setImportCode('');
+    setImportErr('');
+  }
+
+  function doCopy(code) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(function() {
+        setCopied(true);
+        setTimeout(function(){ setCopied(false); }, 2000);
+      });
+    } else {
+      /* Fallback для WebView без clipboard API */
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = code;
+        ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;';
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        setCopied(true);
+        setTimeout(function(){ setCopied(false); }, 2000);
+      } catch(e) { alert('Скопируй код вручную'); }
+    }
+  }
+
+  function doImport() {
+    setImportErr('');
+    try {
+      var def = importTankCode(importCode);
+      /* Загружаем в редактор */
+      setEditing(def);
+      setSelectedDef(null);
+      setTab('editor');
+      setPreviewing(false);
+      bulletsRef.current = [];
+      closeModal();
+    } catch(e) {
+      setImportErr(e.message || 'Неизвестная ошибка');
+    }
+  }
+
+  /* ── Экспорт текущего танка из редактора и немедленное сохранение ── */
+  function saveAndExport() {
+    if (!editing.name.trim()) { alert('Введи имя танка перед экспортом!'); return; }
+    var def = Object.assign({}, editing, { name: editing.name.trim() });
+    var list = loadTanks();
+    var idx  = list.findIndex(function(t){ return t.id === def.id; });
+    if (idx >= 0) list[idx] = def; else list.push(def);
+    saveTanks(list);
+    registerTank(def);
+    openExport(def);
+  }
+
   /* ── Save / delete / nav ────────────────────────────────────── */
   function saveTank() {
     if (!editing.name.trim()) { alert('Введи имя танка!'); return; }
@@ -473,6 +615,16 @@ function TankBuilder({ onClose }) {
     listCard: { background:'rgba(255,255,255,0.04)',borderRadius:10,border:'1px solid rgba(255,255,255,0.1)',padding:'11px',marginBottom:9,display:'flex',alignItems:'center',gap:11 },
     dot: function(col){ return { width:14,height:14,borderRadius:'50%',background:col,flexShrink:0 }; },
     saveBtn: { width:'100%',padding:'13px',fontSize:14,fontWeight:'bold',borderRadius:11,border:'none',cursor:'pointer',fontFamily:'Arial',touchAction:'manipulation',background:'linear-gradient(90deg,#0088cc,#44b4e0)',color:'#fff',boxShadow:'0 4px 14px rgba(0,150,220,0.35)' },
+    /* Модал */
+    modalOverlay: { position:'fixed',inset:0,zIndex:3000,background:'rgba(0,0,0,0.75)',display:'flex',alignItems:'center',justifyContent:'center',padding:16 },
+    modalBox: { background:'#0e1228',border:'1.5px solid rgba(68,136,255,0.4)',borderRadius:16,padding:'20px 18px',width:'100%',maxWidth:480,maxHeight:'90vh',display:'flex',flexDirection:'column',gap:14,boxShadow:'0 16px 60px rgba(0,0,0,0.8)' },
+    modalTitle: { color:'#00ccff',fontSize:15,fontWeight:900,letterSpacing:1 },
+    modalCode: { width:'100%',minHeight:90,background:'rgba(255,255,255,0.04)',border:'1.5px solid rgba(68,136,255,0.3)',borderRadius:8,color:'#a0d8ff',fontFamily:'monospace',fontSize:11,padding:'10px',boxSizing:'border-box',resize:'vertical',outline:'none',wordBreak:'break-all',lineHeight:1.5 },
+    modalImportArea: { width:'100%',minHeight:90,background:'rgba(255,255,255,0.04)',border:'1.5px solid rgba(68,136,255,0.3)',borderRadius:8,color:'#fff',fontFamily:'monospace',fontSize:11,padding:'10px',boxSizing:'border-box',resize:'vertical',outline:'none',wordBreak:'break-all',lineHeight:1.5 },
+    modalErr: { color:'#ff7070',fontSize:11,background:'rgba(180,0,0,0.15)',borderRadius:7,padding:'8px 10px',border:'1px solid rgba(255,60,60,0.3)' },
+    modalHint: { color:'rgba(255,255,255,0.35)',fontSize:10,lineHeight:1.7 },
+    modalBtnRow: { display:'flex',gap:8,flexWrap:'wrap' },
+    exportBtn: function(col){ return { padding:'7px 14px',borderRadius:8,border:'none',cursor:'pointer',fontFamily:'Arial',fontWeight:'bold',fontSize:11,touchAction:'manipulation',background:col||'rgba(0,140,80,0.7)',color:'#fff' }; },
   };
 
   /* ══════════════════════════════════════════════════════════════
@@ -504,22 +656,34 @@ function TankBuilder({ onClose }) {
 
       /* ── LIST TAB ───────────────────────────────────────────── */
       jsxs('div', { style:{flex:1,overflowY:'auto',padding:14}, children:[
-        jsxs('div', { style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:14}, children:[
-          jsx('div', { style:{color:'rgba(255,255,255,0.6)',fontSize:13}, children: tankList.length===0 ? 'Нет сохранённых танков' : tankList.length+' танк(ов)' }),
-          jsx('button', { onClick: startNew, style: S.btn('rgba(0,140,60,0.7)'), children: '+ Создать танк' }),
+        /* Шапка: счётчик + импорт + создать */
+        jsxs('div', { style:{display:'flex',gap:6,alignItems:'center',marginBottom:14,flexWrap:'wrap'}, children:[
+          jsx('div', { style:{color:'rgba(255,255,255,0.6)',fontSize:13,flex:1,minWidth:60},
+            children: tankList.length===0 ? 'Нет сохранённых танков' : tankList.length+' танк(ов)' }),
+          jsx('button', { onClick: openImport, style: S.btn('rgba(0,100,60,0.8)'), children: '📥 Импорт' }),
+          jsx('button', { onClick: startNew,   style: S.btn('rgba(0,140,60,0.7)'), children: '+ Создать' }),
         ]}),
-        tankList.length === 0 && jsx('div', { style:{textAlign:'center',padding:'60px 20px',color:'rgba(255,255,255,0.25)',fontSize:13,lineHeight:2}, children:'У тебя ещё нет кастомных танков.\nНажми «+ Создать танк» чтобы начать!' }),
+
+        /* Пустой список */
+        tankList.length === 0 && jsxs('div', { style:{textAlign:'center',padding:'40px 20px',color:'rgba(255,255,255,0.25)',fontSize:13,lineHeight:2}, children:[
+          'У тебя ещё нет кастомных танков.',jsx('br',{}),
+          'Нажми «+ Создать» чтобы начать,',jsx('br',{}),
+          'или «📥 Импорт» чтобы загрузить чужой код.',
+        ]}),
+
+        /* Карточки танков */
         tankList.map(function(def) {
           var tp = TIER_PRESETS[def.tier] || TIER_PRESETS[3];
           return jsxs('div', { key:def.id, style:S.listCard, children:[
             jsx('div', { style: S.dot(def.color||tp.color) }),
             jsxs('div', { style:{flex:1,minWidth:0}, children:[
               jsx('div', { style:{color:'#fff',fontWeight:'bold',fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}, children: def.name }),
-              jsxs('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:11,marginTop:2}, children:[tp.label,' · ',def.barrels?def.barrels.length:0,' стволов · Родитель: ',def.upgradesFrom||'Basic'] }),
+              jsxs('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:11,marginTop:2}, children:[tp.label,' · ',def.barrels?def.barrels.length:0,' стволов · ',def.upgradesFrom||'Basic'] }),
             ]}),
-            jsxs('div', { style:{display:'flex',gap:5}, children:[
-              jsx('button', { onClick:function(){ editExisting(def); }, style:S.btn(), children:'✏' }),
-              jsx('button', { onClick:function(){ deleteTank(def.id); }, style:S.btn('rgba(180,30,30,0.7)'), children:'🗑' }),
+            jsxs('div', { style:{display:'flex',gap:5,flexShrink:0}, children:[
+              jsx('button', { onClick:function(){ editExisting(def); },      style:S.btn(),                          title:'Редактировать', children:'✏' }),
+              jsx('button', { onClick:function(){ openExport(def); },         style:S.btn('rgba(0,100,60,0.8)'),     title:'Экспортировать код', children:'📤' }),
+              jsx('button', { onClick:function(){ deleteTank(def.id); },      style:S.btn('rgba(180,30,30,0.7)'),    title:'Удалить', children:'🗑' }),
             ]}),
           ]});
         }),
@@ -739,12 +903,108 @@ function TankBuilder({ onClose }) {
           /* Сохранить */
           jsx('button', { onClick: saveTank, style: S.saveBtn, children: '💾 Сохранить и добавить в игру' }),
 
+          /* Сохранить + экспортировать */
+          jsx('button', {
+            onClick: saveAndExport,
+            style: Object.assign({}, S.saveBtn, { background:'linear-gradient(90deg,#007a40,#00b060)', marginTop:0 }),
+            children: '📤 Сохранить и получить код',
+          }),
+
           jsx('div', { style:{height:20} }),
 
         ]}),
       ]})
 
     }), /* body */
+
+    /* ══ МОДАЛ ЭКСПОРТА / ИМПОРТА ══════════════════════════════ */
+    modal && jsx('div', { style: S.modalOverlay, onClick: closeModal, children:
+      jsx('div', { style: S.modalBox, onClick: function(e){ e.stopPropagation(); }, children:
+
+        modal.type === 'export' ? jsxs('div', { style:{display:'flex',flexDirection:'column',gap:12}, children:[
+
+          /* — Заголовок — */
+          jsxs('div', { style:{display:'flex',alignItems:'center',justifyContent:'space-between'}, children:[
+            jsxs('div', { children:[
+              jsx('div', { style: S.modalTitle, children: '📤 Код танка' }),
+              jsx('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:10,marginTop:3}, children: '"' + modal.defName + '"' }),
+            ]}),
+            jsx('button', { onClick: closeModal, style: S.btn('rgba(100,30,30,0.5)'), children: '✕' }),
+          ]}),
+
+          /* — Код — */
+          jsx('textarea', { readOnly: true, value: modal.code, style: S.modalCode,
+            onFocus: function(e){ e.target.select(); } }),
+
+          /* — Подсказка — */
+          jsx('div', { style: S.modalHint, children:
+            'Скопируй этот код и отправь другому игроку. Он сможет вставить его через «📥 Импорт» и сразу получить твой танк в свой редактор.' }),
+
+          /* — Кнопки — */
+          jsxs('div', { style: S.modalBtnRow, children:[
+            jsx('button', {
+              onClick: function(){ doCopy(modal.code); },
+              style: S.exportBtn(copied ? 'rgba(0,160,80,0.9)' : 'rgba(0,100,60,0.8)'),
+              children: copied ? '✔ Скопировано!' : '📋 Скопировать код',
+            }),
+            jsx('button', {
+              onClick: function(){
+                /* Поделиться через Web Share API если доступен */
+                if (navigator.share) {
+                  navigator.share({ title: 'Diep Tank: ' + modal.defName, text: modal.code })
+                    .catch(function(){});
+                } else { doCopy(modal.code); }
+              },
+              style: S.exportBtn('rgba(0,80,180,0.8)'),
+              children: '🔗 Поделиться',
+            }),
+            jsx('button', { onClick: closeModal, style: S.exportBtn('rgba(60,60,80,0.8)'), children: 'Закрыть' }),
+          ]}),
+
+        ]}) :
+
+        /* — Импорт — */
+        jsxs('div', { style:{display:'flex',flexDirection:'column',gap:12}, children:[
+
+          /* — Заголовок — */
+          jsxs('div', { style:{display:'flex',alignItems:'center',justifyContent:'space-between'}, children:[
+            jsx('div', { style: S.modalTitle, children: '📥 Импорт танка' }),
+            jsx('button', { onClick: closeModal, style: S.btn('rgba(100,30,30,0.5)'), children: '✕' }),
+          ]}),
+
+          /* — Поле ввода — */
+          jsx('textarea', {
+            value: importCode,
+            placeholder: 'Вставь сюда код танка (начинается с DIEPTANK1_...)',
+            style: S.modalImportArea,
+            onChange: function(e){ setImportCode(e.target.value); setImportErr(''); },
+            spellCheck: false,
+            autoCorrect: 'off',
+            autoCapitalize: 'none',
+          }),
+
+          /* — Ошибка — */
+          importErr && jsx('div', { style: S.modalErr, children: '⚠ ' + importErr }),
+
+          /* — Подсказка — */
+          jsx('div', { style: S.modalHint, children:
+            'Танк загрузится в редактор для просмотра и настройки. Нажми «💾 Сохранить» чтобы добавить его в игру.' }),
+
+          /* — Кнопки — */
+          jsxs('div', { style: S.modalBtnRow, children:[
+            jsx('button', {
+              onClick: doImport,
+              style: S.exportBtn(importCode.trim() ? 'rgba(0,100,200,0.85)' : 'rgba(40,40,60,0.7)'),
+              children: '✔ Загрузить в редактор',
+            }),
+            jsx('button', { onClick: closeModal, style: S.exportBtn('rgba(60,60,80,0.8)'), children: 'Отмена' }),
+          ]}),
+
+        ]})
+
+      })
+    }),
+
   ]}); /* root */
 }
 
