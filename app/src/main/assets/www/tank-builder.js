@@ -18,6 +18,10 @@ var BARREL_PRESETS = [
   { id:'heavy',  label:'Тяжёлый',     length:52, width:20, reload:1.5,  bSize:1.3,  bSpeed:0.9,  bDmg:2.0 },
   { id:'mini',   label:'Мини',        length:30, width:9,  reload:0.55, bSize:0.65, bSpeed:1.2,  bDmg:0.6 },
   { id:'cannon', label:'Пушка',       length:56, width:28, reload:2.8,  bSize:2.2,  bSpeed:0.95, bDmg:3.5 },
+  { id:'rear',   label:'Задний',     length:42, width:12, reload:0.9,  bSize:0.9,  bSpeed:0.9,  bDmg:0.9 },
+  { id:'side',   label:'Боковой',   length:36, width:12, reload:0.8,  bSize:0.85, bSpeed:1.0,  bDmg:0.85 },
+  { id:'double', label:'Двойной',   length:44, width:16, reload:1.1,  bSize:1.0,  bSpeed:1.0,  bDmg:1.0 },
+  { id:'spiral', label:'Спираль',   length:40, width:11, reload:0.75, bSize:0.8,  bSpeed:1.15, bDmg:0.8 },
 ];
 
 var TANK_TEMPLATES = [
@@ -54,6 +58,40 @@ var TANK_TEMPLATES = [
   { _tpl:'autoturret', name:'Авто-турельщик', icon:'🔫', tier:4, color:'#3399ff', upgradesFrom:'Basic', description:'Разворачивает авто-турели', specialType:'normal', autoGun:false, turretDeploy:true, turretCfg:{maxTurrets:4,fireRate:45,health:100,lifetime:720,damage:10,speed:9,size:7,homing:false}, upgradesTo:[], hpSlider:1.2, speedSlider:0.9,
     barrels:[{id:1,label:'Стандартный',angle:0,length:48,width:14,reload:1.0,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:0,bulletType:'normal'}] },
   { _tpl:'smasher', name:'Смэшер',   icon:'🔨', tier:4, color:'#888888', upgradesFrom:'Basic', description:'Огромный корпус, урон при столкновении', specialType:'normal', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:2.0, speedSlider:1.1,
+    barrels:[] },
+  { _tpl:'triplet', name:'Триплет', icon:'🔱', tier:4, color:'#4488ee', upgradesFrom:'Basic', description:'Три ствола веером — плотный фронтальный огонь', specialType:'normal', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:1.0, speedSlider:1.0,
+    barrels:[
+      {id:1,label:'Стандартный',angle:-0.18,length:48,width:14,reload:1.0,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:0,bulletType:'normal',fireGroup:0,penetration:1,recoil:0},
+      {id:2,label:'Длинный',    angle:0,    length:56,width:14,reload:1.0,bSize:1.0,bSpeed:1.1,bDmg:1.0,lateral:0,bulletType:'normal',fireGroup:0,penetration:1,recoil:0},
+      {id:3,label:'Стандартный',angle:0.18, length:48,width:14,reload:1.0,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:0,bulletType:'normal',fireGroup:0,penetration:1,recoil:0},
+    ] },
+  { _tpl:'overlord', name:'Оверлорд', icon:'👁', tier:4, color:'#9944cc', upgradesFrom:'Basic', description:'Четыре ствола крестом — рой дронов', specialType:'drone', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:1.1, speedSlider:0.9,
+    barrels:[
+      {id:1,label:'Стандартный',angle:0,      length:44,width:16,reload:1.5,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:0,bulletType:'normal',fireGroup:0,penetration:1,recoil:0},
+      {id:2,label:'Стандартный',angle:1.5708, length:44,width:16,reload:1.5,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:0,bulletType:'normal',fireGroup:0,penetration:1,recoil:0},
+      {id:3,label:'Стандартный',angle:3.1416, length:44,width:16,reload:1.5,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:0,bulletType:'normal',fireGroup:0,penetration:1,recoil:0},
+      {id:4,label:'Стандартный',angle:-1.5708,length:44,width:16,reload:1.5,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:0,bulletType:'normal',fireGroup:0,penetration:1,recoil:0},
+    ] },
+  { _tpl:'sprayer', name:'Спрейер', icon:'💦', tier:4, color:'#44ccaa', upgradesFrom:'Basic', description:'Пять мини-стволов в ряд — непрерывный поток', specialType:'normal', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:0.9, speedSlider:1.1,
+    barrels:[
+      {id:1,label:'Мини',angle:0,length:30,width:9,reload:0.4,bSize:0.65,bSpeed:1.2,bDmg:0.55,lateral:-12,bulletType:'normal',fireGroup:1,penetration:1,recoil:0},
+      {id:2,label:'Мини',angle:0,length:30,width:9,reload:0.4,bSize:0.65,bSpeed:1.2,bDmg:0.55,lateral:-4, bulletType:'normal',fireGroup:2,penetration:1,recoil:0},
+      {id:3,label:'Мини',angle:0,length:30,width:9,reload:0.4,bSize:0.65,bSpeed:1.2,bDmg:0.55,lateral:4,  bulletType:'normal',fireGroup:3,penetration:1,recoil:0},
+      {id:4,label:'Мини',angle:0,length:30,width:9,reload:0.4,bSize:0.65,bSpeed:1.2,bDmg:0.55,lateral:12, bulletType:'normal',fireGroup:4,penetration:1,recoil:0},
+      {id:5,label:'Мини',angle:0,length:30,width:9,reload:0.4,bSize:0.65,bSpeed:1.2,bDmg:0.55,lateral:0,  bulletType:'normal',fireGroup:0,penetration:1,recoil:0},
+    ] },
+  { _tpl:'hybrid', name:'Гибрид', icon:'⚗', tier:4, color:'#cc6644', upgradesFrom:'Basic', description:'Спереди пушка, сзади дроны', specialType:'normal', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:1.3, speedSlider:0.95,
+    barrels:[
+      {id:1,label:'Пушка',      angle:0,      length:56,width:28,reload:2.8,bSize:2.2,bSpeed:0.95,bDmg:3.5,lateral:0,bulletType:'normal',fireGroup:0,penetration:2,recoil:0.5},
+      {id:2,label:'Стандартный',angle:3.1416, length:44,width:14,reload:1.5,bSize:1.0,bSpeed:1.0, bDmg:1.0,lateral:-8,bulletType:'normal',fireGroup:0,penetration:1,recoil:0},
+      {id:3,label:'Стандартный',angle:3.1416, length:44,width:14,reload:1.5,bSize:1.0,bSpeed:1.0, bDmg:1.0,lateral:8, bulletType:'normal',fireGroup:0,penetration:1,recoil:0},
+    ] },
+  { _tpl:'battleship', name:'Линкор', icon:'🚢', tier:5, color:'#8888cc', upgradesFrom:'Basic', description:'Шесть авто-турелей + двойной ствол', specialType:'normal', autoGun:false, turretDeploy:true, turretCfg:{maxTurrets:6,fireRate:40,health:120,lifetime:800,damage:11,speed:9,size:8,homing:false}, upgradesTo:[], hpSlider:1.8, speedSlider:0.8,
+    barrels:[
+      {id:1,label:'Длинный',angle:-0.12,length:72,width:10,reload:2.2,bSize:0.75,bSpeed:2.1,bDmg:1.8,lateral:-8,bulletType:'normal',fireGroup:0,penetration:1,recoil:0},
+      {id:2,label:'Длинный',angle:0.12, length:72,width:10,reload:2.2,bSize:0.75,bSpeed:2.1,bDmg:1.8,lateral:8, bulletType:'normal',fireGroup:0,penetration:1,recoil:0},
+    ] },
+  { _tpl:'necromancer', name:'Некромант', icon:'💀', tier:4, color:'#552288', upgradesFrom:'Basic', description:'Нет стволов — поднимает фигуры как дронов', specialType:'drone', autoGun:false, turretDeploy:false, turretCfg:{maxTurrets:3,fireRate:55,health:90,lifetime:700,damage:9,speed:8.5,size:7,homing:false}, upgradesTo:[], hpSlider:1.0, speedSlider:1.0,
     barrels:[] },
 ];
 
@@ -136,6 +174,7 @@ function importTankCode(code) {
   def.speedSlider = Math.min(2, Math.max(0.5, parseFloat(def.speedSlider) || 1));
   var _validSpecial = ['normal','rocket','laser','drone','homing','splitting','vampire'];
   def.specialType = (_validSpecial.indexOf(def.specialType) >= 0) ? def.specialType : 'normal';
+  var _validBullet = ['normal','trap','grenade','boomerang','lightning'];
   def.autoGun      = !!def.autoGun;
   def.turretDeploy = !!def.turretDeploy;
   var _tc = def.turretCfg || {};
@@ -162,7 +201,7 @@ function importTankCode(code) {
       bSpeed:      Math.min(4,   Math.max(0.3, parseFloat(b.bSpeed) || 1)),
       bDmg:        Math.min(5,   Math.max(0.2, parseFloat(b.bDmg)   || 1)),
       bSize:       Math.min(3,   Math.max(0.3, parseFloat(b.bSize)  || 1)),
-      bulletType:  ['normal','trap'].indexOf(b.bulletType) >= 0 ? b.bulletType : 'normal',
+      bulletType:  _validBullet.indexOf(b.bulletType) >= 0 ? b.bulletType : 'normal',
       fireGroup:   Math.min(4, Math.max(0, parseInt(b.fireGroup)   || 0)),
       penetration: Math.min(5, Math.max(1, parseInt(b.penetration) || 1)),
       recoil:      Math.min(3, Math.max(0, parseFloat(b.recoil)    || 0)),
@@ -267,6 +306,88 @@ function registerAllCustomTanks() {
   loadTanks().forEach(function(def) { registerTank(def); });
 }
 
+/* ── Случайный танк ─────────────────────────────────────────── */
+var _RAND_NAMES = ['Омега','Молния','Хаос','Призрак','Тень','Вихрь','Гром','Буран','Огонь','Лёд','Ураган','Шторм','Туман','Пламя','Мрак'];
+var _RAND_ICONS = ['🎲','⚡','💫','🌀','🔥','❄','💥','🎯','🌊','☄'];
+var _RAND_COLORS = ['#ff4444','#44aaff','#44ff88','#ffcc00','#cc44ff','#ff8800','#00cccc','#ff44cc','#88ff44','#ff6600'];
+var _RAND_SPECIALS = ['normal','normal','normal','normal','rocket','drone','homing','splitting','vampire'];
+
+function generateRandomTank() {
+  var nBarrels = Math.floor(Math.random() * 6) + 1;
+  var barrels = [];
+  for (var i = 0; i < nBarrels; i++) {
+    var p = BARREL_PRESETS[Math.floor(Math.random() * 6)]; /* первые 6 = оригинальные */
+    var ang = nBarrels === 1 ? 0 : (Math.PI * 2 / nBarrels) * i;
+    barrels.push({
+      id: Date.now() + i,
+      label: p.label,
+      angle: parseFloat(ang.toFixed(4)),
+      length: Math.min(100, Math.max(20, Math.round(p.length + (Math.random()-0.5)*24))),
+      width:  Math.min(36,  Math.max(5,  Math.round(p.width  + (Math.random()-0.5)*8))),
+      reload: parseFloat(Math.min(5, Math.max(0.2, p.reload + (Math.random()-0.5)*0.6)).toFixed(2)),
+      bSize:  parseFloat(Math.min(3, Math.max(0.3, p.bSize  + (Math.random()-0.5)*0.5)).toFixed(2)),
+      bSpeed: parseFloat(Math.min(4, Math.max(0.3, p.bSpeed + (Math.random()-0.5)*0.7)).toFixed(2)),
+      bDmg:   parseFloat(Math.min(5, Math.max(0.2, p.bDmg   + (Math.random()-0.5)*1.0)).toFixed(2)),
+      lateral: 0,
+      bulletType: Math.random() < 0.12 ? 'trap' : 'normal',
+      fireGroup: 0,
+      penetration: Math.random() < 0.2 ? 2 : 1,
+      recoil: parseFloat((Math.random() * 0.8).toFixed(1)),
+    });
+  }
+  return {
+    id: genId(),
+    name: _RAND_NAMES[Math.floor(Math.random()*_RAND_NAMES.length)] + '-' + Math.floor(Math.random()*999+1),
+    icon: _RAND_ICONS[Math.floor(Math.random()*_RAND_ICONS.length)],
+    tier: Math.floor(Math.random() * 5) + 1,
+    color: _RAND_COLORS[Math.floor(Math.random()*_RAND_COLORS.length)],
+    barrels: barrels,
+    hpSlider:    parseFloat((0.6 + Math.random() * 1.2).toFixed(2)),
+    speedSlider: parseFloat((0.6 + Math.random() * 1.2).toFixed(2)),
+    specialType: _RAND_SPECIALS[Math.floor(Math.random()*_RAND_SPECIALS.length)],
+    autoGun:     Math.random() < 0.15,
+    turretDeploy: false,
+    turretCfg: { maxTurrets:3, fireRate:55, health:90, lifetime:700, damage:9, speed:8.5, size:7, homing:false },
+    upgradesFrom: ['Basic'],
+    upgradesTo: [],
+    category: 'Случайные',
+    description: 'Случайно сгенерированный танк',
+  };
+}
+
+/* ── Оценка баланса ─────────────────────────────────────────── */
+function computeBalanceRating(ed) {
+  var barrels = ed.barrels || [];
+  if (barrels.length === 0) {
+    var bd = (ed.hpSlider || 1) * 3;
+    if (bd < 3) return { label:'😴 Слабый',  color:'#66aaff', score: bd };
+    if (bd < 5) return { label:'⚖ Норм',     color:'#44cc66', score: bd };
+    return               { label:'💪 Сильный', color:'#ffcc00', score: bd };
+  }
+  var dps = 0;
+  barrels.forEach(function(b){ dps += (b.bDmg||1) / (b.reload||1); });
+  var tier = ed.tier || 3;
+  var preset = TIER_PRESETS[tier] || TIER_PRESETS[3];
+  var hpMult = preset.hp * (ed.hpSlider || 1);
+  var score = dps * 2.2 + hpMult * 1.8 + barrels.length * 0.4 + (ed.specialType && ed.specialType !== 'normal' ? 1 : 0);
+  if (score < 5)  return { label:'😴 Слабый',  color:'#66aaff', score: parseFloat(score.toFixed(1)) };
+  if (score < 11) return { label:'⚖ Норм',     color:'#44cc66', score: parseFloat(score.toFixed(1)) };
+  if (score < 20) return { label:'💪 Сильный', color:'#ffcc00', score: parseFloat(score.toFixed(1)) };
+  return               { label:'☠ ИМБА',       color:'#ff4444', score: parseFloat(score.toFixed(1)) };
+}
+
+/* ── Пресеты раскладки стволов ───────────────────────────────── */
+var LAYOUT_PRESETS = [
+  { id:'front',   label:'Вперёд',    angles:[0] },
+  { id:'double',  label:'Двойной',   angles:[0, 0],           laterals:[-9, 9] },
+  { id:'twins',   label:'Близнецы',  angles:[0, Math.PI] },
+  { id:'cross',   label:'Крест',     angles:[0, Math.PI/2, Math.PI, -Math.PI/2] },
+  { id:'star',    label:'Звезда',    angles:[0, Math.PI/3, 2*Math.PI/3, Math.PI, 4*Math.PI/3, 5*Math.PI/3] },
+  { id:'fan3',    label:'Веер×3',    angles:[-0.35, 0, 0.35] },
+  { id:'fan5',    label:'Веер×5',    angles:[-0.5, -0.25, 0, 0.25, 0.5] },
+  { id:'diag',    label:'Диаг×2',    angles:[Math.PI/4, -Math.PI/4] },
+];
+
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
   setTimeout(registerAllCustomTanks, 600);
 } else {
@@ -334,6 +455,15 @@ function TankBuilder({ onClose }) {
   var _prv = useState(false);      var previewing  = _prv[0]; var setPreviewing = _prv[1];
   var _sq  = useState('');         var searchQuery = _sq[0];  var setSearchQuery = _sq[1];
   var _lv  = useState(0);          var setListVersion = _lv[1];
+  /* ── Новые состояния ─────────────────────────────────────── */
+  var _sym  = useState(false);     var autoSymmetry = _sym[0]; var setAutoSymmetry = _sym[1];
+  var _cmp  = useState(null);      var compareWith  = _cmp[0]; var setCompareWith  = _cmp[1];
+  var _hist = useState(false);     var showHistory  = _hist[0]; var setShowHistory  = _hist[1];
+  var _tf   = useState(null);      var tierFilter   = _tf[0];  var setTierFilter   = _tf[1];
+  var _sb   = useState('date');    var sortBy       = _sb[0];  var setSortBy       = _sb[1];
+  var _fav  = useState(function(){
+    try { return JSON.parse(localStorage.getItem('diep_favs')||'{}'); } catch(e){ return {}; }
+  }); var favorites = _fav[0]; var setFavorites = _fav[1];
 
   /* ── Подтверждение удаления ─────────────────────────────────── */
   var _dp = useState(null); var deletePending = _dp[0]; var setDeletePending = _dp[1];
@@ -618,6 +748,27 @@ function TankBuilder({ onClose }) {
       ctx.stroke();
       ctx.restore();
 
+      /* Авто-турели на холсте */
+      if (editing.turretDeploy) {
+        var tc = editing.turretCfg || {};
+        var nt = Math.min(tc.maxTurrets || 3, 8);
+        var tsr = radius + 14 * zoom;
+        for (var _ti2 = 0; _ti2 < nt; _ti2++) {
+          var _ta2 = (Math.PI * 2 / nt) * _ti2;
+          var _tx = cx + Math.cos(_ta2) * tsr;
+          var _ty = cy + Math.sin(_ta2) * tsr;
+          ctx.fillStyle = '#9999cc';
+          ctx.beginPath(); ctx.arc(_tx, _ty, 4.5 * zoom, 0, Math.PI*2); ctx.fill();
+          ctx.strokeStyle = '#6666aa'; ctx.lineWidth = 1;
+          ctx.stroke();
+          var _tl = Math.min(16, (tc.size || 7)) * zoom * 0.55;
+          ctx.strokeStyle = '#ccccff'; ctx.lineWidth = Math.max(1, (tc.size || 7) * zoom * 0.18);
+          ctx.beginPath(); ctx.moveTo(_tx, _ty);
+          ctx.lineTo(_tx + Math.cos(_ta2) * _tl, _ty + Math.sin(_ta2) * _tl);
+          ctx.stroke();
+        }
+      }
+
       /* Превью пуль */
       if (previewing) {
         var now = ts || 0;
@@ -637,12 +788,17 @@ function TankBuilder({ onClose }) {
             var bsx = (cx - Math.sin(ang)*lat) + Math.cos(ang) * (radius*0.55 + bLen);
             var bsy = (cy + Math.cos(ang)*lat) + Math.sin(ang) * (radius*0.55 + bLen);
             var bSpd = (b.bSpeed || 1.0) * 3.5 * zoom;
+            var bt = b.bulletType || 'normal';
             bulletsRef.current.push({
               x: bsx, y: bsy,
               vx: Math.cos(ang)*bSpd, vy: Math.sin(ang)*bSpd,
+              origVx: Math.cos(ang)*bSpd, origVy: Math.sin(ang)*bSpd,
               r: (b.bSize||1.0) * 5 * zoom,
-              isTrap: b.bulletType === 'trap',
-              life: 80, maxLife: 80,
+              bulletType: bt,
+              isTrap: bt === 'trap',
+              age: 0,
+              life: bt === 'boomerang' ? 120 : 80,
+              maxLife: bt === 'boomerang' ? 120 : 80,
             });
             /* Recoil: толчок ствола назад при выстреле */
             if (b.recoil) recoilRef.current[bi] = (b.recoil || 0) * 7 * zoom;
@@ -650,22 +806,67 @@ function TankBuilder({ onClose }) {
         });
         bulletsRef.current = bulletsRef.current.filter(function(blt){ return blt.life > 0; });
         bulletsRef.current.forEach(function(blt) {
+          blt.age++;
+          /* Boomerang: reverse direction at halfway */
+          if (blt.bulletType === 'boomerang') {
+            var half = blt.maxLife / 2;
+            if (blt.age === Math.floor(half)) { blt.vx = -blt.origVx; blt.vy = -blt.origVy; }
+          }
           blt.x += blt.vx; blt.y += blt.vy; blt.life--;
           var alpha = blt.life / blt.maxLife;
-          if (blt.isTrap) {
-            ctx.save();
-            ctx.globalAlpha = alpha;
+          var bt = blt.bulletType || 'normal';
+          ctx.save();
+          ctx.globalAlpha = alpha;
+          if (bt === 'trap') {
             ctx.fillStyle = '#e8a000'; ctx.strokeStyle = '#000'; ctx.lineWidth = 1;
             ctx.beginPath();
-            for (var _ti=0;_ti<8;_ti++){ var _ta=_ti*Math.PI/4; _ti===0?ctx.moveTo(blt.x+Math.cos(_ta)*blt.r,blt.y+Math.sin(_ta)*blt.r):ctx.lineTo(blt.x+Math.cos(_ta)*blt.r,blt.y+Math.sin(_ta)*blt.r); }
+            for (var _ti=0;_ti<8;_ti++){ var _ta=_ti*Math.PI/4+blt.age*0.05; _ti===0?ctx.moveTo(blt.x+Math.cos(_ta)*blt.r,blt.y+Math.sin(_ta)*blt.r):ctx.lineTo(blt.x+Math.cos(_ta)*blt.r,blt.y+Math.sin(_ta)*blt.r); }
             ctx.closePath(); ctx.fill(); ctx.stroke();
-            ctx.restore();
+          } else if (bt === 'grenade') {
+            /* Grenade: dark circle that expands near end of life */
+            var gf = 1 - blt.life / blt.maxLife;
+            var gr = blt.r * (1 + gf * 1.8);
+            ctx.fillStyle = 'rgba(80,40,0,' + alpha + ')';
+            ctx.strokeStyle = 'rgba(255,160,0,' + alpha + ')';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath(); ctx.arc(blt.x, blt.y, gr, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+            if (gf > 0.75) {
+              ctx.strokeStyle = 'rgba(255,80,0,'+(alpha*0.6)+')';
+              ctx.lineWidth = 1;
+              ctx.beginPath(); ctx.arc(blt.x, blt.y, gr * 2.5, 0, Math.PI*2); ctx.stroke();
+            }
+          } else if (bt === 'boomerang') {
+            /* Boomerang: angular shape */
+            ctx.strokeStyle = 'rgba(180,120,0,' + alpha + ')';
+            ctx.lineWidth = blt.r * 0.6;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.arc(blt.x, blt.y, blt.r * 1.2, blt.age * 0.1, blt.age * 0.1 + Math.PI * 0.8);
+            ctx.stroke();
+          } else if (bt === 'lightning') {
+            /* Lightning: jagged line from prev position */
+            ctx.strokeStyle = 'rgba(180,180,255,' + alpha + ')';
+            ctx.lineWidth = Math.max(1, blt.r * 0.5);
+            ctx.shadowColor = '#8888ff';
+            ctx.shadowBlur = 6;
+            ctx.beginPath();
+            ctx.moveTo(blt.x, blt.y);
+            var segs = 5, dx = -blt.vx * 4, dy = -blt.vy * 4;
+            for (var _li = 1; _li <= segs; _li++) {
+              var _lf = _li / segs;
+              ctx.lineTo(blt.x + dx*_lf + (Math.random()-0.5)*blt.r*2, blt.y + dy*_lf + (Math.random()-0.5)*blt.r*2);
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+            ctx.beginPath(); ctx.arc(blt.x, blt.y, blt.r * 0.7, 0, Math.PI*2);
+            ctx.fillStyle = 'rgba(200,200,255,' + alpha + ')'; ctx.fill();
           } else {
             ctx.beginPath();
             ctx.arc(blt.x, blt.y, blt.r, 0, Math.PI*2);
             ctx.fillStyle = 'rgba(255,220,80,' + alpha + ')';
             ctx.fill();
           }
+          ctx.restore();
         });
       } else {
         bulletsRef.current = [];
@@ -682,8 +883,45 @@ function TankBuilder({ onClose }) {
   function addBarrel(preset) {
     var p = preset || BARREL_PRESETS[0];
     setEditing(function(prev) {
-      var next = Object.assign({}, prev, { barrels: prev.barrels.concat([Object.assign({}, p, { angle:0, lateral:0, id:Date.now(), bulletType: p.bulletType||'normal', fireGroup:0, penetration:1, recoil:0 })]) });
+      var nb = Object.assign({}, p, { angle:0, lateral:0, id:Date.now(), bulletType: p.bulletType||'normal', fireGroup:0, penetration:1, recoil:0 });
+      var bList = prev.barrels.concat([nb]);
+      if (autoSymmetry) {
+        bList = bList.concat([Object.assign({}, nb, { id: Date.now()+1, angle: Math.PI, lateral: -nb.lateral })]);
+      }
+      var next = Object.assign({}, prev, { barrels: bList });
       pushHistory(next);
+      return next;
+    });
+  }
+
+  /* ── Применить пресет раскладки ─────────────────────────────── */
+  function applyLayoutPreset(lp) {
+    var base = BARREL_PRESETS[0];
+    setEditing(function(prev) {
+      var newBarrels = lp.angles.map(function(a, i) {
+        return Object.assign({}, base, {
+          id: Date.now() + i,
+          angle: parseFloat(a.toFixed(4)),
+          lateral: (lp.laterals && lp.laterals[i]) ? lp.laterals[i] : 0,
+          bulletType: 'normal',
+          fireGroup: 0,
+          penetration: 1,
+          recoil: 0,
+        });
+      });
+      var next = Object.assign({}, prev, { barrels: newBarrels });
+      pushHistory(next);
+      return next;
+    });
+    bulletsRef.current = [];
+  }
+
+  /* ── Избранное ─────────────────────────────────────────────── */
+  function toggleFavorite(id) {
+    setFavorites(function(prev) {
+      var next = Object.assign({}, prev);
+      if (next[id]) { delete next[id]; } else { next[id] = true; }
+      try { localStorage.setItem('diep_favs', JSON.stringify(next)); } catch(e){}
       return next;
     });
   }
@@ -947,31 +1185,41 @@ function TankBuilder({ onClose }) {
   function computeStats(ed) {
     var barrels = ed.barrels || [];
     if (barrels.length === 0) return null;
-    /* DPS: за условную единицу времени, reload 1.0 = 1 выстрел в сек */
-    var dps = 0;
-    var maxRange = 0;
+    var dps = 0, maxRange = 0, minReload = Infinity, totalPen = 0;
     barrels.forEach(function(b) {
-      var dmg    = (b.bDmg  || 1.0);
-      var reload = (b.reload || 1.0);
-      var speed  = (b.bSpeed || 1.0);
-      /* life ~80 ticks @ 60fps ≈ 1.33s, scaled by speed */
+      var dmg    = (b.bDmg   || 1.0);
+      var reload = (b.reload  || 1.0);
+      var speed  = (b.bSpeed  || 1.0);
+      var pen    = (b.penetration || 1);
       var range  = speed * 2.5 * 80;
       if (range > maxRange) maxRange = range;
+      if (reload < minReload) minReload = reload;
       dps += dmg / reload;
+      totalPen += pen;
     });
     var tier   = ed.tier || 3;
     var preset = TIER_PRESETS[tier] || TIER_PRESETS[3];
     var hpMult = preset.hp * (ed.hpSlider || 1);
     var spMult = preset.speed * (ed.speedSlider || 1);
-    /* Firepower = DPS * range (normalized) */
     var firepower = Math.round(dps * (maxRange / 200) * 10);
+    /* Effective range = range * penetration factor */
+    var avgPen = parseFloat((totalPen / barrels.length).toFixed(1));
+    var effectiveRange = Math.round(maxRange * (1 + (avgPen - 1) * 0.15));
+    /* Body damage: based on tier HP and hpSlider (tanks that survive more also deal more on contact) */
+    var bodyDmg = parseFloat((hpMult * 0.8 * (ed.specialType === 'homing' ? 1.3 : 1)).toFixed(1));
+    /* Reload in seconds: minimum reload * (60 ticks / 1 tick=~16ms) */
+    var reloadSec = parseFloat((minReload * 0.55).toFixed(2));
     return {
-      dps:       parseFloat(dps.toFixed(2)),
-      range:     Math.round(maxRange),
-      hp:        Math.round(hpMult * 100),
-      speed:     Math.round(spMult * 100),
-      firepower: firepower,
-      barrels:   barrels.length,
+      dps:           parseFloat(dps.toFixed(2)),
+      range:         Math.round(maxRange),
+      hp:            Math.round(hpMult * 100),
+      speed:         Math.round(spMult * 100),
+      firepower:     firepower,
+      barrels:       barrels.length,
+      avgPen:        avgPen,
+      effectiveRange:effectiveRange,
+      bodyDmg:       bodyDmg,
+      reloadSec:     reloadSec,
     };
   }
   var stats = computeStats(editing);
@@ -991,6 +1239,39 @@ function TankBuilder({ onClose }) {
                   style:{padding:'6px 2px',borderRadius:7,border:'1.5px solid rgba(68,136,255,0.25)',background:'rgba(0,40,100,0.4)',color:'#aaddff',cursor:'pointer',fontFamily:'Arial',fontSize:11,fontWeight:'bold',touchAction:'manipulation',display:'flex',flexDirection:'column',alignItems:'center',gap:1},
                   onClick:function(){applyTemplate(tpl);},
                   children:[tpl.icon,jsx('span',{style:{fontSize:8,opacity:0.7},children:tpl.name.split(' ')[0]})]});
+              })
+            }),
+            /* Random tank + balance rating row */
+            jsxs('div',{style:{display:'flex',gap:6,alignItems:'center',marginTop:8},children:[
+              jsx('button',{
+                onClick:function(){
+                  var rand=generateRandomTank();
+                  setEditing(function(p){var next=Object.assign({},p,rand,{id:p.id});pushHistory(next);return next;});
+                  bulletsRef.current=[];
+                },
+                style:{flex:1,padding:'7px',borderRadius:8,border:'1.5px solid rgba(255,200,0,0.4)',background:'rgba(80,60,0,0.5)',color:'#ffdd55',cursor:'pointer',fontFamily:'Arial',fontSize:12,fontWeight:'bold',touchAction:'manipulation'},
+                children:'🎲 Случайный танк',
+              }),
+              (function(){
+                var rating=computeBalanceRating(editing);
+                return jsx('div',{
+                  style:{padding:'6px 10px',borderRadius:8,background:'rgba(0,0,0,0.3)',border:'1.5px solid '+rating.color+'66',color:rating.color,fontSize:11,fontWeight:'bold',whiteSpace:'nowrap'},
+                  title:'Оценка баланса (счёт: '+rating.score+')',
+                  children:rating.label,
+                });
+              })(),
+            ]}),
+          ]}),
+          /* Layout presets */
+          jsxs('div',{style:S.section,children:[
+            jsx('div',{style:S.sectionTitle,children:'📐 Пресет раскладки стволов'}),
+            jsx('div',{style:{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:4},children:
+              LAYOUT_PRESETS.map(function(lp){
+                return jsx('button',{key:lp.id,
+                  style:{padding:'6px 4px',borderRadius:7,border:'1.5px solid rgba(68,136,255,0.25)',background:'rgba(0,40,100,0.4)',color:'#88ccff',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},
+                  title:'Применить раскладку «'+lp.label+'» ('+lp.angles.length+' ствол(ов))',
+                  onClick:function(){applyLayoutPreset(lp);},
+                  children:[lp.angles.length+'× ',lp.label]});
               })
             }),
           ]}),
@@ -1036,6 +1317,12 @@ function TankBuilder({ onClose }) {
             jsx('button',{onClick:function(){var ni=editing.barrels.length;addBarrel(BARREL_PRESETS[0]);setActiveBarrelIdx(ni);},style:S.btn('rgba(0,100,60,0.7)'),children:'+ Добавить ствол'}),
             editing.barrels.length>0 && jsx('button',{onClick:function(){removeBarrel(activeBarrelIdx);setActiveBarrelIdx(Math.max(0,activeBarrelIdx-1));},style:S.btn('rgba(180,30,30,0.6)'),children:'🗑 Удалить'}),
             editing.barrels.length>0 && jsx('button',{onClick:function(){mirrorBarrel(activeBarrelIdx);},style:S.btn('rgba(60,80,140,0.7)'),children:'⇄ Зеркало'}),
+            jsx('button',{
+              onClick:function(){setAutoSymmetry(function(v){return !v;});},
+              style:Object.assign({},S.btn(autoSymmetry?'rgba(255,160,0,0.75)':'rgba(60,60,80,0.7)'),{fontSize:10}),
+              title:'Авто-симметрия: при добавлении ствола сразу добавляется зеркальная копия',
+              children:(autoSymmetry?'🔁 Симм. ВКЛ':'🔁 Симм. ВЫКЛ'),
+            }),
           ]}),
           editing.barrels.length > 0 ? jsxs('div',{children:[
             jsx('div',{
@@ -1102,11 +1389,11 @@ function TankBuilder({ onClose }) {
                 }),
                 jsxs('div',{style:{marginTop:6},children:[
                   jsx('div',{style:{color:'rgba(255,255,255,0.45)',fontSize:10,marginBottom:5,fontWeight:'bold',letterSpacing:.5},children:'ТИП СНАРЯДА:'}),
-                  jsx('div',{style:{display:'flex',gap:5},children:
-                    [['normal','🔵 Пуля'],['trap','🟡 Мина']].map(function(p2){
+                  jsx('div',{style:{display:'flex',flexWrap:'wrap',gap:5},children:
+                    [['normal','🔵 Пуля'],['trap','🟡 Мина'],['grenade','💣 Граната'],['boomerang','🪃 Бумеранг'],['lightning','⚡ Молния']].map(function(p2){
                       var v2=p2[0],l2=p2[1],a2=(activeB.bulletType||'normal')===v2;
                       return jsx('button',{key:v2,
-                        style:{padding:'5px 10px',borderRadius:6,border:a2?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.18)',background:a2?'rgba(0,100,200,0.5)':'rgba(255,255,255,0.05)',color:a2?'#fff':'rgba(255,255,255,0.5)',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},
+                        style:{padding:'5px 9px',borderRadius:6,border:a2?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.18)',background:a2?'rgba(0,100,200,0.5)':'rgba(255,255,255,0.05)',color:a2?'#fff':'rgba(255,255,255,0.5)',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},
                         onClick:function(){updateBarrel(bi,'bulletType',v2);},children:l2});
                     })
                   }),
@@ -1173,17 +1460,61 @@ function TankBuilder({ onClose }) {
             ]}),
             editing.turretDeploy && jsxs('div',{style:{marginTop:8,borderTop:'1px solid rgba(255,255,255,0.08)',paddingTop:8,display:'flex',flexDirection:'column',gap:5},children:[
               jsx('div',{style:{color:'rgba(0,180,255,0.7)',fontSize:10,fontWeight:'bold',letterSpacing:.5,marginBottom:3},children:'НАСТРОЙКИ АВТО-ТУРЕЛЕЙ:'}),
-              [['maxTurrets','Макс. турелей',1,8,1,function(v){return v;}],['fireRate','Скор. огня',20,120,5,function(v){return v;}],['health','HP турели',20,500,10,function(v){return v;}],['damage','Урон',2,80,1,function(v){return v;}],['speed','Скор. пули',3,20,0.5,function(v){return v;}]].map(function(row){
+              [
+                ['maxTurrets','Макс. турелей',1,8,1,function(v){return v;}],
+                ['fireRate','Скор. огня',20,120,5,function(v){return v;}],
+                ['health','HP турели',20,500,10,function(v){return v;}],
+                ['damage','Урон',2,80,1,function(v){return v;}],
+                ['speed','Скор. пули',3,20,0.5,function(v){return v;}],
+                ['size','Размер пули',3,20,1,function(v){return v;}],
+                ['detectionRadius','Радиус обнаружения',100,800,25,function(v){return v+'px';}],
+              ].map(function(row){
                 var k=row[0],lbl=row[1],mn=row[2],mx=row[3],step=row[4],fmt=row[5];
                 var tc=editing.turretCfg||{};
-                var val=tc[k]!==undefined?tc[k]:(k==='maxTurrets'?3:k==='fireRate'?55:k==='health'?90:k==='damage'?9:8.5);
+                var defaults={'maxTurrets':3,'fireRate':55,'health':90,'damage':9,'speed':8.5,'size':7,'detectionRadius':300};
+                var val=tc[k]!==undefined?tc[k]:defaults[k];
                 return jsxs('div',{key:k,style:S.sliderRow,children:[
                   jsx('div',{style:S.sliderLabel,children:lbl+': '+fmt(val)}),
                   jsx('input',{type:'range',min:mn,max:mx,step:step,value:val,
                     onChange:function(e){var nv=step%1!==0?parseFloat(e.target.value):parseInt(e.target.value);setEditing(function(p){var tc2=Object.assign({},p.turretCfg||{});tc2[k]=nv;return Object.assign({},p,{turretCfg:tc2});});},
                     style:S.slider}),
+                  jsx('div',{style:S.sliderVal,children:fmt(val)}),
                 ]});
               }),
+              /* Turret canvas preview */
+              jsx('canvas',{
+                width:140,height:140,
+                style:{display:'block',margin:'6px auto 0',borderRadius:8,background:'rgba(0,0,0,0.25)',border:'1px solid rgba(255,255,255,0.1)'},
+                ref:function(c){
+                  if(!c) return;
+                  var tc=editing.turretCfg||{};
+                  var n=tc.maxTurrets||3;
+                  var ctx=c.getContext('2d');
+                  ctx.clearRect(0,0,140,140);
+                  var cx=70,cy=70,r=28;
+                  /* body */
+                  ctx.fillStyle=(editing.color||'#22cc55')+'cc';
+                  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.fill();
+                  ctx.strokeStyle=editing.color||'#22cc55';ctx.lineWidth=2;ctx.stroke();
+                  /* detection radius indicator */
+                  var dr=tc.detectionRadius||300;
+                  var drScale=Math.min(60,(dr/800)*60);
+                  ctx.strokeStyle='rgba(0,200,255,0.15)';ctx.lineWidth=1;
+                  ctx.beginPath();ctx.arc(cx,cy,r+drScale,0,Math.PI*2);ctx.stroke();
+                  /* turrets */
+                  for(var i=0;i<n;i++){
+                    var a=(Math.PI*2/n)*i;
+                    var tx=cx+Math.cos(a)*(r+12),ty=cy+Math.sin(a)*(r+12);
+                    ctx.fillStyle='#aaaaee';
+                    ctx.beginPath();ctx.arc(tx,ty,5,0,Math.PI*2);ctx.fill();
+                    ctx.strokeStyle='#8888cc';ctx.lineWidth=1;ctx.stroke();
+                    var ts=tc.size||7;var tl=Math.min(18,ts*2);
+                    ctx.strokeStyle='#ccccff';ctx.lineWidth=Math.max(1,ts*0.3);
+                    ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(tx+Math.cos(a)*tl,ty+Math.sin(a)*tl);ctx.stroke();
+                  }
+                },
+              }),
+              jsx('div',{style:{color:'rgba(255,255,255,0.3)',fontSize:9,textAlign:'center',marginTop:2},children:'Предпросмотр турелей'}),
             ]}),
           ]}),
         ]});
@@ -1230,7 +1561,10 @@ function TankBuilder({ onClose }) {
       default: /* Готово */
         return jsxs('div',{style:{display:'flex',flexDirection:'column',gap:10},children:[
           stats && jsxs('div',{style:Object.assign({},S.section,{background:'rgba(0,60,20,0.2)',borderColor:'rgba(0,200,100,0.2)'}),children:[
-            jsx('div',{style:S.sectionTitle,children:'📊 Расчётная статистика'}),
+            jsxs('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:8},children:[
+              jsx('div',{style:S.sectionTitle,children:'📊 Расчётная статистика'}),
+              (function(){var r=computeBalanceRating(editing);return jsx('div',{style:{padding:'4px 9px',borderRadius:7,background:'rgba(0,0,0,0.3)',border:'1.5px solid '+r.color+'55',color:r.color,fontSize:10,fontWeight:'bold'},children:r.label});})(),
+            ]}),
             jsx('div',{style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:5},children:[
               jsxs('div',{style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'},children:[jsx('div',{style:{color:'#ff8040',fontSize:14,fontWeight:900},children:stats.dps}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'DPS'})]}),
               jsxs('div',{style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'},children:[jsx('div',{style:{color:'#40c0ff',fontSize:14,fontWeight:900},children:stats.range}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'Дальность'})]}),
@@ -1238,6 +1572,9 @@ function TankBuilder({ onClose }) {
               jsxs('div',{style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'},children:[jsx('div',{style:{color:'#ffee40',fontSize:14,fontWeight:900},children:stats.speed+'%'}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'Скорость'})]}),
               jsxs('div',{style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'},children:[jsx('div',{style:{color:'#cc80ff',fontSize:14,fontWeight:900},children:stats.barrels}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'Стволов'})]}),
               jsxs('div',{style:{background:'rgba(255,200,0,0.12)',borderRadius:7,padding:'6px 8px',textAlign:'center',border:'1px solid rgba(255,200,0,0.2)'},children:[jsx('div',{style:{color:'#ffdd00',fontSize:14,fontWeight:900},children:stats.firepower}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'Мощь'})]}),
+              jsxs('div',{style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'},children:[jsx('div',{style:{color:'#88ffdd',fontSize:14,fontWeight:900},children:stats.avgPen}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'Пробивание'})]}),
+              jsxs('div',{style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'},children:[jsx('div',{style:{color:'#ff88cc',fontSize:14,fontWeight:900},children:stats.effectiveRange}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'Эфф.дальность'})]}),
+              jsxs('div',{style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'},children:[jsx('div',{style:{color:'#ffaa44',fontSize:14,fontWeight:900},children:stats.reloadSec+'с'}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'Перезарядка'})]}),
             ]}),
           ]}),
           jsxs('div',{style:S.section,children:[
@@ -1282,10 +1619,27 @@ function TankBuilder({ onClose }) {
     /* ── Top bar ── */
     jsxs('div', {style:{position:'absolute',top:0,left:0,right:0,zIndex:10,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 10px',background:'rgba(0,0,0,0.85)',borderBottom:'1.5px solid rgba(68,136,255,0.3)'},children:[
       jsx('span',{style:{color:'#00b2e1',fontSize:14,fontWeight:900,letterSpacing:2},children:'КОНСТРУКТОР'}),
-      jsxs('div',{style:{display:'flex',gap:4,alignItems:'center'},children:[
+      jsxs('div',{style:{display:'flex',gap:4,alignItems:'center',flexWrap:'wrap'},children:[
         jsx('button',{onClick:function(){setTab('list');},style:S.btn('rgba(60,80,140,0.8)'),children:'📋 Танки'}),
         jsx('button',{onClick:function(){setTab('graph');},style:S.btn('rgba(40,80,40,0.8)'),children:'🌿 Граф'}),
         jsx('button',{onClick:openImport,style:S.btn('rgba(0,80,50,0.8)'),children:'📥'}),
+        jsx('button',{
+          onClick:function(){
+            var rand=generateRandomTank();
+            setEditing(function(p){var next=Object.assign({},p,rand,{id:p.id});pushHistory(next);return next;});
+            bulletsRef.current=[];
+            setTab('editor');
+          },
+          style:S.btn('rgba(80,60,0,0.8)'),
+          title:'Случайный танк',
+          children:'🎲',
+        }),
+        jsx('button',{
+          onClick:function(){setShowHistory(function(v){return !v;});},
+          style:Object.assign({},S.btn('rgba(60,40,100,0.8)'),{opacity:historyIdxRef&&historyIdxRef.current>=0?1:0.4}),
+          title:'История изменений',
+          children:'📜',
+        }),
         jsx('button',{onClick:undo,disabled:!canUndoRef.current,style:Object.assign({},S.btn('rgba(80,60,120,0.7)'),{opacity:canUndoRef.current?1:0.35}),children:'↩'}),
         jsx('button',{onClick:redo,disabled:!canRedoRef.current,style:Object.assign({},S.btn('rgba(40,100,140,0.7)'),{opacity:canRedoRef.current?1:0.35}),children:'↪'}),
         jsx('button',{onClick:onClose,style:S.btn('rgba(180,30,30,0.6)'),children:'✕'}),
@@ -1299,32 +1653,54 @@ function TankBuilder({ onClose }) {
         jsx('button', { onClick: openImport, style: S.btn('rgba(0,100,60,0.8)'), children: '📥 Импорт' }),
         jsx('button', { onClick: startNew,   style: S.btn('rgba(0,140,60,0.7)'), children: '+ Создать' }),
       ]}),
-      jsx('input', { value: searchQuery, onChange: function(e){ setSearchQuery(e.target.value); }, placeholder: '🔍 Поиск...', style: Object.assign({}, S.input, { marginBottom:10, fontSize:12 }) }),
+      jsx('input', { value: searchQuery, onChange: function(e){ setSearchQuery(e.target.value); }, placeholder: '🔍 Поиск...', style: Object.assign({}, S.input, { marginBottom:8, fontSize:12 }) }),
+      /* Tier filter + Sort */
+      jsxs('div', { style:{display:'flex',gap:5,flexWrap:'wrap',marginBottom:8,alignItems:'center'}, children:[
+        jsx('span', { style:{color:'rgba(255,255,255,0.35)',fontSize:10,fontWeight:'bold'}, children:'ТИР:' }),
+        jsx('button', { onClick:function(){setTierFilter(null);}, style:{padding:'3px 8px',borderRadius:5,border:tierFilter===null?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.15)',background:tierFilter===null?'rgba(0,100,200,0.5)':'rgba(255,255,255,0.05)',color:tierFilter===null?'#fff':'rgba(255,255,255,0.5)',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'}, children:'Все' }),
+        [1,2,3,4,5].map(function(t){ var tp=TIER_PRESETS[t]; return jsx('button',{key:t,onClick:function(){setTierFilter(tierFilter===t?null:t);},style:{padding:'3px 7px',borderRadius:5,border:tierFilter===t?'1.5px solid '+tp.color:'1.5px solid rgba(255,255,255,0.15)',background:tierFilter===t?(tp.color+'44'):'rgba(255,255,255,0.05)',color:tierFilter===t?tp.color:'rgba(255,255,255,0.5)',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},children:'T'+t}); }),
+        jsx('span', { style:{color:'rgba(255,255,255,0.35)',fontSize:10,fontWeight:'bold',marginLeft:4}, children:'СОРТ:' }),
+        [['date','Дата'],['dps','DPS'],['hp','HP']].map(function(pair){ var sv=pair[0],sl=pair[1]; return jsx('button',{key:sv,onClick:function(){setSortBy(sv);},style:{padding:'3px 8px',borderRadius:5,border:sortBy===sv?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.15)',background:sortBy===sv?'rgba(0,100,200,0.5)':'rgba(255,255,255,0.05)',color:sortBy===sv?'#fff':'rgba(255,255,255,0.5)',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},children:sl}); }),
+      ]}),
       tankList.length === 0 && jsxs('div', { style:{textAlign:'center',padding:'40px 20px',color:'rgba(255,255,255,0.25)',fontSize:13,lineHeight:2}, children:['У тебя ещё нет кастомных танков.',jsx('br',{}),'Нажми «+ Создать» чтобы начать.'] }),
-      tankList.length > 0 && filteredList.length === 0 && jsx('div', { style:{textAlign:'center',padding:'30px 20px',color:'rgba(255,255,255,0.25)',fontSize:13}, children: 'Ничего не найдено по запросу «' + searchQuery + '»' }),
-      catGroups.reduce(function(acc, group) {
-        if (group.cat) {
-          acc.push(jsx('div', { key:'cat_'+group.cat, style:{color:'rgba(255,200,80,0.75)',fontSize:10,fontWeight:'bold',letterSpacing:1,textTransform:'uppercase',marginTop:8,marginBottom:5,borderLeft:'2px solid rgba(255,200,80,0.4)',paddingLeft:7}, children: '📁 ' + group.cat }));
-        }
-        group.tanks.forEach(function(def) {
-          var tp = TIER_PRESETS[def.tier] || TIER_PRESETS[3];
-          var froms = Array.isArray(def.upgradesFrom) ? def.upgradesFrom : [def.upgradesFrom||'Basic'];
-          acc.push(jsxs('div', { key:def.id, style:S.listCard, children:[
-            jsx('div', { style: S.dot(def.color||tp.color) }),
-            jsxs('div', { style:{flex:1,minWidth:0}, children:[
-              jsx('div', { style:{color:'#fff',fontWeight:'bold',fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}, children: def.name }),
-              jsxs('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:11,marginTop:2}, children:[tp.label,' · ',def.barrels?def.barrels.length:0,' ств. · ',froms.join(', ')] }),
-            ]}),
-            jsxs('div', { style:{display:'flex',gap:4,flexShrink:0,flexWrap:'wrap',justifyContent:'flex-end'}, children:[
-              jsx('button', { onClick:function(){ editExisting(def); setTab('editor'); }, style:S.btn(), title:'Редактировать', children:'✏' }),
-              jsx('button', { onClick:function(){ cloneTank(def); }, style:S.btn('rgba(60,90,160,0.8)'), title:'Дублировать', children:'📋' }),
-              jsx('button', { onClick:function(){ openExport(def); }, style:S.btn('rgba(0,100,60,0.8)'), title:'Экспортировать', children:'📤' }),
-              jsx('button', { onClick:function(){ deleteTank(def.id); }, style:S.btn('rgba(180,30,30,0.7)'), title:'Удалить', children:'🗑' }),
-            ]}),
-          ]}));
-        });
-        return acc;
-      }, []),
+      (function(){
+        var displayList = filteredList.slice();
+        if (tierFilter !== null) displayList = displayList.filter(function(d){ return d.tier === tierFilter; });
+        if (sortBy === 'dps') displayList.sort(function(a,b){ var sa=computeStats(a),sb=computeStats(b); return ((sb&&sb.dps)||0)-((sa&&sa.dps)||0); });
+        if (sortBy === 'hp') displayList.sort(function(a,b){ var sa=computeStats(a),sb=computeStats(b); return ((sb&&sb.hp)||0)-((sa&&sa.hp)||0); });
+        if (displayList.length === 0 && tankList.length > 0) return jsx('div', { style:{textAlign:'center',padding:'30px 20px',color:'rgba(255,255,255,0.25)',fontSize:13}, children: 'Ничего не найдено' });
+        /* Group by category after filter/sort */
+        var cats = {}, catOrder = [];
+        displayList.forEach(function(d){ var c=d.category||''; if(!cats[c]){cats[c]=[];catOrder.push(c);} cats[c].push(d); });
+        return catOrder.reduce(function(acc, cat) {
+          if (cat) acc.push(jsx('div', { key:'cat_'+cat, style:{color:'rgba(255,200,80,0.75)',fontSize:10,fontWeight:'bold',letterSpacing:1,textTransform:'uppercase',marginTop:8,marginBottom:5,borderLeft:'2px solid rgba(255,200,80,0.4)',paddingLeft:7}, children: '📁 ' + cat }));
+          cats[cat].forEach(function(def) {
+            var tp = TIER_PRESETS[def.tier] || TIER_PRESETS[3];
+            var froms = Array.isArray(def.upgradesFrom) ? def.upgradesFrom : [def.upgradesFrom||'Basic'];
+            var isFav = !!favorites[def.id];
+            var ds = computeStats(def);
+            acc.push(jsxs('div', { key:def.id, style:Object.assign({},S.listCard,{border:isFav?'1px solid rgba(255,200,0,0.35)':'1px solid rgba(255,255,255,0.1)'}), children:[
+              jsx('div', { style: S.dot(def.color||tp.color) }),
+              jsxs('div', { style:{flex:1,minWidth:0}, children:[
+                jsxs('div', { style:{color:'#fff',fontWeight:'bold',fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}, children:[isFav?'⭐ ':'',def.name] }),
+                jsxs('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:10,marginTop:2}, children:[tp.label,' · ',def.barrels?def.barrels.length:0,' ств.',ds?' · DPS '+ds.dps:''] }),
+              ]}),
+              jsxs('div', { style:{display:'flex',gap:4,flexShrink:0,flexWrap:'wrap',justifyContent:'flex-end'}, children:[
+                jsx('button', { onClick:function(){ toggleFavorite(def.id); }, style:S.btn(isFav?'rgba(180,140,0,0.7)':'rgba(60,60,80,0.5)'), title:'Избранное', children:'⭐' }),
+                jsx('button', { onClick:function(){
+                  if (compareWith && compareWith.id !== def.id) { setCompareWith(def); }
+                  else { setCompareWith(compareWith && compareWith.id === def.id ? null : def); }
+                }, style:S.btn(compareWith&&compareWith.id===def.id?'rgba(0,160,200,0.8)':'rgba(60,80,120,0.6)'), title:'Сравнить', children:'⚖' }),
+                jsx('button', { onClick:function(){ editExisting(def); setTab('editor'); }, style:S.btn(), title:'Редактировать', children:'✏' }),
+                jsx('button', { onClick:function(){ cloneTank(def); }, style:S.btn('rgba(60,90,160,0.8)'), title:'Дублировать', children:'📋' }),
+                jsx('button', { onClick:function(){ openExport(def); }, style:S.btn('rgba(0,100,60,0.8)'), title:'Экспортировать', children:'📤' }),
+                jsx('button', { onClick:function(){ deleteTank(def.id); }, style:S.btn('rgba(180,30,30,0.7)'), title:'Удалить', children:'🗑' }),
+              ]}),
+            ]}));
+          });
+          return acc;
+        }, []);
+      })(),
     ]}),
 
     /* ── Graph panel (full-screen overlay) ── */
@@ -1407,6 +1783,103 @@ function TankBuilder({ onClose }) {
         ]}),
       ],
     }),
+
+    /* ══ ИСТОРИЯ UNDO ══ */
+    showHistory && jsxs('div', { style:Object.assign({},S.modalOverlay,{zIndex:3100,alignItems:'flex-end'}), onClick:function(){setShowHistory(false);}, children:[
+      jsxs('div', { style:Object.assign({},S.modalBox,{maxHeight:'70vh',width:'100%',maxWidth:'100%',borderRadius:'16px 16px 0 0',margin:0}), onClick:function(e){e.stopPropagation();}, children:[
+        jsxs('div', { style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:4}, children:[
+          jsx('div', { style:S.modalTitle, children:'📜 История изменений' }),
+          jsx('button', { onClick:function(){setShowHistory(false);}, style:S.btn('rgba(100,30,30,0.5)'), children:'✕' }),
+        ]}),
+        jsx('div', { style:{color:'rgba(255,255,255,0.35)',fontSize:10,marginBottom:10}, children:'Нажми «↩» чтобы откатиться. Новое действие очищает будущее.' }),
+        (function(){
+          var hist = historyRef ? historyRef.current : [];
+          if (!hist || hist.length === 0) return jsx('div',{style:{textAlign:'center',padding:'20px',color:'rgba(255,255,255,0.25)',fontSize:12},children:'История пуста — начни редактировать танк.'});
+          return jsx('div',{style:{display:'flex',flexDirection:'column',gap:5},children:
+            hist.slice().reverse().map(function(h,ri){
+              var i=hist.length-1-ri;
+              var isHead=historyIdxRef&&historyIdxRef.current===i;
+              return jsxs('div',{key:i,style:{display:'flex',alignItems:'center',gap:8,padding:'7px 10px',borderRadius:8,background:isHead?'rgba(0,100,200,0.3)':'rgba(255,255,255,0.04)',border:isHead?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.08)'},children:[
+                jsx('div',{style:{flex:1},children:[
+                  jsx('div',{style:{color:isHead?'#00ccff':'rgba(255,255,255,0.7)',fontSize:11,fontWeight:'bold'},children:(isHead?'▶ ':'')+'Шаг '+(i+1)+': '+(h.name||'(без имени)')}),
+                  jsx('div',{style:{color:'rgba(255,255,255,0.35)',fontSize:9,marginTop:1},children:(h.barrels?h.barrels.length:0)+' ствол(а) · T'+(h.tier||3)}),
+                ]}),
+                !isHead && jsx('button',{
+                  onClick:function(){
+                    /* jump to this history step */
+                    if(historyIdxRef) historyIdxRef.current=i;
+                    setEditing(Object.assign({},h));
+                    bulletsRef.current=[];
+                    setShowHistory(false);
+                  },
+                  style:{padding:'4px 8px',borderRadius:6,border:'none',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',background:'rgba(60,80,140,0.7)',color:'#aaddff',touchAction:'manipulation'},
+                  children:'↩ Вернуть'
+                }),
+              ]});
+            })
+          });
+        })(),
+      ]})
+    ]),
+
+    /* ══ СРАВНЕНИЕ ТАНКОВ ══ */
+    compareWith && jsx('div', { style:Object.assign({},S.modalOverlay,{zIndex:3100}), onClick:function(){setCompareWith(null);}, children:
+      jsx('div', { style:Object.assign({},S.modalBox,{maxWidth:520}), onClick:function(e){e.stopPropagation();}, children:
+        jsxs('div', { style:{display:'flex',flexDirection:'column',gap:12}, children:[
+          jsxs('div', { style:{display:'flex',alignItems:'center',justifyContent:'space-between'}, children:[
+            jsx('div', { style:S.modalTitle, children:'⚖ Сравнение танков' }),
+            jsx('button', { onClick:function(){setCompareWith(null);}, style:S.btn('rgba(100,30,30,0.5)'), children:'✕' }),
+          ]}),
+          jsx('div', { style:{color:'rgba(255,255,255,0.35)',fontSize:10}, children:'Текущий редактируемый (слева) vs. выбранный (справа).' }),
+          (function(){
+            var a = editing, b = compareWith;
+            var sa = computeStats(a), sb = computeStats(b);
+            var ra = computeBalanceRating(a), rb = computeBalanceRating(b);
+            var rows = [
+              ['DPS',          sa?sa.dps:'—',         sb?sb.dps:'—',         '#ff8040'],
+              ['Дальность',   sa?sa.range:'—',        sb?sb.range:'—',       '#40c0ff'],
+              ['HP%',          sa?sa.hp+'%':'—',       sb?sb.hp+'%':'—',      '#80ff60'],
+              ['Скорость%',   sa?sa.speed+'%':'—',    sb?sb.speed+'%':'—',   '#ffee40'],
+              ['Стволов',     sa?sa.barrels:'—',      sb?sb.barrels:'—',     '#cc80ff'],
+              ['Мощь',         sa?sa.firepower:'—',    sb?sb.firepower:'—',   '#ffdd00'],
+              ['Пробивание',  sa?sa.avgPen:'—',       sb?sb.avgPen:'—',      '#88ffdd'],
+              ['Перезарядка', sa?sa.reloadSec+'с':'—',sb?sb.reloadSec+'с':'—','#ffaa44'],
+            ];
+            return jsxs('div',{children:[
+              /* Заголовки */
+              jsxs('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:4,marginBottom:6},children:[
+                jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:10,fontWeight:'bold'},children:'Стат'}),
+                jsxs('div',{style:{textAlign:'center'},children:[
+                  jsx('div',{style:{width:12,height:12,borderRadius:'50%',background:a.color||'#22cc55',display:'inline-block',marginRight:4,verticalAlign:'middle'}}),
+                  jsx('span',{style:{color:'#fff',fontSize:11,fontWeight:'bold'},children:(a.name||'Текущий').slice(0,10)}),
+                ]}),
+                jsxs('div',{style:{textAlign:'center'},children:[
+                  jsx('div',{style:{width:12,height:12,borderRadius:'50%',background:b.color||'#4488cc',display:'inline-block',marginRight:4,verticalAlign:'middle'}}),
+                  jsx('span',{style:{color:'#aaddff',fontSize:11,fontWeight:'bold'},children:(b.name||'Выбранный').slice(0,10)}),
+                ]}),
+              ]}),
+              rows.map(function(row){
+                var label=row[0],va=row[1],vb=row[2],col=row[3];
+                var na=parseFloat(va),nb=parseFloat(vb);
+                var aWins=!isNaN(na)&&!isNaN(nb)&&na>nb,bWins=!isNaN(na)&&!isNaN(nb)&&nb>na;
+                return jsxs('div',{key:label,style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:4,padding:'5px 0',borderBottom:'1px solid rgba(255,255,255,0.06)'},children:[
+                  jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:10},children:label}),
+                  jsx('div',{style:{textAlign:'center',color:aWins?col:'rgba(255,255,255,0.7)',fontSize:12,fontWeight:aWins?900:'normal'},children:(aWins?'▲ ':'')+va}),
+                  jsx('div',{style:{textAlign:'center',color:bWins?col:'rgba(255,255,255,0.45)',fontSize:12,fontWeight:bWins?900:'normal'},children:(bWins?'▲ ':'')+vb}),
+                ]});
+              }),
+              /* Баланс */
+              jsxs('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:4,marginTop:8},children:[
+                jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:10,fontWeight:'bold'},children:'Оценка'}),
+                jsx('div',{style:{textAlign:'center',color:ra.color,fontSize:11,fontWeight:'bold'},children:ra.label}),
+                jsx('div',{style:{textAlign:'center',color:rb.color,fontSize:11,fontWeight:'bold'},children:rb.label}),
+              ]}),
+            ]});
+          })(),
+          jsx('button',{onClick:function(){setCompareWith(null);},style:Object.assign({},S.exportBtn('rgba(60,60,80,0.8)'),{width:'100%'}),children:'Закрыть'}),
+        ]})
+      })
+    ),
 
     /* ══ МОДАЛ УДАЛЕНИЯ ══ */
     deletePending && jsx('div', { style: S.modalOverlay, onClick: function(){ setDeletePending(null); }, children:
