@@ -69,12 +69,12 @@ function genId() { return 'custom_' + Date.now() + '_' + Math.floor(Math.random(
 var EXPORT_PREFIX = 'DIEPTANK1_';
 
 function exportTankCode(def) {
-  /* Берём только игровые поля, убираем UI-служебные */
   var clean = {
     name:         def.name,
     tier:         def.tier,
     color:        def.color,
-    upgradesFrom: def.upgradesFrom,
+    upgradesFrom: Array.isArray(def.upgradesFrom) ? def.upgradesFrom : [def.upgradesFrom || 'Basic'],
+    category:     def.category || '',
     description:  def.description || '',
     hpSlider:     def.hpSlider,
     speedSlider:  def.speedSlider,
@@ -85,15 +85,19 @@ function exportTankCode(def) {
     upgradesTo:   def.upgradesTo || [],
     barrels:      (def.barrels || []).map(function(b) {
       return {
-        angle:   b.angle,
-        length:  b.length,
-        width:   b.width,
-        lateral: b.lateral,
-        reload:  b.reload,
-        bSpeed:  b.bSpeed,
-        bDmg:    b.bDmg,
-        bSize:   b.bSize,
-        label:   b.label,
+        angle:       b.angle,
+        length:      b.length,
+        width:       b.width,
+        lateral:     b.lateral,
+        reload:      b.reload,
+        bSpeed:      b.bSpeed,
+        bDmg:        b.bDmg,
+        bSize:       b.bSize,
+        label:       b.label,
+        bulletType:  b.bulletType  || 'normal',
+        fireGroup:   b.fireGroup   || 0,
+        penetration: b.penetration || 1,
+        recoil:      b.recoil      || 0,
       };
     }),
   };
@@ -114,8 +118,14 @@ function importTankCode(code) {
   if (!Array.isArray(def.barrels))               throw new Error('В коде нет данных о стволах.');
   /* Санируем строковые поля чтобы не допустить мусор в CSS/глобалах */
   if (typeof def.color !== 'string' || !/^#[0-9a-fA-F]{3,8}$/.test(def.color)) def.color = '#44aaff';
-  if (typeof def.upgradesFrom !== 'string' || !def.upgradesFrom.trim()) def.upgradesFrom = 'Basic';
-  def.upgradesFrom = def.upgradesFrom.trim().slice(0, 32);
+  if (Array.isArray(def.upgradesFrom)) {
+    def.upgradesFrom = def.upgradesFrom.filter(function(s){ return typeof s==='string' && s.trim(); }).map(function(s){ return s.trim().slice(0,32); });
+    if (def.upgradesFrom.length === 0) def.upgradesFrom = ['Basic'];
+  } else {
+    if (typeof def.upgradesFrom !== 'string' || !def.upgradesFrom.trim()) def.upgradesFrom = 'Basic';
+    def.upgradesFrom = [def.upgradesFrom.trim().slice(0, 32)];
+  }
+  def.category = typeof def.category === 'string' ? def.category.trim().slice(0,24) : '';
   def.name = def.name.trim().slice(0, 18);
   def.description = (typeof def.description === 'string') ? def.description.trim().slice(0, 80) : '';
   /* Присваиваем новый id чтобы не перетереть оригинал */
@@ -142,17 +152,20 @@ function importTankCode(code) {
   def.upgradesTo = Array.isArray(def.upgradesTo) ? def.upgradesTo.filter(function(s){ return typeof s==='string'; }) : [];
   def.barrels = def.barrels.map(function(b, i) {
     return {
-      id:         Date.now() + i,
-      label:      b.label  || 'Custom',
-      angle:      isFinite(b.angle)  ? b.angle  : 0,
-      length:     Math.min(100, Math.max(20,  parseInt(b.length) || 48)),
-      width:      Math.min(36,  Math.max(5,   parseInt(b.width)  || 14)),
-      lateral:    Math.min(30,  Math.max(-30, parseInt(b.lateral)|| 0)),
-      reload:     Math.min(5,   Math.max(0.2, parseFloat(b.reload) || 1)),
-      bSpeed:     Math.min(4,   Math.max(0.3, parseFloat(b.bSpeed) || 1)),
-      bDmg:       Math.min(5,   Math.max(0.2, parseFloat(b.bDmg)   || 1)),
-      bSize:      Math.min(3,   Math.max(0.3, parseFloat(b.bSize)  || 1)),
-      bulletType: ['normal','trap'].indexOf(b.bulletType) >= 0 ? b.bulletType : 'normal',
+      id:          Date.now() + i,
+      label:       b.label  || 'Custom',
+      angle:       isFinite(b.angle)  ? b.angle  : 0,
+      length:      Math.min(100, Math.max(20,  parseInt(b.length) || 48)),
+      width:       Math.min(36,  Math.max(5,   parseInt(b.width)  || 14)),
+      lateral:     Math.min(30,  Math.max(-30, parseInt(b.lateral)|| 0)),
+      reload:      Math.min(5,   Math.max(0.2, parseFloat(b.reload) || 1)),
+      bSpeed:      Math.min(4,   Math.max(0.3, parseFloat(b.bSpeed) || 1)),
+      bDmg:        Math.min(5,   Math.max(0.2, parseFloat(b.bDmg)   || 1)),
+      bSize:       Math.min(3,   Math.max(0.3, parseFloat(b.bSize)  || 1)),
+      bulletType:  ['normal','trap'].indexOf(b.bulletType) >= 0 ? b.bulletType : 'normal',
+      fireGroup:   Math.min(4, Math.max(0, parseInt(b.fireGroup)   || 0)),
+      penetration: Math.min(5, Math.max(1, parseInt(b.penetration) || 1)),
+      recoil:      Math.min(3, Math.max(0, parseFloat(b.recoil)    || 0)),
     };
   });
   return def;
@@ -176,7 +189,10 @@ function registerTank(def) {
       bulletSpeedMultiplier: b.bSpeed,
       bulletDamageMultiplier: b.bDmg > 1 ? 1 + (b.bDmg - 1) * 0.65 : b.bDmg,
       lateralOffset: b.lateral || 0,
-      isTrap: b.bulletType === 'trap',
+      isTrap:        b.bulletType === 'trap',
+      penetration:   b.penetration || 1,
+      recoilForce:   b.recoil || 0,
+      fireGroup:     b.fireGroup || 0,
     };
   });
   if (barrels.length === 0) {
@@ -188,7 +204,7 @@ function registerTank(def) {
   window._t[id] = {
     name: id,
     requiredLevel: preset.requiredLevel,
-    upgradesFrom: def.upgradesFrom ? [def.upgradesFrom] : ['Basic'],
+    upgradesFrom: Array.isArray(def.upgradesFrom) ? def.upgradesFrom : (def.upgradesFrom ? [def.upgradesFrom] : ['Basic']),
     color: def.color || preset.color,
     description: def.description || 'Кастомный танк',
     barrels: barrels,
@@ -228,13 +244,12 @@ function registerTank(def) {
   else window.w0.push({ name: id, tier: tierIdx, x: xl[tierIdx], y: yBase });
 
   if (!window.Ty) window.Ty = [];
-  var parent = def.upgradesFrom || 'Basic';
-  /* Удаляем все старые рёбра, ведущие К этому танку (e[1]===id).
-     Иначе при смене родителя танк висел бы как апгрейд сразу двух родителей. */
+  var _parents = Array.isArray(def.upgradesFrom) ? def.upgradesFrom : (def.upgradesFrom ? [def.upgradesFrom] : ['Basic']);
+  /* Удаляем все старые рёбра, ведущие К этому танку (e[1]===id) */
   for (var _ti = window.Ty.length - 1; _ti >= 0; _ti--) {
     if (window.Ty[_ti][1] === id) window.Ty.splice(_ti, 1);
   }
-  window.Ty.push([parent, id]);
+  _parents.forEach(function(p) { window.Ty.push([p, id]); });
   /* Custom upgrade tree — tank can upgrade TO other custom tanks */
   if (Array.isArray(def.upgradesTo)) {
     def.upgradesTo.forEach(function(childId) {
@@ -298,7 +313,8 @@ function TankBuilder({ onClose }) {
       name: '',
       tier: 3,
       color: '#22cc55',
-      upgradesFrom: 'Basic',
+      upgradesFrom: ['Basic'],
+      category: '',
       description: '',
       barrels: [],
       hpSlider: 1.0,
@@ -316,6 +332,7 @@ function TankBuilder({ onClose }) {
   var _e   = useState(_blank);     var editing     = _e[0];  var setEditing     = _e[1];
   var _tab = useState('editor');   var tab         = _tab[0]; var setTab        = _tab[1];
   var _prv = useState(false);      var previewing  = _prv[0]; var setPreviewing = _prv[1];
+  var _sq  = useState('');         var searchQuery = _sq[0];  var setSearchQuery = _sq[1];
 
   /* ── Подтверждение удаления ─────────────────────────────────── */
   var _dp = useState(null); var deletePending = _dp[0]; var setDeletePending = _dp[1];
@@ -375,6 +392,7 @@ function TankBuilder({ onClose }) {
   var canvasWrapRef  = useRef(null);
   var animRef        = useRef(null);
   var bulletsRef     = useRef([]);
+  var recoilRef      = useRef({});
   /* Состояние drag/pinch */
   var dragRef     = useRef({ active: false, lastX: 0, lastY: 0 });
   var pinchRef    = useRef({ active: false, lastDist: 0 });
@@ -559,21 +577,25 @@ function TankBuilder({ onClose }) {
       var radius = 22 * zoom * (TIER_PRESETS[editing.tier] || TIER_PRESETS[3]).radiusMultiplier;
 
       /* Стволы */
-      editing.barrels.forEach(function(b) {
+      /* Decay recoil each frame */
+      Object.keys(recoilRef.current).forEach(function(k) {
+        recoilRef.current[k] *= 0.72;
+        if (recoilRef.current[k] < 0.4) delete recoilRef.current[k];
+      });
+      editing.barrels.forEach(function(b, bi) {
         var ang = b.angle  || 0;
         var len = (b.length || 48) * zoom * 0.55;
         var wid = (b.width  || 14) * zoom * 0.55;
         var lat = (b.lateral|| 0)  * zoom * 0.55;
+        var rcl = recoilRef.current[bi] || 0;
         ctx.save();
-        /* Lateral: перпендикулярно направлению ствола (исправленный расчёт) */
         ctx.translate(cx - Math.sin(ang)*lat, cy + Math.cos(ang)*lat);
         ctx.rotate(ang);
-        /* Ствол вдоль +X, чтобы совпадало с направлением пули cos(ang)/sin(ang) */
         ctx.fillStyle   = '#aaaaaa';
         ctx.strokeStyle = '#888888';
         ctx.lineWidth   = 1.5;
         ctx.beginPath();
-        ctx.rect(radius*0.55, -wid/2, len, wid);
+        ctx.rect(radius*0.55 - rcl, -wid/2, len, wid);
         ctx.fill();
         ctx.stroke();
         ctx.restore();
@@ -598,13 +620,15 @@ function TankBuilder({ onClose }) {
         if (!bulletsRef.current._cyc) bulletsRef.current._cyc = {};
         editing.barrels.forEach(function(b, bi) {
           var period = Math.round(600 * (b.reload || 1));
-          var cycIdx = Math.floor((now + bi * 200) / period);
+          /* fireGroup: 0=независимый (offset по индексу), 1-4=последовательный */
+          var fg = b.fireGroup || 0;
+          var tOffset = fg > 0 ? (fg - 1) * 280 : bi * 200;
+          var cycIdx = Math.floor((now + tOffset) / period);
           if (cycIdx !== bulletsRef.current._cyc[bi]) {
             bulletsRef.current._cyc[bi] = cycIdx;
             var ang = b.angle || 0;
             var lat = (b.lateral || 0) * zoom * 0.55;
             var bLen = (b.length || 48) * zoom * 0.55;
-            /* Позиция — дальний конец ствола */
             var bsx = (cx - Math.sin(ang)*lat) + Math.cos(ang) * (radius*0.55 + bLen);
             var bsy = (cy + Math.cos(ang)*lat) + Math.sin(ang) * (radius*0.55 + bLen);
             var bSpd = (b.bSpeed || 1.0) * 3.5 * zoom;
@@ -615,6 +639,8 @@ function TankBuilder({ onClose }) {
               isTrap: b.bulletType === 'trap',
               life: 80, maxLife: 80,
             });
+            /* Recoil: толчок ствола назад при выстреле */
+            if (b.recoil) recoilRef.current[bi] = (b.recoil || 0) * 7 * zoom;
           }
         });
         bulletsRef.current = bulletsRef.current.filter(function(blt){ return blt.life > 0; });
@@ -651,7 +677,7 @@ function TankBuilder({ onClose }) {
   function addBarrel(preset) {
     var p = preset || BARREL_PRESETS[0];
     setEditing(function(prev) {
-      var next = Object.assign({}, prev, { barrels: prev.barrels.concat([Object.assign({}, p, { angle:0, lateral:0, id:Date.now(), bulletType: p.bulletType||'normal' })]) });
+      var next = Object.assign({}, prev, { barrels: prev.barrels.concat([Object.assign({}, p, { angle:0, lateral:0, id:Date.now(), bulletType: p.bulletType||'normal', fireGroup:0, penetration:1, recoil:0 })]) });
       pushHistory(next);
       return next;
     });
@@ -816,6 +842,17 @@ function TankBuilder({ onClose }) {
     setEditing(JSON.parse(JSON.stringify(def)));
     setSelectedDef(def); setTab('editor'); setPreviewing(false); bulletsRef.current = [];
   }
+  function cloneTank(def) {
+    var copy = JSON.parse(JSON.stringify(def));
+    copy.id = genId();
+    copy.name = 'Копия ' + def.name;
+    copy.barrels = copy.barrels.map(function(b, i){ return Object.assign({}, b, {id: Date.now()+i}); });
+    var list = loadTanks();
+    list.push(copy);
+    saveTanks(list);
+    registerTank(copy);
+    alert('Создана копия «' + copy.name + '»');
+  }
 
   var tankList = loadTanks();
   var parentOptions = ['Basic'];
@@ -836,6 +873,23 @@ function TankBuilder({ onClose }) {
   var hpEff  = Math.round(preset.hp    * editing.hpSlider    * 100);
   var spdPts = Math.min(10, Math.max(0, Math.round(Math.log(Math.max(0.001, preset.speed * editing.speedSlider)) / Math.log(1.07))));
   var zoomPct = Math.round((viewRef.current.zoom || 1) * 100);
+
+  /* ── Filtered list + category groups ──────────────────────── */
+  var filteredList = tankList.filter(function(t) {
+    if (!searchQuery.trim()) return true;
+    var q = searchQuery.trim().toLowerCase();
+    return t.name.toLowerCase().indexOf(q) >= 0 || (t.category||'').toLowerCase().indexOf(q) >= 0;
+  });
+  var catGroups = (function() {
+    var groups = {}, keys = [];
+    filteredList.forEach(function(t) {
+      var c = t.category || '';
+      if (!groups[c]) { groups[c] = []; keys.push(c); }
+      groups[c].push(t);
+    });
+    keys.sort(function(a,b) { if(a===''&&b!=='') return 1; if(a!==''&&b==='') return -1; return a<b?-1:a>b?1:0; });
+    return keys.map(function(k){ return { cat:k, tanks:groups[k] }; });
+  })();
 
   /* ── Стили ──────────────────────────────────────────────────── */
   var S = {
@@ -953,6 +1007,8 @@ function TankBuilder({ onClose }) {
         children: tab==='editor' && !selectedDef ? '✏ Новый танк' : '✏ Редактор' }),
       jsxs('button', { style: S.tab(tab==='list'), onClick: function(){ setTab('list'); },
         children: ['📋 Мои танки', tankList.length > 0 ? ' (' + tankList.length + ')' : ''] }),
+      jsx('button', { style: S.tab(tab==='graph'), onClick: function(){ setTab('graph'); },
+        children: '🌿 Граф' }),
     ]}),
 
     /* BODY — список и редактор всегда в DOM; скрываем CSS чтобы рефы на canvas
@@ -963,12 +1019,20 @@ function TankBuilder({ onClose }) {
       /* ── LIST TAB ───────────────────────────────────────────── */
       jsxs('div', { style:Object.assign({flex:1,overflowY:'auto',padding:14}, tab!=='list'?{display:'none'}:{}), children:[
         /* Шапка: счётчик + импорт + создать */
-        jsxs('div', { style:{display:'flex',gap:6,alignItems:'center',marginBottom:14,flexWrap:'wrap'}, children:[
+        jsxs('div', { style:{display:'flex',gap:6,alignItems:'center',marginBottom:7,flexWrap:'wrap'}, children:[
           jsx('div', { style:{color:'rgba(255,255,255,0.6)',fontSize:13,flex:1,minWidth:60},
             children: tankList.length===0 ? 'Нет сохранённых танков' : tankList.length+' танк(ов)' }),
           jsx('button', { onClick: openImport, style: S.btn('rgba(0,100,60,0.8)'), children: '📥 Импорт' }),
           jsx('button', { onClick: startNew,   style: S.btn('rgba(0,140,60,0.7)'), children: '+ Создать' }),
         ]}),
+
+        /* Поиск */
+        jsx('input', {
+          value: searchQuery,
+          onChange: function(e){ setSearchQuery(e.target.value); },
+          placeholder: '🔍 Поиск по имени или категории...',
+          style: Object.assign({}, S.input, { marginBottom:10, fontSize:12 }),
+        }),
 
         /* Пустой список */
         tankList.length === 0 && jsxs('div', { style:{textAlign:'center',padding:'40px 20px',color:'rgba(255,255,255,0.25)',fontSize:13,lineHeight:2}, children:[
@@ -977,21 +1041,38 @@ function TankBuilder({ onClose }) {
           'или «📥 Импорт» чтобы загрузить чужой код.',
         ]}),
 
-        /* Карточки танков */
-        tankList.map(function(def) {
-          var tp = TIER_PRESETS[def.tier] || TIER_PRESETS[3];
-          return jsxs('div', { key:def.id, style:S.listCard, children:[
-            jsx('div', { style: S.dot(def.color||tp.color) }),
-            jsxs('div', { style:{flex:1,minWidth:0}, children:[
-              jsx('div', { style:{color:'#fff',fontWeight:'bold',fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}, children: def.name }),
-              jsxs('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:11,marginTop:2}, children:[tp.label,' · ',def.barrels?def.barrels.length:0,' стволов · ',def.upgradesFrom||'Basic'] }),
-            ]}),
-            jsxs('div', { style:{display:'flex',gap:5,flexShrink:0}, children:[
-              jsx('button', { onClick:function(){ editExisting(def); },      style:S.btn(),                          title:'Редактировать', children:'✏' }),
-              jsx('button', { onClick:function(){ openExport(def); },         style:S.btn('rgba(0,100,60,0.8)'),     title:'Экспортировать код', children:'📤' }),
-              jsx('button', { onClick:function(){ deleteTank(def.id); },      style:S.btn('rgba(180,30,30,0.7)'),    title:'Удалить', children:'🗑' }),
-            ]}),
-          ]});
+        /* Нет результатов поиска */
+        tankList.length > 0 && filteredList.length === 0 && jsx('div', {
+          style:{textAlign:'center',padding:'30px 20px',color:'rgba(255,255,255,0.25)',fontSize:13},
+          children: 'Ничего не найдено по запросу «' + searchQuery + '»',
+        }),
+
+        /* Карточки танков — сгруппированные по категориям */
+        catGroups.map(function(group) {
+          return [
+            group.cat ? jsx('div', { key:'cat_'+group.cat,
+              style:{color:'rgba(255,200,80,0.75)',fontSize:10,fontWeight:'bold',letterSpacing:1,
+                textTransform:'uppercase',marginTop:8,marginBottom:5,paddingLeft:4,
+                borderLeft:'2px solid rgba(255,200,80,0.4)',paddingLeft:7},
+              children: '📁 ' + group.cat }) : null,
+            group.tanks.map(function(def) {
+              var tp = TIER_PRESETS[def.tier] || TIER_PRESETS[3];
+              var froms = Array.isArray(def.upgradesFrom) ? def.upgradesFrom : [def.upgradesFrom||'Basic'];
+              return jsxs('div', { key:def.id, style:S.listCard, children:[
+                jsx('div', { style: S.dot(def.color||tp.color) }),
+                jsxs('div', { style:{flex:1,minWidth:0}, children:[
+                  jsx('div', { style:{color:'#fff',fontWeight:'bold',fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}, children: def.name }),
+                  jsxs('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:11,marginTop:2}, children:[tp.label,' · ',def.barrels?def.barrels.length:0,' стволов · ',froms.join(', ')] }),
+                ]}),
+                jsxs('div', { style:{display:'flex',gap:4,flexShrink:0,flexWrap:'wrap',justifyContent:'flex-end'}, children:[
+                  jsx('button', { onClick:function(){ editExisting(def); },   style:S.btn(),                         title:'Редактировать',    children:'✏' }),
+                  jsx('button', { onClick:function(){ cloneTank(def); },      style:S.btn('rgba(60,90,160,0.8)'),    title:'Дублировать',      children:'📋' }),
+                  jsx('button', { onClick:function(){ openExport(def); },     style:S.btn('rgba(0,100,60,0.8)'),     title:'Экспортировать',   children:'📤' }),
+                  jsx('button', { onClick:function(){ deleteTank(def.id); },  style:S.btn('rgba(180,30,30,0.7)'),    title:'Удалить',          children:'🗑' }),
+                ]}),
+              ]});
+            }),
+          ];
         }),
       ]}),
 
@@ -1171,20 +1252,35 @@ function TankBuilder({ onClose }) {
               children: preset.label + '  ·  Уровень ' + preset.requiredLevel }),
           ]}),
 
-          /* Родитель */
+          /* Родитель(и) */
           jsxs('div', { style: S.section, children: [
-            jsx('div', { style: S.sectionTitle, children: 'Родитель в дереве прокачки' }),
-            jsx('select', {
-              value: editing.upgradesFrom||'Basic',
-              onChange: function(e){ setEditing(function(p){ return Object.assign({},p,{upgradesFrom:e.target.value}); }); },
-              style: Object.assign({}, S.input, {appearance:'none'}),
-              children: parentOptions.map(function(k){
-                var label = (window.W1&&window.W1[k]) ? window.W1[k]+' ('+k+')' : k;
-                return jsx('option', { key:k, value:k, children:label });
-              }),
+            jsx('div', { style: S.sectionTitle, children: 'Родитель(и) в дереве прокачки' }),
+            jsx('div', { style:{display:'flex',flexWrap:'wrap',gap:4,maxHeight:110,overflowY:'auto',paddingRight:2}, children:
+              parentOptions.map(function(k){
+                var label = (window.W1&&window.W1[k]) ? window.W1[k] : k;
+                var froms = Array.isArray(editing.upgradesFrom) ? editing.upgradesFrom : [editing.upgradesFrom||'Basic'];
+                var isOn = froms.indexOf(k) >= 0;
+                return jsx('button', { key:k,
+                  style:{padding:'4px 9px',borderRadius:6,cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',
+                    touchAction:'manipulation',flexShrink:0,
+                    border: isOn?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.12)',
+                    background: isOn?'rgba(0,100,200,0.55)':'rgba(255,255,255,0.05)',
+                    color: isOn?'#fff':'rgba(255,255,255,0.45)'},
+                  onClick: function(){
+                    setEditing(function(p){
+                      var arr = Array.isArray(p.upgradesFrom) ? p.upgradesFrom.slice() : [p.upgradesFrom||'Basic'];
+                      var i = arr.indexOf(k);
+                      if (i >= 0) { if (arr.length > 1) arr.splice(i,1); }
+                      else arr.push(k);
+                      var next = Object.assign({},p,{upgradesFrom:arr});
+                      pushHistory(next); return next;
+                    });
+                  },
+                  children: (isOn?'✔ ':'')+label });
+              })
             }),
-            jsx('div', { style:{color:'rgba(255,255,255,0.3)',fontSize:10,marginTop:4},
-              children:'Танк появится как вариант апгрейда из выбранного родителя' }),
+            jsx('div', { style:{color:'rgba(255,255,255,0.3)',fontSize:10,marginTop:5},
+              children:'Можно выбрать несколько (минимум 1). Танк появится как апгрейд из каждого выбранного.' }),
           ]}),
 
           /* HP / Скорость */
@@ -1267,6 +1363,43 @@ function TankBuilder({ onClose }) {
                         children:l2});
                     })
                   }),
+                ]}),
+                /* Группа стрельбы (fireGroup) */
+                jsxs('div', { style:{marginTop:8}, children:[
+                  jsx('div', { style:{color:'rgba(255,255,255,0.45)',fontSize:10,marginBottom:5,fontWeight:'bold',letterSpacing:.5},
+                    children:'🔢 ГРУППА СТРЕЛЬБЫ:' }),
+                  jsx('div', { style:{display:'flex',gap:4}, children:
+                    [[0,'Все'],[1,'1'],[2,'2'],[3,'3'],[4,'4']].map(function(pair){
+                      var gv=pair[0], gl=pair[1];
+                      var ga=(b.fireGroup||0)===gv;
+                      return jsx('button',{key:gv,
+                        style:{flex:1,padding:'4px 2px',borderRadius:5,cursor:'pointer',fontFamily:'Arial',fontSize:10,
+                          fontWeight:'bold',touchAction:'manipulation',
+                          border:ga?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.12)',
+                          background:ga?'rgba(0,100,200,0.55)':'rgba(255,255,255,0.06)',
+                          color:ga?'#fff':'rgba(255,255,255,0.45)'},
+                        onClick:function(){ updateBarrel(bi,'fireGroup',gv); },
+                        children:gl});
+                    })
+                  }),
+                  jsx('div', { style:{color:'rgba(255,255,255,0.22)',fontSize:9,marginTop:3},
+                    children:'«Все» = независимо. 1→2→3→4 = поочерёдный залп.' }),
+                ]}),
+                /* Пробивание */
+                jsxs('div', { style: Object.assign({}, S.sliderRow, {marginTop:7}), children:[
+                  jsx('div', { style:S.sliderLabel, children:'Пробивание: '+(b.penetration||1)+' цел.' }),
+                  jsx('input', { type:'range',min:1,max:5,step:1,value:b.penetration||1,
+                    onChange:function(e){ updateBarrel(bi,'penetration',parseInt(e.target.value)); },
+                    style:S.slider }),
+                  jsx('div', { style:S.sliderVal, children:b.penetration||1 }),
+                ]}),
+                /* Отдача ствола */
+                jsxs('div', { style: S.sliderRow, children:[
+                  jsx('div', { style:S.sliderLabel, children:'Отдача ствола: ×'+parseFloat(b.recoil||0).toFixed(1) }),
+                  jsx('input', { type:'range',min:0,max:3,step:0.1,value:b.recoil||0,
+                    onChange:function(e){ updateBarrel(bi,'recoil',parseFloat(e.target.value)); },
+                    style:S.slider }),
+                  jsx('div', { style:S.sliderVal, children:parseFloat(b.recoil||0).toFixed(1) }),
                 ]}),
               ]});
             }),
@@ -1420,6 +1553,16 @@ function TankBuilder({ onClose }) {
             ]});
           })(),
 
+          /* Категория */
+          jsxs('div', { style: S.section, children: [
+            jsx('div', { style: S.sectionTitle, children: '📁 Категория (необязательно)' }),
+            jsx('input', { value:editing.category||'', maxLength:24, placeholder:'Например: Снайперы, Пулемёты, Мои...', style:S.input,
+              onChange:function(e){ setEditing(function(p){ return Object.assign({},p,{category:e.target.value}); }); },
+            }),
+            jsx('div', { style:{color:'rgba(255,255,255,0.25)',fontSize:10,marginTop:4},
+              children:'Группирует танки в табе «Мои танки»' }),
+          ]}),
+
           /* Описание */
           jsxs('div', { style: S.section, children: [
             jsx('div', { style: S.sectionTitle, children: 'Описание (необязательно)' }),
@@ -1441,6 +1584,112 @@ function TankBuilder({ onClose }) {
           jsx('div', { style:{height:20} }),
 
         ]}),
+      ]}),
+
+      /* ── GRAPH TAB ──────────────────────────────────────────── */
+      jsxs('div', { style:Object.assign({flex:1,overflowY:'auto',padding:'12px 14px'}, tab!=='graph'?{display:'none'}:{}), children:[
+        jsx('div', { style:{color:'rgba(255,255,255,0.55)',fontSize:11,marginBottom:10,lineHeight:1.6},
+          children:'🌿 Граф кастомных апгрейдов. Нажми на узел чтобы открыть танк в редакторе.' }),
+        (function(){
+          var allTanks = loadTanks();
+          if (allTanks.length === 0) return jsx('div', {
+            style:{textAlign:'center',padding:'40px',color:'rgba(255,255,255,0.22)',fontSize:13},
+            children:'Нет сохранённых танков. Создай хотя бы один.' });
+
+          /* Layout: X = tier column, Y = index within tier */
+          var tierGroups = {};
+          allTanks.forEach(function(t) {
+            var tr = t.tier || 3;
+            if (!tierGroups[tr]) tierGroups[tr] = [];
+            tierGroups[tr].push(t);
+          });
+          var nodeW = 110, nodeH = 40, hGap = 32, vGap = 14;
+          var colX = {};
+          [1,2,3,4,5].forEach(function(tr,i){ colX[tr] = 8 + i*(nodeW+hGap); });
+          var nodePos = {};
+          [1,2,3,4,5].forEach(function(tr) {
+            (tierGroups[tr]||[]).forEach(function(t, i) {
+              nodePos[t.id] = { x: colX[tr], y: 24 + i*(nodeH+vGap) };
+            });
+          });
+          var svgW = 8 + 5*(nodeW+hGap) - hGap + 8;
+          var maxCount = 1;
+          [1,2,3,4,5].forEach(function(tr){ var c=(tierGroups[tr]||[]).length; if(c>maxCount) maxCount=c; });
+          var svgH = 24 + maxCount*(nodeH+vGap) + 8;
+
+          /* Edges */
+          var nodeIds = {};
+          allTanks.forEach(function(t){ nodeIds[t.id]=true; });
+          var edges = [], seen = {};
+          allTanks.forEach(function(t) {
+            var froms = Array.isArray(t.upgradesFrom) ? t.upgradesFrom : [t.upgradesFrom||'Basic'];
+            froms.forEach(function(p) {
+              if (nodeIds[p]) {
+                var k=p+'→'+t.id; if(!seen[k]){seen[k]=1;edges.push({from:p,to:t.id});}
+              }
+            });
+            (t.upgradesTo||[]).forEach(function(cid) {
+              if (nodeIds[cid]) {
+                var k=t.id+'→'+cid; if(!seen[k]){seen[k]=1;edges.push({from:t.id,to:cid});}
+              }
+            });
+          });
+
+          return jsx('div', { style:{overflowX:'auto'}, children:
+            jsx('svg', { xmlns:'http://www.w3.org/2000/svg', width:svgW, height:svgH,
+              style:{display:'block',minWidth:svgW},
+              children:[
+                /* Tier headers */
+                jsx('g', { key:'hdr', children:
+                  [1,2,3,4,5].map(function(tr){
+                    var tp=TIER_PRESETS[tr];
+                    return jsx('text',{key:'h'+tr,x:colX[tr]+nodeW/2,y:14,
+                      textAnchor:'middle',fill:tp.color,fontSize:9,fontFamily:'Arial',fontWeight:'bold',
+                      children:'T'+tr+' ('+tp.requiredLevel+'ур)'});
+                  })
+                }),
+                /* Defs: arrowhead */
+                jsx('defs',{key:'defs',children:
+                  jsx('marker',{id:'_arw',markerWidth:6,markerHeight:6,refX:5,refY:3,orient:'auto',children:
+                    jsx('path',{d:'M0,0 L6,3 L0,6 Z',fill:'rgba(0,180,255,0.7)'})
+                  })
+                }),
+                /* Edges */
+                jsx('g',{key:'edges',children:
+                  edges.map(function(e,i){
+                    var fp=nodePos[e.from],tp2=nodePos[e.to];
+                    if(!fp||!tp2) return null;
+                    var x1=fp.x+nodeW, y1=fp.y+nodeH/2, x2=tp2.x, y2=tp2.y+nodeH/2;
+                    var mx=(x1+x2)/2;
+                    return jsx('path',{key:'e'+i,
+                      d:'M '+x1+' '+y1+' C '+mx+' '+y1+' '+mx+' '+y2+' '+x2+' '+y2,
+                      fill:'none',stroke:'rgba(0,180,255,0.4)',strokeWidth:1.5,markerEnd:'url(#_arw)'});
+                  })
+                }),
+                /* Nodes */
+                jsx('g',{key:'nodes',children:
+                  allTanks.map(function(t){
+                    var p=nodePos[t.id]; if(!p) return null;
+                    var tp=TIER_PRESETS[t.tier]||TIER_PRESETS[3];
+                    var col=t.color||tp.color;
+                    var label=t.name.length>13?t.name.slice(0,12)+'…':t.name;
+                    var sub=(t.category?'📁'+t.category+' · ':'')+(t.barrels?t.barrels.length:0)+'б';
+                    return jsxs('g',{key:t.id,style:{cursor:'pointer'},
+                      onClick:function(){editExisting(t);setTab('editor');},
+                      children:[
+                        jsx('rect',{x:p.x,y:p.y,width:nodeW,height:nodeH,rx:7,
+                          fill:col+'28',stroke:col,strokeWidth:1.5}),
+                        jsx('text',{x:p.x+nodeW/2,y:p.y+15,textAnchor:'middle',
+                          fill:'#fff',fontSize:10,fontFamily:'Arial',fontWeight:'bold',children:label}),
+                        jsx('text',{x:p.x+nodeW/2,y:p.y+29,textAnchor:'middle',
+                          fill:'rgba(255,255,255,0.38)',fontSize:8,fontFamily:'Arial',children:sub}),
+                      ]});
+                  })
+                }),
+              ]
+            })
+          });
+        })(),
       ]}),
 
     ]}), /* body */
