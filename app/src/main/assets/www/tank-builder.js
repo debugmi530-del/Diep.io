@@ -4,11 +4,11 @@
 var STORAGE_KEY = 'diep_custom_tanks';
 
 var TIER_PRESETS = {
-  1: { label:'T1 — Базовый',    color:'#44aaff', requiredLevel:1,  hp:1.0,  speed:1.0,  radiusMultiplier:1.0  },
-  2: { label:'T2 — Продвинутый',color:'#e0e0e0', requiredLevel:5,  hp:1.25, speed:1.05, radiusMultiplier:1.1  },
-  3: { label:'T3 — Элитный',    color:'#22cc55', requiredLevel:15, hp:1.55, speed:1.1,  radiusMultiplier:1.2  },
-  4: { label:'T4 — Мастер',     color:'#ffdd00', requiredLevel:30, hp:1.9,  speed:1.15, radiusMultiplier:1.32 },
-  5: { label:'T5 — Легенда',    color:'#ff8800', requiredLevel:45, hp:2.4,  speed:1.2,  radiusMultiplier:1.45 },
+  1: { label:'T1 — Базовый',    color:'#44aaff', requiredLevel:5,  hp:1.0,  speed:1.0,  radiusMultiplier:1.0  },
+  2: { label:'T2 — Продвинутый',color:'#e0e0e0', requiredLevel:15, hp:1.25, speed:1.05, radiusMultiplier:1.1  },
+  3: { label:'T3 — Элитный',    color:'#22cc55', requiredLevel:30, hp:1.55, speed:1.1,  radiusMultiplier:1.2  },
+  4: { label:'T4 — Мастер',     color:'#ffdd00', requiredLevel:45, hp:1.9,  speed:1.15, radiusMultiplier:1.32 },
+  5: { label:'T5 — Легенда',    color:'#ff8800', requiredLevel:60, hp:2.4,  speed:1.2,  radiusMultiplier:1.45 },
 };
 
 var BARREL_PRESETS = [
