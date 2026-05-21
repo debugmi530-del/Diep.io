@@ -3650,7 +3650,7 @@ window._gs = null; // populated by G0 wrapper below
     }
 
     // Name
-    _inp('Название танка (уникальное, латиница)', '_tb_name', t.name, 'text');
+    _inp('Название танка (уникальное, можно кириллицу)', '_tb_name', t.name, 'text');
 
     // Color
     _inp('Цвет', '_tb_color', t.color||'#4488ff', 'color', 'height:36px;padding:2px 6px;cursor:pointer;');
@@ -3665,7 +3665,8 @@ window._gs = null; // populated by G0 wrapper below
       var lb = document.createElement('button');
       lb.textContent = lv;
       lb.dataset.lv = lv;
-      var active = (t.lvl||45) === lv;
+      var _defLvl = t.lvl || (_state.editing && _state.editing.lvl) || 45;
+      var active = _defLvl === lv;
       lb.style.cssText = 'flex:1;padding:8px;border-radius:8px;font-weight:bold;font-size:14px;cursor:pointer;border:2px solid ' +
         (active?'rgba(68,136,255,0.8)':'rgba(255,255,255,0.15)') + ';background:' +
         (active?'rgba(0,80,160,0.5)':'rgba(255,255,255,0.04)') + ';color:' + (active?'#fff':'rgba(255,255,255,0.4)') + ';';
@@ -3778,9 +3779,12 @@ window._gs = null; // populated by G0 wrapper below
     saveBtn.style.cssText = 'width:100%;margin-top:16px;padding:13px;font-size:15px;font-weight:bold;border-radius:10px;border:none;background:linear-gradient(90deg,#0068a8,#22aadd);color:#fff;cursor:pointer;';
     saveBtn.onclick = function(){
       var name = (document.getElementById('_tb_name')||{}).value || '';
-      name = name.trim().replace(/\s+/g,'');
+      name = name.trim();
       if(!name){ alert('Введите название танка!'); return; }
-      if(!/^[A-Za-z0-9_]+$/.test(name)){ alert('Название: только латинские буквы, цифры, _'); return; }
+      // sanitize for use as object key: replace spaces/special chars with _
+      var nameKey = name.replace(/\s+/g,'_').replace(/[^\u0400-\u04FFa-zA-Z0-9_]/g,'_');
+      if(!nameKey){ alert('Введите название танка!'); return; }
+      name = nameKey;
       var fromEl = document.getElementById('_tb_from');
       var from = fromEl ? fromEl.value : '';
       if(!from){ alert('Выберите родительский танк!'); return; }
