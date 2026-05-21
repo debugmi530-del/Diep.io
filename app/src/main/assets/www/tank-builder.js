@@ -1454,7 +1454,7 @@ function TankBuilder({ onClose }) {
             jsx('button', { onClick: closeModal, style: S.exportBtn('rgba(60,60,80,0.8)'), children: 'Отмена' }),
           ]}),
         ]})
-      ])
+      })
     }),
 
   ]}); /* root */
