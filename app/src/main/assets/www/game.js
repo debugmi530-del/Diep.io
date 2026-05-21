@@ -3197,3 +3197,105 @@ window._gs = null; // populated by G0 wrapper below
     };
   } catch(e) {}
 })();
+
+// ── Cannon branch: explosion, splitting, rocket-arc, immobility, siege-slow ──
+;(function patchCannonBranchMechanics(){
+  'use strict';
+
+  // ── Step 1: Set flags on engine-defined Cannon-branch tanks ──────────────
+  // Artillery T3: explosive bullet (AoE on impact) — description says "взрывная пуля"
+  if(_t['Artillery'])  { _t['Artillery'].isBomb      = true; }
+  // Howitzer T4: double explosion — description says "двойной взрыв"
+  if(_t['Howitzer'])   { _t['Howitzer'].isBomb        = true; }
+  // Cassette T4: bullet splits into mini-bullets — "делится на 5 маленьких"
+  if(_t['Cassette'])   { _t['Cassette'].isSplitting   = true; }
+  // Mortar T4: arc/rocket trajectory (starts slow, accelerates) — "летит по дуге, ускоряясь"
+  if(_t['Mortar'])     { _t['Mortar'].isRocket         = true; }
+
+  // ── Step 2: Set flags on T5 tanks (defined in _ct4, so must patch after) ──
+  // From Howitzer:
+  //   MegaHowitzer — "тройной взрыв, замедляет" → isBomb
+  if(_t['MegaHowitzer'])  { _t['MegaHowitzer'].isBomb     = true; }
+  //   Shrapnel — "взрыв даёт 8 осколков — смертельный веер" → isBomb + splits
+  if(_t['Shrapnel'])       { _t['Shrapnel'].isBomb          = true;
+                              _t['Shrapnel'].isSplitting     = true; }
+  //   Core — "пуля летит сквозь всех — бесконечное пробитие" → isPiercing
+  if(_t['Core'])            { _t['Core'].isPiercing          = true; }
+
+  // From Cassette:
+  //   Cluster — "10 осколков, широкий разлёт" → isSplitting
+  if(_t['Cluster'])         { _t['Cluster'].isSplitting      = true; }
+  //   Thermite — "осколки поджигают — урон 3 сек." → isSplitting (shards)
+  if(_t['Thermite'])        { _t['Thermite'].isSplitting     = true; }
+  // ShotgunX needs no extra flags (pure barrel-cone mechanic)
+
+  // From Mortar:
+  //   Rocket — "три ракеты с задержкой" → isRocket
+  if(_t['Rocket'])          { _t['Rocket'].isRocket           = true; }
+  //   Drum   — "4 последовательных залпа" → isRocket (arc trajectory)
+  if(_t['Drum'])             { _t['Drum'].isRocket             = true; }
+  //   Storm  — "6 снарядов по сетке — шторм разрушения" → isRocket
+  if(_t['Storm'])            { _t['Storm'].isRocket            = true; }
+
+  // ── Step 3: Mark Siege branch as slow, Citadel branch as immovable ───────
+  var _SIEGE_SLOW = new Set(['Siege']);
+  var _IMMOVABLE  = new Set(['Citadel','FortressX','Volcano','Fort']);
+  // Bomb tanks: whose NEW player bullets should get isBomb flag via fy wrapper
+  var _BOMB_TANKS = new Set([
+    'Artillery','Howitzer','MegaHowitzer','Shrapnel'
+  ]);
+
+  // ── Step 4: Wrap fy ───────────────────────────────────────────────────────
+  try {
+    if(typeof fy !== 'function') return;
+    var _prevFyCannon = fy;
+
+    fy = function(gameState, input, dt) {
+      // Snapshot bullet count before tick
+      var _preBullets = (gameState && gameState.bullets)
+        ? gameState.bullets.length : 0;
+
+      var result = _prevFyCannon(gameState, input, dt);
+
+      try {
+        if(!gameState || gameState.phase !== 'playing') return result;
+        var p = gameState.player;
+        if(!p) return result;
+        var cls = p.className;
+        var bullets = gameState.bullets;
+
+        // a) Tag new player bullets with isBomb for Artillery/Howitzer family
+        //    (engine copies isRocket/isSplitting/isPiercing from _t[cls] but NOT isBomb)
+        if(bullets && _BOMB_TANKS.has(cls)) {
+          for(var _bi = _preBullets; _bi < bullets.length; _bi++) {
+            var _b = bullets[_bi];
+            if(_b && !_b.isNpc && !_b.isTrap && !_b.isBomb) {
+              _b.isBomb = true;
+            }
+          }
+        }
+
+        // b) Immovable tanks — zero velocity every tick
+        if(_IMMOVABLE.has(cls)) {
+          p.vel.x = 0;
+          p.vel.y = 0;
+        }
+
+        // c) Siege — clamp speed to 60% (description: "скорость −40%")
+        if(_SIEGE_SLOW.has(cls)) {
+          var _spd2 = Math.sqrt(p.vel.x * p.vel.x + p.vel.y * p.vel.y);
+          if(_spd2 > 0) {
+            var _maxSiegeSpd = _spd2 * 0.6;
+            if(_spd2 > _maxSiegeSpd) {
+              var _sf = _maxSiegeSpd / _spd2;
+              p.vel.x *= _sf;
+              p.vel.y *= _sf;
+            }
+          }
+        }
+      } catch(_ex) { /* never crash the game */ }
+
+      return result;
+    };
+  } catch(e) {}
+})();
