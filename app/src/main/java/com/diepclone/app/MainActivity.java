@@ -20,6 +20,12 @@ public class MainActivity extends Activity {
         public void exitApp() {
             finishAffinity();
         }
+
+        /* #18 Виджет: JS вызывает этот метод при сохранении танка */
+        @JavascriptInterface
+        public void updateWidget(String name, int tier, double dps, int hpPct, int barrels) {
+            TankWidget.saveTankData(MainActivity.this, name, tier, dps, hpPct, barrels);
+        }
     }
 
     private void hideSystemUI() {
@@ -48,7 +54,6 @@ public class MainActivity extends Activity {
         webView = new WebView(this);
         webView.addJavascriptInterface(new AndroidBridge(), "Android");
 
-        // GPU-слой: WebView рендерится через GPU напрямую
         webView.setLayerType(View.LAYER_TYPE_HARDWARE, null);
 
         WebSettings s = webView.getSettings();
@@ -60,8 +65,6 @@ public class MainActivity extends Activity {
         s.setLoadWithOverviewMode(true);
         s.setUseWideViewPort(true);
         s.setCacheMode(WebSettings.LOAD_NO_CACHE);
-
-        // Повышенный приоритет рендер-потока
         s.setRenderPriority(WebSettings.RenderPriority.HIGH);
 
         webView.setWebViewClient(new WebViewClient());
@@ -74,9 +77,7 @@ public class MainActivity extends Activity {
     @Override
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
-        if (hasFocus) {
-            hideSystemUI();
-        }
+        if (hasFocus) hideSystemUI();
     }
 
     @Override

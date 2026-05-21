@@ -388,6 +388,138 @@ var LAYOUT_PRESETS = [
   { id:'diag',    label:'Диаг×2',    angles:[Math.PI/4, -Math.PI/4] },
 ];
 
+/* ── #13 Авто-нейминг ────────────────────────────────────────── */
+var _AUTO_ADJ = ['Быстрый','Смертоносный','Стальной','Тёмный','Огненный','Ледяной','Электрический','Яростный','Ядерный','Призрачный','Небесный','Теневой','Громовой','Боевой','Неуязвимый'];
+var _AUTO_CLASS = {
+  sniperLike: ['Снайпер','Разведчик','Наблюдатель','Охотник'],
+  tankLike:   ['Броненосец','Крепость','Колосс','Цитадель'],
+  speedLike:  ['Спринтер','Перехватчик','Стрела','Вихрь'],
+  swarmLike:  ['Рой','Орда','Пучина','Легион'],
+  heavyLike:  ['Разрушитель','Тяжеловес','Мортира','Дредноут'],
+};
+function autoNameTank(ed) {
+  var barrels = ed.barrels || [];
+  var avgLen = barrels.reduce(function(s,b){ return s+(b.length||48); }, 0) / Math.max(1, barrels.length);
+  var avgDmg = barrels.reduce(function(s,b){ return s+(b.bDmg||1); }, 0) / Math.max(1, barrels.length);
+  var hp = (ed.hpSlider||1) * ((TIER_PRESETS[ed.tier||3]||TIER_PRESETS[3]).hp||1);
+  var spd = ed.speedSlider || 1;
+  var n = barrels.length;
+  var classArr;
+  if      (avgLen > 60)  classArr = _AUTO_CLASS.sniperLike;
+  else if (hp > 2.5)     classArr = _AUTO_CLASS.tankLike;
+  else if (spd > 1.4)    classArr = _AUTO_CLASS.speedLike;
+  else if (n >= 4)       classArr = _AUTO_CLASS.swarmLike;
+  else if (avgDmg > 2.5) classArr = _AUTO_CLASS.heavyLike;
+  else                   classArr = _AUTO_CLASS.tankLike;
+  var adj = _AUTO_ADJ[Math.floor(Math.random() * _AUTO_ADJ.length)];
+  var cls = classArr[Math.floor(Math.random() * classArr.length)];
+  return adj + ' ' + cls;
+}
+
+/* ── #10 Предложения по улучшению (ИИ-анализ) ────────────────── */
+function suggestImprovements(ed) {
+  var barrels = ed.barrels || [];
+  var tips = [];
+  var totalDps = barrels.reduce(function(s,b){ return s+(b.bDmg||1)/(b.reload||1); }, 0);
+  var hp = (ed.hpSlider||1) * ((TIER_PRESETS[ed.tier||3]||TIER_PRESETS[3]).hp||1);
+  var spd = ed.speedSlider || 1;
+  var n = barrels.length;
+  if (totalDps > 12 && hp < 1.0)
+    tips.push({ icon:'❤', title:'Хрупкий убийца', text:'DPS очень высокий, но HP низкий. Подними HP до 120–150% чтобы выживать в ближнем бою.' });
+  var slowB = barrels.filter(function(b){ return (b.bSpeed||1) < 0.7; });
+  if (slowB.length >= 2)
+    tips.push({ icon:'🐢', title:'Медленные снаряды', text:slowB.length+' стволов с bSpeed < 0.7. Подними до 1.0+ — снаряды будут настигать манёвренных врагов.' });
+  if (n === 1 && (barrels[0].width||14) >= 22)
+    tips.push({ icon:'⚖', title:'Дисбаланс отдачи', text:'Один широкий ствол создаёт дрейф. Добавь зеркальный ствол сзади или увеличь HP.' });
+  var types = barrels.map(function(b){ return b.bulletType||'normal'; });
+  var unique = types.filter(function(t,i){ return types.indexOf(t)===i; });
+  if (n >= 3 && unique.length === 1)
+    tips.push({ icon:'🎭', title:'Однообразный арсенал', text:'Все стволы одного типа. Добавь гранату или молнию для универсальности.' });
+  if (n === 0)
+    tips.push({ icon:'💀', title:'Нет стволов', text:'Без стволов танк только тараном. Добавь хотя бы 1 ствол.' });
+  var slowR = barrels.filter(function(b){ return (b.reload||1) > 3.5; });
+  if (slowR.length >= 2)
+    tips.push({ icon:'⏳', title:'Долгая перезарядка', text:slowR.length+' стволов > 3.5с. В ближнем бою это окно уязвимости — добавь мини-стволы.' });
+  if ((ed.tier||3) === 5 && totalDps < 3)
+    tips.push({ icon:'👑', title:'T5, но слабый урон', text:'Tier 5, но DPS < 3. Подними bDmg стволов или добавь тяжёлый ствол.' });
+  if (spd > 1.5 && hp > 1.6)
+    tips.push({ icon:'⚡', title:'Отличный баланс!', text:'Высокая скорость + хороший HP. Добавь стволы с пробиванием (penetration 2+) для доминирования.' });
+  if (tips.length === 0)
+    tips.push({ icon:'✅', title:'Явных слабостей нет', text:'Попробуй эволюцию для поиска скрытых улучшений.' });
+  while (tips.length < 3)
+    tips.push({ icon:'🏆', title:'Тир-апгрейд', text:'T'+(ed.tier||3)+'→T'+Math.min(5,(ed.tier||3)+1)+' даст больше HP и разблокирует более высокую лигу.' });
+  return tips.slice(0, 5);
+}
+
+/* ── #12 Контр-билд ─────────────────────────────────────────── */
+function computeCounterBuild(enemy) {
+  var barrels = enemy.barrels || [];
+  var avgLen = barrels.reduce(function(s,b){ return s+(b.length||48); }, 0) / Math.max(1, barrels.length);
+  var n = barrels.length;
+  var hp = (enemy.hpSlider||1) * ((TIER_PRESETS[enemy.tier||3]||TIER_PRESETS[3]).hp||1);
+  var spd = enemy.speedSlider || 1;
+  var tips, tplKey, tplName;
+  if (avgLen > 60) {
+    tips = ['Враг — снайпер. Атакуй с боков: высокая скорость + ближний бой делает снайпера беспомощным.',
+            'Широкие стволы разрушают дальние снаряды на подлёте.',
+            'Держись ближе 200px — вне прицельного диапазона противника.'];
+    tplKey = 'spinner'; tplName = 'Спиннер (ближний бой)';
+  } else if (n >= 4) {
+    tips = ['Рой дронов. Используй пробивание 3+ чтобы проходить сквозь дронов.',
+            'Длинный ствол + высокая скорость пуль: уничтожай дронов до контакта.',
+            'Избегай замкнутых пространств — там рой максимально опасен.'];
+    tplKey = 'sniper'; tplName = 'Снайпер (высокое пробивание)';
+  } else if (hp > 2.5) {
+    tips = ['Враг очень живуч. Нужен максимальный DPS: тяжёлые стволы с bDmg > 3.',
+            'Ракетный тип эффективен — взрыв наносит урон сквозь корпус.',
+            'Атакуй burst-ом и отходи для перезарядки — не давай врагу регенерировать.'];
+    tplKey = 'cannon'; tplName = 'Миномёт (бурст-урон)';
+  } else if (spd > 1.5) {
+    tips = ['Враг быстрый. Мины (тип «Мина») идеальны — быстрый враг сам на них наедет.',
+            'Веерное расположение стволов: не надо целиться, покрывай площадь.',
+            'Увеличь HP и стань «башней» — быстрые враги сами подлетают к тебе.'];
+    tplKey = 'miner'; tplName = 'Минёр (ловушки)';
+  } else {
+    tips = ['Сбалансированный враг. Врасплох: включи автоогонь + неожиданное направление атаки.',
+            'Флангируй: атакуй под 90° к направлению движения противника.',
+            'Авто-турели дают преимущество в хаотичном бою.'];
+    tplKey = 'autoturret'; tplName = 'Авто-турельщик';
+  }
+  var tpl = TANK_TEMPLATES.find(function(t){ return t._tpl === tplKey; }) || TANK_TEMPLATES[0];
+  return { tips: tips, template: tpl, templateName: tplName };
+}
+
+/* ── #11 Эволюция: 1 поколение ──────────────────────────────── */
+function mutateBarrel(b) {
+  var keys = ['length','width','reload','bSize','bSpeed','bDmg'];
+  var k = keys[Math.floor(Math.random() * keys.length)];
+  var delta = (Math.random()-0.5) * 0.4;
+  var v = (b[k] || 1) + delta;
+  var bounds = { length:[20,100], width:[5,36], reload:[0.2,5], bSize:[0.3,3], bSpeed:[0.3,4], bDmg:[0.2,5] };
+  v = Math.max(bounds[k][0], Math.min(bounds[k][1], v));
+  var nb = Object.assign({}, b);
+  nb[k] = parseFloat(v.toFixed(2));
+  return nb;
+}
+function evolveOnce(def) {
+  var mutated = Object.assign({}, def, { barrels: (def.barrels||[]).map(mutateBarrel) });
+  /* 10% шанс добавить/убрать ствол */
+  if (Math.random() < 0.1 && mutated.barrels.length > 1) {
+    mutated.barrels = mutated.barrels.slice(0, mutated.barrels.length - 1);
+  } else if (Math.random() < 0.08 && mutated.barrels.length < 8) {
+    var src = mutated.barrels[Math.floor(Math.random()*mutated.barrels.length)];
+    mutated.barrels = mutated.barrels.concat([Object.assign({}, src, { id: Date.now()+Math.random(), angle: parseFloat((Math.random()*Math.PI*2).toFixed(4)) })]);
+  }
+  return mutated;
+}
+function scoreForEvolution(def) {
+  var b = def.barrels || [];
+  if (b.length === 0) return 0;
+  var dps = b.reduce(function(s,x){ return s+(x.bDmg||1)/(x.reload||1); }, 0);
+  var hp = (def.hpSlider||1) * ((TIER_PRESETS[def.tier||3]||TIER_PRESETS[3]).hp||1);
+  return dps * 2 + hp * 1.5;
+}
+
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
   setTimeout(registerAllCustomTanks, 600);
 } else {
@@ -464,6 +596,12 @@ function TankBuilder({ onClose }) {
   var _fav  = useState(function(){
     try { return JSON.parse(localStorage.getItem('diep_favs')||'{}'); } catch(e){ return {}; }
   }); var favorites = _fav[0]; var setFavorites = _fav[1];
+  /* ── #10 #11 #12 новые модалы ──────────────────────────────── */
+  var _si  = useState(false); var showSuggest    = _si[0];  var setShowSuggest    = _si[1];
+  var _sev = useState(false); var showEvolution  = _sev[0]; var setShowEvolution  = _sev[1];
+  var _sct = useState(null);  var showCounter    = _sct[0]; var setShowCounter    = _sct[1];
+  var _evR = useState(null);  var evolutionResult= _evR[0]; var setEvolutionResult= _evR[1];
+  var _evP = useState(false); var evolutionRunning=_evP[0]; var setEvolutionRunning=_evP[1];
 
   /* ── Подтверждение удаления ─────────────────────────────────── */
   var _dp = useState(null); var deletePending = _dp[0]; var setDeletePending = _dp[1];
@@ -531,6 +669,7 @@ function TankBuilder({ onClose }) {
   /* Состояние drag/pinch */
   var dragRef     = useRef({ active: false, lastX: 0, lastY: 0 });
   var pinchRef    = useRef({ active: false, lastDist: 0 });
+  var droneRef    = useRef([]);   /* #4 орбитальные дроны */
 
   /* ── Вспомогательные функции вида ──────────────────────────── */
   function clampZoom(z) { return Math.max(0.2, Math.min(5.0, z)); }
@@ -774,6 +913,8 @@ function TankBuilder({ onClose }) {
         var now = ts || 0;
         /* Спавн строго раз в цикл — без искажений при любом reload */
         if (!bulletsRef.current._cyc) bulletsRef.current._cyc = {};
+        /* #1 chained: отслеживаем последний момент стрельбы каждого ствола */
+        if (!bulletsRef.current._lastFired) bulletsRef.current._lastFired = {};
         editing.barrels.forEach(function(b, bi) {
           var period = Math.round(600 * (b.reload || 1));
           /* fireGroup: 0=независимый (offset по индексу), 1-4=последовательный */
@@ -781,7 +922,14 @@ function TankBuilder({ onClose }) {
           var tOffset = fg > 0 ? (fg - 1) * 280 : bi * 200;
           var cycIdx = Math.floor((now + tOffset) / period);
           if (cycIdx !== bulletsRef.current._cyc[bi]) {
+            /* #1 Цепной: стреляет только если предыдущий выстрелил в пределах 1 периода */
+            if (b.chained && bi > 0) {
+              var prevFired = bulletsRef.current._lastFired[bi-1] || 0;
+              var prevPeriod = Math.round(600 * (editing.barrels[bi-1].reload || 1));
+              if ((now - prevFired) > prevPeriod * 1.1) return;
+            }
             bulletsRef.current._cyc[bi] = cycIdx;
+            bulletsRef.current._lastFired[bi] = now;
             var ang = b.angle || 0;
             var lat = (b.lateral || 0) * zoom * 0.55;
             var bLen = (b.length || 48) * zoom * 0.55;
@@ -789,6 +937,19 @@ function TankBuilder({ onClose }) {
             var bsy = (cy + Math.cos(ang)*lat) + Math.sin(ang) * (radius*0.55 + bLen);
             var bSpd = (b.bSpeed || 1.0) * 3.5 * zoom;
             var bt = b.bulletType || 'normal';
+            /* #4 Дрон-ствол: добавляем орбитального дрона вместо обычной пули */
+            if (bt === 'drone') {
+              droneRef.current.push({
+                orbitAngle: ang,
+                orbitR: radius + 18 * zoom,
+                angSpd: (Math.random() > 0.5 ? 1 : -1) * 0.04,
+                r: (b.bSize||1.0) * 6 * zoom,
+                life: 120, maxLife: 120,
+                color: editing.color || '#22cc55',
+              });
+              if (b.recoil) recoilRef.current[bi] = (b.recoil || 0) * 7 * zoom;
+              return;
+            }
             bulletsRef.current.push({
               x: bsx, y: bsy,
               vx: Math.cos(ang)*bSpd, vy: Math.sin(ang)*bSpd,
@@ -796,6 +957,8 @@ function TankBuilder({ onClose }) {
               r: (b.bSize||1.0) * 5 * zoom,
               bulletType: bt,
               isTrap: bt === 'trap',
+              /* #5 рикошет: число отражений */
+              ricochet: Math.min(3, Math.max(0, parseInt(b.ricochet)||0)),
               age: 0,
               life: bt === 'boomerang' ? 120 : 80,
               maxLife: bt === 'boomerang' ? 120 : 80,
@@ -804,6 +967,29 @@ function TankBuilder({ onClose }) {
             if (b.recoil) recoilRef.current[bi] = (b.recoil || 0) * 7 * zoom;
           }
         });
+        /* #4 Дроны: обновляем орбиту */
+        droneRef.current = droneRef.current.filter(function(d){ return d.life > 0; });
+        droneRef.current.forEach(function(d) {
+          d.orbitAngle += d.angSpd;
+          d.orbitR = Math.min(d.orbitR + 0.3, radius + 55 * zoom);
+          d.life--;
+          var dx = cx + Math.cos(d.orbitAngle) * d.orbitR;
+          var dy = cy + Math.sin(d.orbitAngle) * d.orbitR;
+          var alpha = d.life / d.maxLife;
+          ctx.save();
+          ctx.globalAlpha = alpha * 0.9;
+          ctx.translate(dx, dy);
+          ctx.rotate(d.orbitAngle + Math.PI/2);
+          /* Мини-танк: корпус + ствол */
+          ctx.fillStyle = d.color;
+          ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.arc(0, 0, d.r, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+          ctx.fillStyle = '#aaaaaa';
+          ctx.fillRect(d.r*0.5, -d.r*0.3, d.r*0.9, d.r*0.6);
+          ctx.restore();
+        });
+
         bulletsRef.current = bulletsRef.current.filter(function(blt){ return blt.life > 0; });
         bulletsRef.current.forEach(function(blt) {
           blt.age++;
@@ -811,6 +997,17 @@ function TankBuilder({ onClose }) {
           if (blt.bulletType === 'boomerang') {
             var half = blt.maxLife / 2;
             if (blt.age === Math.floor(half)) { blt.vx = -blt.origVx; blt.vy = -blt.origVy; }
+          }
+          /* #5 Рикошет: отражаемся от краёв canvas */
+          if (blt.ricochet > 0) {
+            if (blt.x - blt.r < 0 || blt.x + blt.r > W) {
+              blt.vx = -blt.vx; blt.x = Math.max(blt.r, Math.min(W - blt.r, blt.x));
+              blt.origVx = -blt.origVx; blt.ricochet--;
+            }
+            if (blt.y - blt.r < 0 || blt.y + blt.r > H) {
+              blt.vy = -blt.vy; blt.y = Math.max(blt.r, Math.min(H - blt.r, blt.y));
+              blt.origVy = -blt.origVy; blt.ricochet--;
+            }
           }
           blt.x += blt.vx; blt.y += blt.vy; blt.life--;
           var alpha = blt.life / blt.maxLife;
@@ -870,6 +1067,7 @@ function TankBuilder({ onClose }) {
         });
       } else {
         bulletsRef.current = [];
+        droneRef.current = [];
       }
 
       animRef.current = requestAnimationFrame(drawFrame);
@@ -1051,6 +1249,22 @@ function TankBuilder({ onClose }) {
     if (idx >= 0) list[idx] = def; else list.push(def);
     saveTanks(list);
     registerTank(def);
+    /* #18 Виджет: обновляем данные на домашнем экране */
+    try {
+      var _ws = computeStats(def);
+      var _wTier = def.tier || 3;
+      var _wPreset = TIER_PRESETS[_wTier] || TIER_PRESETS[3];
+      var _wHp = Math.round(_wPreset.hp * (def.hpSlider || 1) * 100);
+      if (window.Android && window.Android.updateWidget) {
+        window.Android.updateWidget(
+          def.name || 'Танк',
+          _wTier,
+          _ws ? parseFloat(_ws.dps) : 0,
+          _wHp,
+          (def.barrels || []).length
+        );
+      }
+    } catch(_we) {}
     setTab('list');
     alert('Танк "' + def.name + '" сохранён и добавлен в дерево прокачки!');
   }
@@ -1277,9 +1491,17 @@ function TankBuilder({ onClose }) {
           ]}),
           jsxs('div',{style:S.section,children:[
             jsx('div',{style:S.sectionTitle,children:'Название танка'}),
-            jsx('input',{value:editing.name,maxLength:18,placeholder:'Например: Снайпер-Х...',style:S.input,
-              onChange:function(e){setEditing(function(p){return Object.assign({},p,{name:e.target.value});});},
-            }),
+            jsxs('div',{style:{display:'flex',gap:6,alignItems:'center'},children:[
+              jsx('input',{value:editing.name,maxLength:18,placeholder:'Например: Снайпер-Х...',style:Object.assign({},S.input,{flex:1,margin:0}),
+                onChange:function(e){setEditing(function(p){return Object.assign({},p,{name:e.target.value});});},
+              }),
+              jsx('button',{
+                onClick:function(){ setEditing(function(p){ return Object.assign({},p,{name:autoNameTank(p)}); }); },
+                style:{padding:'8px 10px',borderRadius:8,border:'1.5px solid rgba(200,160,0,0.5)',background:'rgba(80,60,0,0.6)',color:'#ffdd88',cursor:'pointer',fontFamily:'Arial',fontSize:11,fontWeight:'bold',touchAction:'manipulation',whiteSpace:'nowrap'},
+                title:'Авто-имя по характеристикам',
+                children:'✍ Авто'
+              }),
+            ]}),
           ]}),
           jsxs('div',{style:S.section,children:[
             jsx('div',{style:S.sectionTitle,children:'Цвет и Тир'}),
@@ -1409,6 +1631,31 @@ function TankBuilder({ onClose }) {
                           background:ga?'rgba(0,100,200,0.55)':'rgba(255,255,255,0.06)',
                           color:ga?'#fff':'rgba(255,255,255,0.45)'},
                         onClick:function(){updateBarrel(bi,'fireGroup',gv);},children:gl});
+                    })
+                  }),
+                ]}),
+                /* #1 Цепной ствол */
+                jsxs('div',{style:{marginTop:8,display:'flex',alignItems:'center',gap:8},children:[
+                  jsx('div',{style:{color:'rgba(255,255,255,0.45)',fontSize:10,fontWeight:'bold',letterSpacing:.5,flex:1},children:'🔗 ЦЕПНОЙ:'}),
+                  jsx('button',{
+                    onClick:function(){updateBarrel(bi,'chained',!activeB.chained);},
+                    style:{padding:'4px 10px',borderRadius:6,border:activeB.chained?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.18)',background:activeB.chained?'rgba(0,100,200,0.5)':'rgba(255,255,255,0.05)',color:activeB.chained?'#fff':'rgba(255,255,255,0.4)',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},
+                    children:activeB.chained?'✔ Вкл':'Выкл'
+                  }),
+                  jsx('div',{style:{color:'rgba(255,255,255,0.25)',fontSize:9},children:'ждёт пред. ствол'}),
+                ]}),
+                /* #5 Рикошет */
+                jsxs('div',{style:{marginTop:6},children:[
+                  jsx('div',{style:{color:'rgba(255,255,255,0.45)',fontSize:10,marginBottom:4,fontWeight:'bold',letterSpacing:.5},children:'🪞 РИКОШЕТ:'}),
+                  jsx('div',{style:{display:'flex',gap:4},children:
+                    [[0,'0×'],[1,'1×'],[2,'2×'],[3,'3×']].map(function(pair){
+                      var rv=pair[0],rl=pair[1],ra=(activeB.ricochet||0)===rv;
+                      return jsx('button',{key:rv,
+                        style:{flex:1,padding:'4px 2px',borderRadius:5,cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation',
+                          border:ra?'1.5px solid #ffaa44':'1.5px solid rgba(255,255,255,0.12)',
+                          background:ra?'rgba(200,100,0,0.45)':'rgba(255,255,255,0.06)',
+                          color:ra?'#ffcc88':'rgba(255,255,255,0.45)'},
+                        onClick:function(){updateBarrel(bi,'ricochet',rv);},children:rl});
                     })
                   }),
                 ]}),
@@ -1587,6 +1834,31 @@ function TankBuilder({ onClose }) {
               ]}),
             ]}),
             jsx('div',{style:{color:'rgba(255,255,255,0.3)',fontSize:11,lineHeight:1.6},children:editing.description||'Без описания.'}),
+          ]}),
+          /* #10 #11 #12 Кнопки ИИ-анализа */
+          jsxs('div',{style:{display:'flex',gap:5,flexWrap:'wrap'},children:[
+            jsx('button',{
+              onClick:function(){ setShowSuggest(true); },
+              style:{flex:1,padding:'9px',borderRadius:8,border:'1.5px solid rgba(100,200,100,0.4)',background:'rgba(0,80,0,0.5)',color:'#88ffaa',cursor:'pointer',fontFamily:'Arial',fontSize:11,fontWeight:'bold',touchAction:'manipulation'},
+              children:'🤖 Улучшить'},
+            ),
+            jsx('button',{
+              onClick:function(){
+                setEvolutionResult(null);
+                setShowEvolution(true);
+              },
+              style:{flex:1,padding:'9px',borderRadius:8,border:'1.5px solid rgba(100,80,200,0.4)',background:'rgba(40,0,120,0.5)',color:'#cc99ff',cursor:'pointer',fontFamily:'Arial',fontSize:11,fontWeight:'bold',touchAction:'manipulation'},
+              children:'🧬 Эволюция'},
+            ),
+            jsx('button',{
+              onClick:function(){
+                var list=loadTanks().filter(function(t){return t.id!==editing.id;});
+                if(list.length===0){alert('Нет сохранённых танков для сравнения.'); return;}
+                setShowCounter(list[0]);
+              },
+              style:{flex:1,padding:'9px',borderRadius:8,border:'1.5px solid rgba(200,100,50,0.4)',background:'rgba(80,30,0,0.5)',color:'#ffcc88',cursor:'pointer',fontFamily:'Arial',fontSize:11,fontWeight:'bold',touchAction:'manipulation'},
+              children:'⚔ Контр'},
+            ),
           ]}),
           jsx('button',{onClick:saveTank,style:S.saveBtn,children:'💾 Сохранить и добавить в игру'}),
           jsx('button',{onClick:saveAndExport,style:Object.assign({},S.saveBtn,{background:'linear-gradient(90deg,#007a40,#00b060)',marginTop:4}),children:'📤 Сохранить и получить код'}),
@@ -1877,6 +2149,149 @@ function TankBuilder({ onClose }) {
             ]});
           })(),
           jsx('button',{onClick:function(){setCompareWith(null);},style:Object.assign({},S.exportBtn('rgba(60,60,80,0.8)'),{width:'100%'}),children:'Закрыть'}),
+        ]})
+      })
+    ),
+
+    /* ══ #10 УЛУЧШИ МОЙ ТАНК ══ */
+    showSuggest && jsx('div',{style:S.modalOverlay,onClick:function(){setShowSuggest(false);},children:
+      jsx('div',{style:Object.assign({},S.modalBox,{maxWidth:480}),onClick:function(e){e.stopPropagation();},children:
+        jsxs('div',{style:{display:'flex',flexDirection:'column',gap:10},children:[
+          jsxs('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between'},children:[
+            jsx('div',{style:S.modalTitle,children:'🤖 Предложения по улучшению'}),
+            jsx('button',{onClick:function(){setShowSuggest(false);},style:S.btn('rgba(100,30,30,0.5)'),children:'✕'}),
+          ]}),
+          jsx('div',{style:{color:'rgba(255,255,255,0.3)',fontSize:10,marginBottom:4},children:'Анализ текущего танка по правилам баланса.'}),
+          jsx('div',{style:{display:'flex',flexDirection:'column',gap:6},children:
+            suggestImprovements(editing).map(function(tip,i){
+              return jsxs('div',{key:i,style:{padding:'10px 12px',borderRadius:10,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)'},children:[
+                jsxs('div',{style:{display:'flex',alignItems:'center',gap:6,marginBottom:4},children:[
+                  jsx('span',{style:{fontSize:16},children:tip.icon}),
+                  jsx('div',{style:{color:'#fff',fontSize:12,fontWeight:'bold'},children:tip.title}),
+                ]}),
+                jsx('div',{style:{color:'rgba(255,255,255,0.5)',fontSize:11,lineHeight:1.5},children:tip.text}),
+              ]});
+            })
+          }),
+          jsx('button',{onClick:function(){setShowSuggest(false);},style:Object.assign({},S.exportBtn('rgba(60,60,80,0.8)'),{width:'100%',marginTop:4}),children:'Закрыть'}),
+        ]})
+      })
+    ),
+
+    /* ══ #11 ЭВОЛЮЦИЯ ══ */
+    showEvolution && jsx('div',{style:S.modalOverlay,onClick:function(){if(!evolutionRunning)setShowEvolution(false);},children:
+      jsx('div',{style:Object.assign({},S.modalBox,{maxWidth:420}),onClick:function(e){e.stopPropagation();},children:
+        jsxs('div',{style:{display:'flex',flexDirection:'column',gap:10},children:[
+          jsxs('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between'},children:[
+            jsx('div',{style:S.modalTitle,children:'🧬 Эволюция танка'}),
+            !evolutionRunning && jsx('button',{onClick:function(){setShowEvolution(false);},style:S.btn('rgba(100,30,30,0.5)'),children:'✕'}),
+          ]}),
+          jsx('div',{style:{color:'rgba(255,255,255,0.35)',fontSize:10},children:'20 поколений случайных мутаций. Выживает лучший DPS+HP.'}),
+          !evolutionRunning && !evolutionResult && jsx('button',{
+            onClick:function(){
+              setEvolutionRunning(true);
+              setTimeout(function(){
+                var best = editing;
+                var bestScore = scoreForEvolution(editing);
+                for(var g=0;g<20;g++){
+                  var candidate = evolveOnce(best);
+                  var s = scoreForEvolution(candidate);
+                  if(s > bestScore){ best = candidate; bestScore = s; }
+                }
+                var orig = scoreForEvolution(editing);
+                var gain = bestScore - orig;
+                setEvolutionResult({ tank: best, score: parseFloat(bestScore.toFixed(2)), gain: parseFloat(gain.toFixed(2)) });
+                setEvolutionRunning(false);
+              }, 400);
+            },
+            style:Object.assign({},S.saveBtn,{background:'linear-gradient(90deg,#4400aa,#8833ff)'}),
+            children:'▶ Запустить эволюцию (20 поколений)'
+          }),
+          evolutionRunning && jsxs('div',{style:{textAlign:'center',padding:'20px',color:'#cc99ff'},children:[
+            jsx('div',{style:{fontSize:28,marginBottom:8},children:'🧬'}),
+            jsx('div',{style:{fontSize:13,fontWeight:'bold'},children:'Идёт эволюция...'}),
+          ]}),
+          evolutionResult && jsxs('div',{style:{display:'flex',flexDirection:'column',gap:8},children:[
+            jsxs('div',{style:{padding:'12px',borderRadius:10,background:'rgba(80,0,120,0.3)',border:'1px solid rgba(150,50,255,0.3)'},children:[
+              jsx('div',{style:{color:'#cc99ff',fontSize:11,fontWeight:'bold',marginBottom:6},children:'Лучший результат после эволюции:'}),
+              jsxs('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4},children:[
+                jsxs('div',{style:{color:'rgba(255,255,255,0.5)',fontSize:10},children:['Оценка: ',jsx('span',{style:{color:'#ffdd00',fontWeight:'bold'},children:evolutionResult.score})]}),
+                jsxs('div',{style:{color:'rgba(255,255,255,0.5)',fontSize:10},children:['Прирост: ',jsx('span',{style:{color:evolutionResult.gain>0?'#88ff88':'#ff8888',fontWeight:'bold'},children:(evolutionResult.gain>0?'+':'')+evolutionResult.gain})]}),
+                jsx('div',{style:{color:'rgba(255,255,255,0.5)',fontSize:10},children:'Стволов: '+((evolutionResult.tank.barrels||[]).length)}),
+                jsx('div',{style:{color:'rgba(255,255,255,0.5)',fontSize:10},children:'DPS: '+parseFloat((evolutionResult.tank.barrels||[]).reduce(function(s,b){return s+(b.bDmg||1)/(b.reload||1);},0).toFixed(1))}),
+              ]}),
+            ]}),
+            jsxs('div',{style:{display:'flex',gap:6},children:[
+              jsx('button',{
+                onClick:function(){
+                  var t=evolutionResult.tank;
+                  setEditing(Object.assign({},t,{id:editing.id,name:editing.name||t.name}));
+                  pushHistory(t);
+                  bulletsRef.current=[];
+                  setShowEvolution(false);
+                  setEvolutionResult(null);
+                },
+                style:Object.assign({},S.saveBtn,{flex:2,margin:0,background:'linear-gradient(90deg,#4400aa,#8833ff)'}),
+                children:'✅ Применить лучшего'
+              }),
+              jsx('button',{
+                onClick:function(){ setEvolutionResult(null); },
+                style:Object.assign({},S.exportBtn('rgba(60,60,80,0.8)'),{flex:1}),
+                children:'↻ Заново'
+              }),
+            ]}),
+          ]}),
+          !evolutionRunning && jsx('button',{onClick:function(){setShowEvolution(false);setEvolutionResult(null);},style:Object.assign({},S.exportBtn('rgba(40,40,60,0.8)'),{width:'100%'}),children:'Закрыть'}),
+        ]})
+      })
+    ),
+
+    /* ══ #12 КОНТР-БИЛД ══ */
+    showCounter && jsx('div',{style:S.modalOverlay,onClick:function(){setShowCounter(null);},children:
+      jsx('div',{style:Object.assign({},S.modalBox,{maxWidth:460}),onClick:function(e){e.stopPropagation();},children:
+        jsxs('div',{style:{display:'flex',flexDirection:'column',gap:10},children:[
+          jsxs('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between'},children:[
+            jsx('div',{style:S.modalTitle,children:'⚔ Контр-билд'}),
+            jsx('button',{onClick:function(){setShowCounter(null);},style:S.btn('rgba(100,30,30,0.5)'),children:'✕'}),
+          ]}),
+          jsx('div',{style:{color:'rgba(255,255,255,0.35)',fontSize:10},children:'Выбери противника из сохранённых танков:'}),
+          (function(){
+            var list=loadTanks().filter(function(t){return t.id!==editing.id;});
+            if(list.length===0) return jsx('div',{style:{textAlign:'center',padding:12,color:'rgba(255,255,255,0.25)',fontSize:12},children:'Нет сохранённых танков-противников.'});
+            return jsx('div',{style:{display:'flex',gap:5,flexWrap:'wrap',marginBottom:4},children:
+              list.slice(0,8).map(function(t){
+                var isSelected=showCounter&&showCounter.id===t.id;
+                return jsx('button',{key:t.id,
+                  onClick:function(){setShowCounter(t);},
+                  style:{padding:'5px 10px',borderRadius:7,border:isSelected?'1.5px solid #ff8844':'1.5px solid rgba(255,255,255,0.15)',background:isSelected?'rgba(150,50,0,0.5)':'rgba(255,255,255,0.05)',color:isSelected?'#ffcc88':'rgba(255,255,255,0.5)',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},
+                  children:(t.tier?'T'+t.tier+' ':'')+t.name.slice(0,10)
+                });
+              })
+            );
+          })(),
+          showCounter && showCounter.id && (function(){
+            var c = computeCounterBuild(showCounter);
+            return jsxs('div',{style:{display:'flex',flexDirection:'column',gap:6},children:[
+              jsxs('div',{style:{padding:'10px 12px',borderRadius:10,background:'rgba(40,20,0,0.4)',border:'1px solid rgba(255,140,40,0.25)'},children:[
+                jsx('div',{style:{color:'#ffaa44',fontSize:11,fontWeight:'bold',marginBottom:6},children:'Анализ противника: '+(showCounter.name||'?')+' (T'+(showCounter.tier||3)+')'}),
+                c.tips.map(function(tip,i){
+                  return jsxs('div',{key:i,style:{color:'rgba(255,255,255,0.6)',fontSize:11,lineHeight:1.5,marginBottom:3},children:['• ',tip]});
+                }),
+              ]}),
+              jsxs('div',{style:{padding:'10px 12px',borderRadius:10,background:'rgba(0,60,40,0.3)',border:'1px solid rgba(40,200,100,0.2)'},children:[
+                jsx('div',{style:{color:'#88ffaa',fontSize:11,fontWeight:'bold',marginBottom:4},children:'Рекомендуемый контр-шаблон: '+c.templateName}),
+                jsx('button',{
+                  onClick:function(){
+                    applyTemplate(c.template);
+                    setShowCounter(null);
+                  },
+                  style:Object.assign({},S.saveBtn,{margin:0,padding:'8px',background:'linear-gradient(90deg,#006030,#00aa55)'}),
+                  children:'⚡ Применить шаблон «'+c.templateName+'»'
+                }),
+              ]}),
+            ]});
+          })(),
+          jsx('button',{onClick:function(){setShowCounter(null);},style:Object.assign({},S.exportBtn('rgba(40,40,60,0.8)'),{width:'100%'}),children:'Закрыть'}),
         ]})
       })
     ),
