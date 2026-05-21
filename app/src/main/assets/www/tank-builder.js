@@ -186,7 +186,7 @@ function registerTank(def) {
 
   var _spt = def.specialType || 'normal';
   window._t[id] = {
-    name: def.name,
+    name: id,
     requiredLevel: preset.requiredLevel,
     upgradesFrom: def.upgradesFrom ? [def.upgradesFrom] : ['Basic'],
     color: def.color || preset.color,
@@ -1132,7 +1132,8 @@ function TankBuilder({ onClose }) {
                 var tp2 = TIER_PRESETS[t];
                 return jsx('button', { key:t, style: S.tierBtn(editing.tier===t, tp2.color),
                   onClick: function(){ setEditing(function(p){ return Object.assign({},p,{tier:t}); }); },
-                  children: 'T'+t });
+                  title: tp2.label + ' — разблокируется на уровне ' + tp2.requiredLevel,
+                  children: 'T'+t+' ('+tp2.requiredLevel+')' });
               })
             }),
             jsx('div', { style:{color:'rgba(255,255,255,0.3)',fontSize:10,marginTop:5},
