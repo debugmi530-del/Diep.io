@@ -1827,37 +1827,132 @@ function mountBuilderButton() {
   function BuilderRoot() {
     var useState  = React.useState;
     var useEffect = React.useEffect;
+    var useRef    = React.useRef;
 
-    /* Хуки ВСЕГДА вызываются первыми — до любых условных return.
-       Rules of Hooks: количество вызовов должно быть одинаковым на каждый рендер. */
-    var _o = useState(false); var open    = _o[0]; var setOpen    = _o[1];
-    var _v = useState(false); var visible = _v[0]; var setVisible = _v[1];
+    /* ── state (Rules of Hooks: все хуки до любых return) ── */
+    var _o  = useState(false); var open     = _o[0];  var setOpen     = _o[1];
+    var _pm = useState(false); var pinModal = _pm[0]; var setPinModal = _pm[1];
+    var _pc = useState('');    var pinCode  = _pc[0]; var setPinCode  = _pc[1];
+    var _pe = useState(false); var pinErr   = _pe[0]; var setPinErr   = _pe[1];
 
-    useEffect(function() {
-      var t = setInterval(function() {
-        var phase = window._gamePhase || 'menu';
-        setVisible(phase === 'menu' || !phase);
-      }, 150);
-      return function(){ clearInterval(t); };
-    }, []);
+    var tapsRef      = useRef([]);   /* метки времени последних тапов */
+    var unlockedRef  = useRef(false);/* разблокирован в этой сессии */
 
+    /* внешний вызов window._openTankBuilder сохраняем, но ничего не показываем в UI */
     useEffect(function() {
       window._openTankBuilder = function(){ setOpen(true); };
       return function(){ window._openTankBuilder = null; };
     }, [setOpen]);
 
-    /* Проверки после хуков */
+    /* ── обработчик тапа по невидимой зоне ── */
+    function handleZoneTap() {
+      var now = Date.now();
+      tapsRef.current.push(now);
+      tapsRef.current = tapsRef.current.filter(function(t){ return now - t < 10000; });
+      if (tapsRef.current.length >= 5) {
+        tapsRef.current = [];
+        if (unlockedRef.current) {
+          /* уже разблокировано — просто открыть */
+          setOpen(true);
+        } else {
+          setPinCode('');
+          setPinErr(false);
+          setPinModal(true);
+        }
+      }
+    }
+
+    /* ── проверка кода ── */
+    function handlePinSubmit() {
+      if (pinCode === '2009') {
+        unlockedRef.current = true;
+        setPinModal(false);
+        setPinCode('');
+        setOpen(true);
+      } else {
+        setPinErr(true);
+        setPinCode('');
+      }
+    }
+
+    /* ── jsx доступен только здесь (после хуков) ── */
     if (!window.D || !window.D.jsx) return null;
     var jsx  = window.D.jsx;
     var jsxs = window.D.jsxs;
 
-    if (!visible && !open) return null;
-
+    /* ── рендер ── */
     return jsxs('div', { style:{position:'fixed',inset:0,zIndex:1999,pointerEvents:'none'}, children:[
 
+      /* Невидимая зона в левом нижнем углу — никаких визуальных подсказок */
+      jsx('div', {
+        style:{position:'fixed',bottom:0,left:0,width:80,height:80,
+          zIndex:2100,pointerEvents:'auto'},
+        onClick: handleZoneTap,
+      }),
+
+      /* ── PIN-модал ── */
+      pinModal && jsx('div', {
+        style:{position:'fixed',inset:0,zIndex:2200,pointerEvents:'auto',
+          display:'flex',alignItems:'center',justifyContent:'center',
+          background:'rgba(0,0,0,0.6)'},
+        onClick: function(e){
+          if (e.target === e.currentTarget){ setPinModal(false); setPinCode(''); setPinErr(false); }
+        },
+        children: jsxs('div', {
+          style:{background:'#0e1228',border:'1.5px solid rgba(68,136,255,0.3)',
+            borderRadius:16,padding:'28px 22px',width:240,
+            display:'flex',flexDirection:'column',alignItems:'center',gap:14,
+            boxShadow:'0 16px 60px rgba(0,0,0,0.95)',fontFamily:'Arial'},
+          children:[
+
+            jsx('div', { style:{color:'rgba(255,255,255,0.88)',fontSize:14,fontWeight:'bold',
+              letterSpacing:.3}, children:'Введите код доступа' }),
+
+            jsx('input', {
+              type:'password',
+              inputMode:'numeric',
+              value: pinCode,
+              autoFocus: true,
+              maxLength: 10,
+              placeholder:'••••',
+              onChange: function(e){ setPinCode(e.target.value); setPinErr(false); },
+              onKeyDown: function(e){ if (e.key === 'Enter') handlePinSubmit(); },
+              style:{width:'100%',padding:'11px 14px',borderRadius:9,outline:'none',
+                border: pinErr ? '1.5px solid #ff5555' : '1.5px solid rgba(68,136,255,0.35)',
+                background:'rgba(255,255,255,0.06)',color:'#fff',fontSize:20,
+                textAlign:'center',letterSpacing:8,boxSizing:'border-box'},
+            }),
+
+            pinErr && jsx('div', { style:{color:'#ff6060',fontSize:12,marginTop:-6},
+              children:'Неверный код' }),
+
+            jsxs('div', { style:{display:'flex',gap:8,width:'100%'}, children:[
+              jsx('button', {
+                onClick: handlePinSubmit,
+                style:{flex:1,padding:'10px',borderRadius:9,border:'none',
+                  cursor:'pointer',fontWeight:'bold',fontSize:13,fontFamily:'Arial',
+                  background:'rgba(0,100,200,0.85)',color:'#fff',touchAction:'manipulation'},
+                children:'Войти',
+              }),
+              jsx('button', {
+                onClick: function(){ setPinModal(false); setPinCode(''); setPinErr(false); },
+                style:{padding:'10px 14px',borderRadius:9,border:'none',cursor:'pointer',
+                  fontWeight:'bold',fontSize:13,fontFamily:'Arial',
+                  background:'rgba(60,60,80,0.8)',color:'rgba(255,255,255,0.55)',
+                  touchAction:'manipulation'},
+                children:'✕',
+              }),
+            ]}),
+
+          ]
+        })
+      }),
+
+      /* ── Конструктор ── */
       open && jsx('div', { style:{pointerEvents:'auto'},
         children: React.createElement(TankBuilder, { onClose: function(){ setOpen(false); } })
       }),
+
     ]});
   }
 
