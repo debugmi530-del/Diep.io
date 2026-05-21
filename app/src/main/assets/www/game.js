@@ -3299,3 +3299,108 @@ window._gs = null; // populated by G0 wrapper below
     };
   } catch(e) {}
 })();
+
+// ── Ram-branch fixes: body-damage boost to NPCs, shape-armor, regen-cap ───────
+;(function patchRamBranchMechanics(){
+  'use strict';
+
+  // Helper: is this className a ram/smasher-type tank?
+  function _isRamTank(className) {
+    var td = _t[className];
+    if(!td) return false;
+    // noBarrels=true AND meaningful bodyDamageMultiplier (>2)
+    return !!td.noBarrels && (td.bodyDamageMultiplier || 1) > 2;
+  }
+
+  // Quick circle-overlap check (mirrors engine xe())
+  function _overlap(ax, ay, ar, bx, by, br) {
+    var dx = ax - bx, dy = ay - by;
+    return (dx*dx + dy*dy) < (ar + br + 4) * (ar + br + 4);
+  }
+
+  try {
+    if(typeof fy !== 'function') return;
+    var _prevFyRam = fy;
+
+    // Track "last health before this tick" for shapes per-player
+    var _prevPlayerHp = 0;
+
+    fy = function(gameState, input, dt) {
+      // ── Snapshot player HP before the engine tick ────────────────────
+      var _pHp = (gameState && gameState.player) ? gameState.player.health : 0;
+
+      var result = _prevFyRam(gameState, input, dt);
+
+      try {
+        if(!gameState || gameState.phase !== 'playing') return result;
+        var p = gameState.player;
+        if(!p) return result;
+        var cls = p.className;
+        if(!_isRamTank(cls)) return result;   // only ram-type tanks
+
+        var T = _t[cls];
+        var bdm = T.bodyDamageMultiplier || 1;
+        var px = p.pos.x, py = p.pos.y, pr = p.radius;
+        // Player speed this tick (used as impact-force proxy)
+        var pspd = Math.sqrt(p.vel.x * p.vel.x + p.vel.y * p.vel.y);
+        // Force factor: faster = harder hit (clamped 0.4–2.5)
+        var frc  = Math.max(0.4, Math.min(2.5, pspd / 2.8));
+
+        // ── 1. EXTRA BODY DAMAGE TO NPCs ──────────────────────────────
+        // Engine applies U*0.016 (~0.48/tick for Spike).
+        // We add a speed-scaled burst so a full-speed ram actually hurts.
+        // Target: Spike (bdm=10) kills 195HP NPC in ~1.5 sec (≈90 ticks).
+        //   Engine gives 0.48/tick. We add bdm * frc * 0.10 ≈ 0.4–1.0/tick → total ~1.5/tick.
+        var npcs = gameState.npcs;
+        if(npcs) {
+          for(var _ni = 0; _ni < npcs.length; _ni++) {
+            var npc = npcs[_ni];
+            if(_overlap(px, py, pr, npc.pos.x, npc.pos.y, npc.radius)) {
+              if(!gameState.teamMode || npc.team !== 'blue') {
+                npc.health -= bdm * frc * 0.10;
+              }
+            }
+          }
+        }
+
+        // ── 2. BODY ARMOR vs SHAPES ──────────────────────────────────
+        // Engine: shape.damage * 0.016 per tick — for MegaPentagon (160) = 2.56/tick.
+        // Over 65 ticks to kill it → 166 HP loss without armor → player dies.
+        // We restore (armor%) of HP lost to shapes this tick.
+        // armor = (bdm-1) * 0.09, capped 0.80.
+        //   Smasher(5): 36%   Spike(10): 81%→80%   MegaSmasher(6): 45%
+        var armor = Math.min(0.80, (bdm - 1) * 0.09);
+        var hpLostThisTick = _pHp - p.health;
+        if(hpLostThisTick > 0) {
+          // Only restore if actually touching a shape (avoid restoring bullet damage)
+          var touchingShape = false;
+          var shapes = gameState.shapes;
+          if(shapes) {
+            for(var _si = 0; _si < shapes.length; _si++) {
+              var sh = shapes[_si];
+              if(_overlap(px, py, pr, sh.pos.x, sh.pos.y, sh.radius)) {
+                touchingShape = true;
+                break;
+              }
+            }
+          }
+          if(touchingShape) {
+            // Restore armor% of HP lost — but cap so we don't overheal
+            var restore = hpLostThisTick * armor;
+            p.health = Math.min(p.maxHealth, p.health + restore);
+          }
+        }
+
+        // ── 3. REDUCE REGEN DELAY (cap regenTimer at 80 for ram tanks) ─
+        // Engine: regenTimer = 240 every frame during contact (~4 sec).
+        // 80 ticks = ~1.3 sec — fast enough for a bruiser playstyle.
+        if(p.regenTimer > 80) {
+          p.regenTimer = 80;
+        }
+
+      } catch(_ex) { /* never crash the game */ }
+
+      return result;
+    };
+  } catch(e) {}
+})();
