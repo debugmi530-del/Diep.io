@@ -231,13 +231,17 @@ function registerTank(def) {
   var parent = def.upgradesFrom || 'Basic';
   /* Удаляем все старые рёбра, ведущие К этому танку (e[1]===id).
      Иначе при смене родителя танк висел бы как апгрейд сразу двух родителей. */
-  window.Ty = window.Ty.filter(function(e){ return e[1] !== id; });
+  for (var _ti = window.Ty.length - 1; _ti >= 0; _ti--) {
+    if (window.Ty[_ti][1] === id) window.Ty.splice(_ti, 1);
+  }
   window.Ty.push([parent, id]);
   /* Custom upgrade tree — tank can upgrade TO other custom tanks */
   if (Array.isArray(def.upgradesTo)) {
     def.upgradesTo.forEach(function(childId) {
       if (childId && childId !== id) {
-        window.Ty = window.Ty.filter(function(e){ return !(e[0]===id && e[1]===childId); });
+        for (var _tj = window.Ty.length - 1; _tj >= 0; _tj--) {
+          if (window.Ty[_tj][0] === id && window.Ty[_tj][1] === childId) window.Ty.splice(_tj, 1);
+        }
         window.Ty.push([id, childId]);
       }
     });
@@ -787,8 +791,16 @@ function TankBuilder({ onClose }) {
   function confirmDelete(id) {
     saveTanks(loadTanks().filter(function(t){ return t.id !== id; }));
     if (window._t) delete window._t[id];
-    if (window.w0) window.w0 = window.w0.filter(function(n){ return n.name !== id; });
-    if (window.Ty) window.Ty = window.Ty.filter(function(e){ return e[0]!==id && e[1]!==id; });
+    if (window.w0) {
+      for (var _wi = window.w0.length - 1; _wi >= 0; _wi--) {
+        if (window.w0[_wi].name === id) window.w0.splice(_wi, 1);
+      }
+    }
+    if (window.Ty) {
+      for (var _tyi = window.Ty.length - 1; _tyi >= 0; _tyi--) {
+        if (window.Ty[_tyi][0] === id || window.Ty[_tyi][1] === id) window.Ty.splice(_tyi, 1);
+      }
+    }
     setDeletePending(null);
     setTab('list');
     if (editing.id === id) {
@@ -822,7 +834,6 @@ function TankBuilder({ onClose }) {
   var tier   = editing.tier || 3;
   var preset = TIER_PRESETS[tier] || TIER_PRESETS[3];
   var hpEff  = Math.round(preset.hp    * editing.hpSlider    * 100);
-  var spdEff = Math.round(preset.speed * editing.speedSlider * 100);
   var spdPts = Math.min(10, Math.max(0, Math.round(Math.log(Math.max(0.001, preset.speed * editing.speedSlider)) / Math.log(1.07))));
   var zoomPct = Math.round((viewRef.current.zoom || 1) * 100);
 
