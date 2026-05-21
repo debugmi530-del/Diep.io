@@ -424,69 +424,249 @@ function suggestImprovements(ed) {
   var hp = (ed.hpSlider||1) * ((TIER_PRESETS[ed.tier||3]||TIER_PRESETS[3]).hp||1);
   var spd = ed.speedSlider || 1;
   var n = barrels.length;
+
+  /* ── Анализ DPS vs HP ── */
   if (totalDps > 12 && hp < 1.0)
-    tips.push({ icon:'❤', title:'Хрупкий убийца', text:'DPS очень высокий, но HP низкий. Подними HP до 120–150% чтобы выживать в ближнем бою.' });
+    tips.push({ icon:'❤', title:'Хрупкий убийца',
+      text:'DPS очень высокий, но HP низкий. Подними HP до 120–150% чтобы выживать в ближнем бою.',
+      apply: function(def){ return Object.assign({},def,{hpSlider:Math.min(2.5,(def.hpSlider||1)+0.3)}); }
+    });
+
+  /* ── Медленные снаряды ── */
   var slowB = barrels.filter(function(b){ return (b.bSpeed||1) < 0.7; });
-  if (slowB.length >= 2)
-    tips.push({ icon:'🐢', title:'Медленные снаряды', text:slowB.length+' стволов с bSpeed < 0.7. Подними до 1.0+ — снаряды будут настигать манёвренных врагов.' });
+  if (slowB.length >= 1)
+    tips.push({ icon:'🐢', title:'Медленные снаряды',
+      text:slowB.length+' ствол(а) с bSpeed < 0.7. Подними до 1.0+ — снаряды будут настигать манёвренных врагов.',
+      apply: function(def){ return Object.assign({},def,{barrels:def.barrels.map(function(b){ return (b.bSpeed||1)<0.7?Object.assign({},b,{bSpeed:parseFloat(Math.min(2,(b.bSpeed||0.5)+0.35).toFixed(2))}):b; })}); }
+    });
+
+  /* ── Дисбаланс отдачи ── */
   if (n === 1 && (barrels[0].width||14) >= 22)
-    tips.push({ icon:'⚖', title:'Дисбаланс отдачи', text:'Один широкий ствол создаёт дрейф. Добавь зеркальный ствол сзади или увеличь HP.' });
+    tips.push({ icon:'⚖', title:'Дисбаланс отдачи',
+      text:'Один широкий ствол создаёт дрейф. Добавь зеркальный ствол сзади или увеличь HP.',
+      apply: function(def){
+        var b0 = def.barrels[0];
+        var mirror = Object.assign({},b0,{id:Date.now()+1,angle:parseFloat((Math.PI).toFixed(4)),lateral:0});
+        return Object.assign({},def,{barrels:[b0,mirror]});
+      }
+    });
+
+  /* ── Однообразный арсенал ── */
   var types = barrels.map(function(b){ return b.bulletType||'normal'; });
   var unique = types.filter(function(t,i){ return types.indexOf(t)===i; });
   if (n >= 3 && unique.length === 1)
-    tips.push({ icon:'🎭', title:'Однообразный арсенал', text:'Все стволы одного типа. Добавь гранату или молнию для универсальности.' });
+    tips.push({ icon:'🎭', title:'Однообразный арсенал',
+      text:'Все стволы одного типа. Последний ствол переведён в тип «trap» для разнообразия.',
+      apply: function(def){
+        var bs = def.barrels.slice();
+        if (bs.length > 0) { var last = Object.assign({},bs[bs.length-1],{bulletType:'trap'}); bs[bs.length-1]=last; }
+        return Object.assign({},def,{barrels:bs});
+      }
+    });
+
+  /* ── Нет стволов ── */
   if (n === 0)
-    tips.push({ icon:'💀', title:'Нет стволов', text:'Без стволов танк только тараном. Добавь хотя бы 1 ствол.' });
+    tips.push({ icon:'💀', title:'Нет стволов',
+      text:'Без стволов танк только тараном. Добавлен стандартный ствол.',
+      apply: function(def){
+        return Object.assign({},def,{barrels:[{id:Date.now(),label:'Стандартный',angle:0,length:48,width:14,reload:1.0,bSize:1.0,bSpeed:1.0,bDmg:1.0,lateral:0,bulletType:'normal',fireGroup:0,penetration:1,recoil:0}]});
+      }
+    });
+
+  /* ── Долгая перезарядка ── */
   var slowR = barrels.filter(function(b){ return (b.reload||1) > 3.5; });
-  if (slowR.length >= 2)
-    tips.push({ icon:'⏳', title:'Долгая перезарядка', text:slowR.length+' стволов > 3.5с. В ближнем бою это окно уязвимости — добавь мини-стволы.' });
+  if (slowR.length >= 1)
+    tips.push({ icon:'⏳', title:'Долгая перезарядка',
+      text:slowR.length+' ствол(а) > 3.5с. Снижено до 2.5с — меньше окно уязвимости.',
+      apply: function(def){ return Object.assign({},def,{barrels:def.barrels.map(function(b){ return (b.reload||1)>3.5?Object.assign({},b,{reload:2.5}):b; })}); }
+    });
+
+  /* ── T5 слабый урон ── */
   if ((ed.tier||3) === 5 && totalDps < 3)
-    tips.push({ icon:'👑', title:'T5, но слабый урон', text:'Tier 5, но DPS < 3. Подними bDmg стволов или добавь тяжёлый ствол.' });
+    tips.push({ icon:'👑', title:'T5, но слабый урон',
+      text:'Tier 5, но DPS < 3. bDmg всех стволов увеличен на 0.5.',
+      apply: function(def){ return Object.assign({},def,{barrels:def.barrels.map(function(b){ return Object.assign({},b,{bDmg:parseFloat(Math.min(5,(b.bDmg||1)+0.5).toFixed(2))}); })}); }
+    });
+
+  /* ── Несимметричные стволы ── */
+  if (n >= 2) {
+    var angles = barrels.map(function(b){ return b.angle||0; });
+    var hasSymPair = false;
+    for (var ai=0; ai<angles.length; ai++) {
+      for (var aj=ai+1; aj<angles.length; aj++) {
+        var diff = Math.abs(angles[ai] + angles[aj]);
+        if (diff < 0.05 || Math.abs(diff - Math.PI*2) < 0.05) { hasSymPair = true; break; }
+      }
+      if (hasSymPair) break;
+    }
+    if (!hasSymPair)
+      tips.push({ icon:'🔀', title:'Несимметричные стволы',
+        text:'Стволы расположены несимметрично. Зеркальные копии добавят стабильность и баланс отдачи.',
+        apply: function(def){
+          var existing = def.barrels.slice();
+          var mirrors = existing.map(function(b,i){
+            var mirA = parseFloat((-( b.angle||0 )).toFixed(4));
+            var alreadyMirrored = existing.some(function(x){ return Math.abs((x.angle||0)-mirA)<0.05 && Math.abs((x.lateral||0)+(b.lateral||0))<2; });
+            if (alreadyMirrored) return null;
+            return Object.assign({},b,{id:Date.now()+i+100,angle:mirA,lateral:-(b.lateral||0)});
+          }).filter(Boolean);
+          return Object.assign({},def,{barrels:existing.concat(mirrors).slice(0,8)});
+        }
+      });
+  }
+
+  /* ── Хорошее состояние ── */
   if (spd > 1.5 && hp > 1.6)
-    tips.push({ icon:'⚡', title:'Отличный баланс!', text:'Высокая скорость + хороший HP. Добавь стволы с пробиванием (penetration 2+) для доминирования.' });
+    tips.push({ icon:'⚡', title:'Отличный баланс!',
+      text:'Высокая скорость + хороший HP. Пробивание повышено до 2 для доминирования.',
+      apply: function(def){ return Object.assign({},def,{barrels:def.barrels.map(function(b){ return Object.assign({},b,{penetration:Math.max(b.penetration||1,2)}); })}); }
+    });
+
   if (tips.length === 0)
-    tips.push({ icon:'✅', title:'Явных слабостей нет', text:'Попробуй эволюцию для поиска скрытых улучшений.' });
+    tips.push({ icon:'✅', title:'Явных слабостей нет',
+      text:'Попробуй эволюцию для поиска скрытых улучшений. Пробивание немного улучшено.',
+      apply: function(def){ return Object.assign({},def,{barrels:def.barrels.map(function(b){ return Object.assign({},b,{penetration:Math.max(b.penetration||1,(b.penetration||1)+1)}); })}); }
+    });
+
+  /* Гарантия минимум 3 советов — тир-апгрейд */
   while (tips.length < 3)
-    tips.push({ icon:'🏆', title:'Тир-апгрейд', text:'T'+(ed.tier||3)+'→T'+Math.min(5,(ed.tier||3)+1)+' даст больше HP и разблокирует более высокую лигу.' });
-  return tips.slice(0, 5);
+    tips.push({ icon:'🏆', title:'Тир-апгрейд',
+      text:'T'+(ed.tier||3)+'→T'+Math.min(5,(ed.tier||3)+1)+' даст больше HP и разблокирует более высокую лигу.',
+      apply: function(def){ return Object.assign({},def,{tier:Math.min(5,(def.tier||3)+1)}); }
+    });
+
+  return tips.slice(0, 6);
 }
 
 /* ── #12 Контр-билд ─────────────────────────────────────────── */
-function computeCounterBuild(enemy) {
+function computeCounterOptions(enemy) {
   var barrels = enemy.barrels || [];
   var avgLen = barrels.reduce(function(s,b){ return s+(b.length||48); }, 0) / Math.max(1, barrels.length);
+  var avgDmg = barrels.reduce(function(s,b){ return s+(b.bDmg||1); }, 0) / Math.max(1, barrels.length);
+  var avgSpd = barrels.reduce(function(s,b){ return s+(b.bSpeed||1); }, 0) / Math.max(1, barrels.length);
   var n = barrels.length;
   var hp = (enemy.hpSlider||1) * ((TIER_PRESETS[enemy.tier||3]||TIER_PRESETS[3]).hp||1);
   var spd = enemy.speedSlider || 1;
-  var tips, tplKey, tplName;
-  if (avgLen > 60) {
-    tips = ['Враг — снайпер. Атакуй с боков: высокая скорость + ближний бой делает снайпера беспомощным.',
-            'Широкие стволы разрушают дальние снаряды на подлёте.',
-            'Держись ближе 200px — вне прицельного диапазона противника.'];
-    tplKey = 'spinner'; tplName = 'Спиннер (ближний бой)';
-  } else if (n >= 4) {
-    tips = ['Рой дронов. Используй пробивание 3+ чтобы проходить сквозь дронов.',
-            'Длинный ствол + высокая скорость пуль: уничтожай дронов до контакта.',
-            'Избегай замкнутых пространств — там рой максимально опасен.'];
-    tplKey = 'sniper'; tplName = 'Снайпер (высокое пробивание)';
-  } else if (hp > 2.5) {
-    tips = ['Враг очень живуч. Нужен максимальный DPS: тяжёлые стволы с bDmg > 3.',
-            'Ракетный тип эффективен — взрыв наносит урон сквозь корпус.',
-            'Атакуй burst-ом и отходи для перезарядки — не давай врагу регенерировать.'];
-    tplKey = 'cannon'; tplName = 'Миномёт (бурст-урон)';
-  } else if (spd > 1.5) {
-    tips = ['Враг быстрый. Мины (тип «Мина») идеальны — быстрый враг сам на них наедет.',
-            'Веерное расположение стволов: не надо целиться, покрывай площадь.',
-            'Увеличь HP и стань «башней» — быстрые враги сами подлетают к тебе.'];
-    tplKey = 'miner'; tplName = 'Минёр (ловушки)';
-  } else {
-    tips = ['Сбалансированный враг. Врасплох: включи автоогонь + неожиданное направление атаки.',
-            'Флангируй: атакуй под 90° к направлению движения противника.',
-            'Авто-турели дают преимущество в хаотичном бою.'];
-    tplKey = 'autoturret'; tplName = 'Авто-турельщик';
+  var enemyDps = barrels.reduce(function(s,b){ return s+(b.bDmg||1)/(b.reload||1); }, 0);
+
+  /* ── Matchup score: оцениваем "угрозу" врага ── */
+  var threat = enemyDps * 0.5 + hp * 1.2 + spd * 0.8 + (avgLen > 55 ? 2 : 0) + (n >= 4 ? 1.5 : 0);
+
+  /* ── Строим несколько контр-вариантов ── */
+  var options = [];
+
+  /* 1. Против снайпера/длинных стволов: ближний бой */
+  if (avgLen > 55) {
+    options.push({
+      tplKey: 'spinner', score: 70 + Math.min(25, (avgLen-55)*0.8),
+      tplName: 'Спиннер',
+      reason: 'Враг снайпер (стволы '+avgLen.toFixed(0)+'px). Высокая скорость + 360° покрытие.',
+      tips: [
+        'Зайди сбоку — снайпер беспомощен на дистанции < 200px.',
+        'Широкие стволы разрушают дальние снаряды на подлёте.',
+        'Атакуй рывками, уклоняясь от прямого луча огня.'
+      ]
+    });
   }
-  var tpl = TANK_TEMPLATES.find(function(t){ return t._tpl === tplKey; }) || TANK_TEMPLATES[0];
-  return { tips: tips, template: tpl, templateName: tplName };
+
+  /* 2. Против роя дронов / 4+ стволов: пробивание */
+  if (n >= 4) {
+    options.push({
+      tplKey: 'sniper', score: 65 + Math.min(25, (n-4)*5),
+      tplName: 'Снайпер',
+      reason: 'Враг рой ('+n+' стволов). Высокое пробивание уничтожает дронов до контакта.',
+      tips: [
+        'Пробивание 3+ — снаряды проходят сквозь рой без потери урона.',
+        'Держи дистанцию: рой слабеет на > 300px.',
+        'Избегай замкнутых пространств — там рой максимально опасен.'
+      ]
+    });
+  }
+
+  /* 3. Против живучего (высокий HP): бурст */
+  if (hp > 2.0) {
+    options.push({
+      tplKey: 'cannon', score: 60 + Math.min(30, (hp-2.0)*15),
+      tplName: 'Миномёт',
+      reason: 'Враг живуч (HP ×'+hp.toFixed(1)+'). Тяжёлые снаряды с bDmg > 3 — единственный выход.',
+      tips: [
+        'Атакуй бёрстом и немедленно отходи — не давай врагу регенерировать.',
+        'bDmg > 3: каждый выстрел снимает 30–40% HP.',
+        'Ракетный тип тоже эффективен против толстой брони.'
+      ]
+    });
+  }
+
+  /* 4. Против быстрого: ловушки */
+  if (spd > 1.3) {
+    options.push({
+      tplKey: 'miner', score: 55 + Math.min(35, (spd-1.3)*25),
+      tplName: 'Минёр',
+      reason: 'Враг быстрый (скорость ×'+spd.toFixed(1)+'). Мины — быстрый враг сам едет на них.',
+      tips: [
+        'Расставь мины на пути отступления противника.',
+        'Веерное расположение стволов: покрывай площадь, не целься.',
+        'Стань «башней»: высокий HP + мины = неуязвимость.'
+      ]
+    });
+  }
+
+  /* 5. Против высокого урона пуль: дроны */
+  if (avgDmg > 2.0 || avgSpd > 1.5) {
+    options.push({
+      tplKey: 'overlord', score: 58 + Math.min(20, avgDmg * 4),
+      tplName: 'Оверлорд',
+      reason: 'Враг бьёт сильно/быстро. Рой дронов держит его на расстоянии.',
+      tips: [
+        'Дроны поглощают вражеские снаряды как щит.',
+        'Управляй роем мышью — направляй его прямо на врага.',
+        'Оверлорд отличен против агрессивных ближних бойцов.'
+      ]
+    });
+  }
+
+  /* 6. Против сбалансированного: авто-турели */
+  if (options.length < 2) {
+    options.push({
+      tplKey: 'autoturret', score: 52,
+      tplName: 'Авто-турельщик',
+      reason: 'Сбалансированный враг. Авто-турели дают преимущество в хаосе.',
+      tips: [
+        'Авто-турели атакуют сами — фокусируйся на маневре.',
+        'Флангируй: атакуй под 90° к направлению движения противника.',
+        'Включи автоогонь + неожиданное направление атаки.'
+      ]
+    });
+    options.push({
+      tplKey: 'triplet', score: 50,
+      tplName: 'Триплет',
+      reason: 'Плотный веер из 3 стволов перекрывает любой уклон.',
+      tips: [
+        'Стреляй непрерывно вперёд — хотя бы 1 снаряд попадёт.',
+        'Хорош против средних танков с 1–2 стволами.',
+        'Дополни высоким HP для устойчивости в перестрелке.'
+      ]
+    });
+  }
+
+  /* Убираем дубликаты и сортируем по score */
+  var seen = {};
+  options = options.filter(function(o){ if(seen[o.tplKey]) return false; seen[o.tplKey]=true; return true; });
+  options.sort(function(a,b){ return b.score-a.score; });
+
+  /* Привязываем шаблоны */
+  options = options.slice(0,3).map(function(o){
+    var tpl = TANK_TEMPLATES.find(function(t){ return t._tpl === o.tplKey; }) || TANK_TEMPLATES[0];
+    return Object.assign({},o,{template:tpl, matchup: Math.min(95,Math.round(o.score))});
+  });
+
+  return { options: options, threat: Math.min(100,Math.round(threat*6)) };
+}
+/* Обратная совместимость */
+function computeCounterBuild(enemy) {
+  var r = computeCounterOptions(enemy);
+  var best = r.options[0] || {};
+  return { tips: best.tips||[], template: best.template||TANK_TEMPLATES[0], templateName: best.tplName||'Авто-турельщик' };
 }
 
 /* ── #11 Эволюция: 1 поколение ──────────────────────────────── */
@@ -602,6 +782,12 @@ function TankBuilder({ onClose }) {
   var _sct = useState(null);  var showCounter    = _sct[0]; var setShowCounter    = _sct[1];
   var _evR = useState(null);  var evolutionResult= _evR[0]; var setEvolutionResult= _evR[1];
   var _evP = useState(false); var evolutionRunning=_evP[0]; var setEvolutionRunning=_evP[1];
+  /* ── Эволюция: настройки ── */
+  var _evG = useState(20);    var evoGens        = _evG[0]; var setEvoGens        = _evG[1];
+  var _evO = useState('balanced'); var evoGoal   = _evO[0]; var setEvoGoal        = _evO[1];
+  var _evProg = useState(0);  var evoProgress    = _evProg[0]; var setEvoProgress  = _evProg[1];
+  /* ── Улучшить: состояние применения ── */
+  var _sapplied = useState({}); var suggestApplied = _sapplied[0]; var setSuggestApplied = _sapplied[1];
 
   /* ── Подтверждение удаления ─────────────────────────────────── */
   var _dp = useState(null); var deletePending = _dp[0]; var setDeletePending = _dp[1];
@@ -1249,20 +1435,33 @@ function TankBuilder({ onClose }) {
     if (idx >= 0) list[idx] = def; else list.push(def);
     saveTanks(list);
     registerTank(def);
-    /* #18 Виджет: обновляем данные на домашнем экране */
+    /* Виджет: отправляем полный список танков с расширенными данными */
     try {
-      var _ws = computeStats(def);
-      var _wTier = def.tier || 3;
-      var _wPreset = TIER_PRESETS[_wTier] || TIER_PRESETS[3];
-      var _wHp = Math.round(_wPreset.hp * (def.hpSlider || 1) * 100);
-      if (window.Android && window.Android.updateWidget) {
-        window.Android.updateWidget(
-          def.name || 'Танк',
-          _wTier,
-          _ws ? parseFloat(_ws.dps) : 0,
-          _wHp,
-          (def.barrels || []).length
-        );
+      if (window.Android && window.Android.updateWidgetAll) {
+        var _wList = loadTanks();
+        var _wData = _wList.map(function(t) {
+          var _ws2 = computeStats(t);
+          var _wTier2 = t.tier || 3;
+          var _wPreset2 = TIER_PRESETS[_wTier2] || TIER_PRESETS[3];
+          var _wHp2 = Math.round(_wPreset2.hp * (t.hpSlider || 1) * 100);
+          return {
+            id:          t.id || '',
+            name:        t.name || 'Танк',
+            tier:        _wTier2,
+            color:       t.color || '#4488ff',
+            description: t.description || '',
+            specialType: t.specialType || 'normal',
+            autoGun:     t.autoGun || false,
+            dps:         _ws2 ? parseFloat(_ws2.dps) : 0,
+            hpPct:       _wHp2,
+            barrels:     (t.barrels || []).length,
+            speed:       parseFloat(((_wPreset2.speed || 1) * (t.speedSlider || 1)).toFixed(2)),
+            barrelData:  (t.barrels || []).map(function(b) {
+              return { angle: b.angle || 0, length: b.length || 48, width: b.width || 14 };
+            })
+          };
+        });
+        window.Android.updateWidgetAll(JSON.stringify(_wData));
       }
     } catch(_we) {}
     setTab('list');
@@ -1290,6 +1489,28 @@ function TankBuilder({ onClose }) {
       setEditing(Object.assign({}, _blank, { id: genId() }));
       setSelectedDef(null);
     }
+    /* Виджет: обновляем список после удаления */
+    try {
+      if (window.Android && window.Android.updateWidgetAll) {
+        var _wDelList = loadTanks();
+        var _wDelData = _wDelList.map(function(t) {
+          var _wds = computeStats(t);
+          var _wdt = t.tier || 3;
+          var _wdp = TIER_PRESETS[_wdt] || TIER_PRESETS[3];
+          return {
+            id: t.id||'', name: t.name||'Танк', tier: _wdt,
+            color: t.color||'#4488ff', description: t.description||'',
+            specialType: t.specialType||'normal', autoGun: t.autoGun||false,
+            dps: _wds ? parseFloat(_wds.dps) : 0,
+            hpPct: Math.round(_wdp.hp * (t.hpSlider||1) * 100),
+            barrels: (t.barrels||[]).length,
+            speed: parseFloat(((_wdp.speed||1)*(t.speedSlider||1)).toFixed(2)),
+            barrelData: (t.barrels||[]).map(function(b){ return {angle:b.angle||0,length:b.length||48,width:b.width||14}; })
+          };
+        });
+        window.Android.updateWidgetAll(JSON.stringify(_wDelData));
+      }
+    } catch(_wde) {}
   }
   function startNew() {
     setEditing(Object.assign({}, _blank, { id: genId() }));
@@ -2154,85 +2375,244 @@ function TankBuilder({ onClose }) {
     }),
 
     /* ══ #10 УЛУЧШИ МОЙ ТАНК ══ */
-    showSuggest && jsx('div',{style:S.modalOverlay,onClick:function(){setShowSuggest(false);},children:
-      jsx('div',{style:Object.assign({},S.modalBox,{maxWidth:480}),onClick:function(e){e.stopPropagation();},children:
+    showSuggest && jsx('div',{style:S.modalOverlay,onClick:function(){setShowSuggest(false);setSuggestApplied({});},children:
+      jsx('div',{style:Object.assign({},S.modalBox,{maxWidth:490}),onClick:function(e){e.stopPropagation();},children:
         jsxs('div',{style:{display:'flex',flexDirection:'column',gap:10},children:[
           jsxs('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between'},children:[
-            jsx('div',{style:S.modalTitle,children:'🤖 Предложения по улучшению'}),
-            jsx('button',{onClick:function(){setShowSuggest(false);},style:S.btn('rgba(100,30,30,0.5)'),children:'✕'}),
+            jsx('div',{style:S.modalTitle,children:'🤖 Улучшение танка'}),
+            jsx('button',{onClick:function(){setShowSuggest(false);setSuggestApplied({});},style:S.btn('rgba(100,30,30,0.5)'),children:'✕'}),
           ]}),
-          jsx('div',{style:{color:'rgba(255,255,255,0.3)',fontSize:10,marginBottom:4},children:'Анализ текущего танка по правилам баланса.'}),
+          jsx('div',{style:{color:'rgba(255,255,255,0.3)',fontSize:10,marginBottom:2},children:'Анализ по правилам баланса. Нажми «Применить» у каждого совета или «Применить всё».'}),
+          /* Превью DPS/HP до изменений */
+          (function(){
+            var b=editing.barrels||[];
+            var dps=parseFloat(b.reduce(function(s,x){return s+(x.bDmg||1)/(x.reload||1);},0).toFixed(1));
+            var hp=parseFloat(((editing.hpSlider||1)*((TIER_PRESETS[editing.tier||3]||TIER_PRESETS[3]).hp||1)).toFixed(2));
+            return jsxs('div',{style:{display:'flex',gap:6,padding:'7px 10px',borderRadius:8,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',marginBottom:2},children:[
+              jsxs('div',{style:{flex:1,textAlign:'center'},children:[jsx('div',{style:{color:'#ff8040',fontWeight:'bold',fontSize:13},children:dps}),jsx('div',{style:{color:'rgba(255,255,255,0.35)',fontSize:9},children:'DPS сейчас'})]}),
+              jsxs('div',{style:{flex:1,textAlign:'center'},children:[jsx('div',{style:{color:'#80ff60',fontWeight:'bold',fontSize:13},children:'×'+hp}),jsx('div',{style:{color:'rgba(255,255,255,0.35)',fontSize:9},children:'HP сейчас'})]}),
+              jsxs('div',{style:{flex:1,textAlign:'center'},children:[jsx('div',{style:{color:'#cc80ff',fontWeight:'bold',fontSize:13},children:b.length}),jsx('div',{style:{color:'rgba(255,255,255,0.35)',fontSize:9},children:'Стволов'})]}),
+            ]});
+          })(),
           jsx('div',{style:{display:'flex',flexDirection:'column',gap:6},children:
             suggestImprovements(editing).map(function(tip,i){
-              return jsxs('div',{key:i,style:{padding:'10px 12px',borderRadius:10,background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)'},children:[
+              var applied = !!suggestApplied[i];
+              return jsxs('div',{key:i,style:{padding:'10px 12px',borderRadius:10,background:applied?'rgba(0,80,30,0.35)':'rgba(255,255,255,0.04)',border:'1px solid '+(applied?'rgba(0,200,80,0.35)':'rgba(255,255,255,0.08)'),transition:'background .2s'},children:[
                 jsxs('div',{style:{display:'flex',alignItems:'center',gap:6,marginBottom:4},children:[
-                  jsx('span',{style:{fontSize:16},children:tip.icon}),
-                  jsx('div',{style:{color:'#fff',fontSize:12,fontWeight:'bold'},children:tip.title}),
+                  jsx('span',{style:{fontSize:15},children:tip.icon}),
+                  jsx('div',{style:{color:applied?'#88ffaa':'#fff',fontSize:12,fontWeight:'bold',flex:1},children:tip.title}),
+                  tip.apply && jsx('button',{
+                    onClick:function(){
+                      if(applied) return;
+                      var next=tip.apply(editing);
+                      setEditing(function(p){ var r=tip.apply(p); pushHistory(r); return r; });
+                      bulletsRef.current=[];
+                      setSuggestApplied(function(s){ var n=Object.assign({},s); n[i]=true; return n; });
+                    },
+                    style:{padding:'3px 9px',borderRadius:6,border:'none',cursor:applied?'default':'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',background:applied?'rgba(0,150,60,0.5)':'rgba(0,120,60,0.8)',color:applied?'#88ffaa':'#fff',touchAction:'manipulation',opacity:applied?0.7:1},
+                    children:applied?'✔ Готово':'Применить'
+                  }),
                 ]}),
                 jsx('div',{style:{color:'rgba(255,255,255,0.5)',fontSize:11,lineHeight:1.5},children:tip.text}),
               ]});
             })
           }),
-          jsx('button',{onClick:function(){setShowSuggest(false);},style:Object.assign({},S.exportBtn('rgba(60,60,80,0.8)'),{width:'100%',marginTop:4}),children:'Закрыть'}),
+          /* Применить всё */
+          jsx('button',{
+            onClick:function(){
+              var tips=suggestImprovements(editing);
+              setEditing(function(p){
+                var r=p;
+                tips.forEach(function(t,i){ if(t.apply && !suggestApplied[i]) r=t.apply(r); });
+                pushHistory(r);
+                return r;
+              });
+              bulletsRef.current=[];
+              var all={};
+              tips.forEach(function(_,i){ all[i]=true; });
+              setSuggestApplied(all);
+            },
+            style:Object.assign({},S.saveBtn,{background:'linear-gradient(90deg,#006030,#00aa55)',marginTop:2}),
+            children:'⚡ Применить все советы сразу'
+          }),
+          jsx('button',{onClick:function(){setShowSuggest(false);setSuggestApplied({});},style:Object.assign({},S.exportBtn('rgba(60,60,80,0.8)'),{width:'100%',marginTop:2}),children:'Закрыть'}),
         ]})
       })
     }),
 
     /* ══ #11 ЭВОЛЮЦИЯ ══ */
     showEvolution && jsx('div',{style:S.modalOverlay,onClick:function(){if(!evolutionRunning)setShowEvolution(false);},children:
-      jsx('div',{style:Object.assign({},S.modalBox,{maxWidth:420}),onClick:function(e){e.stopPropagation();},children:
+      jsx('div',{style:Object.assign({},S.modalBox,{maxWidth:440}),onClick:function(e){e.stopPropagation();},children:
         jsxs('div',{style:{display:'flex',flexDirection:'column',gap:10},children:[
           jsxs('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between'},children:[
             jsx('div',{style:S.modalTitle,children:'🧬 Эволюция танка'}),
-            !evolutionRunning && jsx('button',{onClick:function(){setShowEvolution(false);},style:S.btn('rgba(100,30,30,0.5)'),children:'✕'}),
+            !evolutionRunning && jsx('button',{onClick:function(){setShowEvolution(false);setEvolutionResult(null);},style:S.btn('rgba(100,30,30,0.5)'),children:'✕'}),
           ]}),
-          jsx('div',{style:{color:'rgba(255,255,255,0.35)',fontSize:10},children:'20 поколений случайных мутаций. Выживает лучший DPS+HP.'}),
-          !evolutionRunning && !evolutionResult && jsx('button',{
-            onClick:function(){
-              setEvolutionRunning(true);
-              setTimeout(function(){
-                var best = editing;
-                var bestScore = scoreForEvolution(editing);
-                for(var g=0;g<20;g++){
-                  var candidate = evolveOnce(best);
-                  var s = scoreForEvolution(candidate);
-                  if(s > bestScore){ best = candidate; bestScore = s; }
-                }
-                var orig = scoreForEvolution(editing);
-                var gain = bestScore - orig;
-                setEvolutionResult({ tank: best, score: parseFloat(bestScore.toFixed(2)), gain: parseFloat(gain.toFixed(2)) });
-                setEvolutionRunning(false);
-              }, 400);
-            },
-            style:Object.assign({},S.saveBtn,{background:'linear-gradient(90deg,#4400aa,#8833ff)'}),
-            children:'▶ Запустить эволюцию (20 поколений)'
-          }),
-          evolutionRunning && jsxs('div',{style:{textAlign:'center',padding:'20px',color:'#cc99ff'},children:[
-            jsx('div',{style:{fontSize:28,marginBottom:8},children:'🧬'}),
-            jsx('div',{style:{fontSize:13,fontWeight:'bold'},children:'Идёт эволюция...'}),
-          ]}),
-          evolutionResult && jsxs('div',{style:{display:'flex',flexDirection:'column',gap:8},children:[
-            jsxs('div',{style:{padding:'12px',borderRadius:10,background:'rgba(80,0,120,0.3)',border:'1px solid rgba(150,50,255,0.3)'},children:[
-              jsx('div',{style:{color:'#cc99ff',fontSize:11,fontWeight:'bold',marginBottom:6},children:'Лучший результат после эволюции:'}),
-              jsxs('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr',gap:4},children:[
-                jsxs('div',{style:{color:'rgba(255,255,255,0.5)',fontSize:10},children:['Оценка: ',jsx('span',{style:{color:'#ffdd00',fontWeight:'bold'},children:evolutionResult.score})]}),
-                jsxs('div',{style:{color:'rgba(255,255,255,0.5)',fontSize:10},children:['Прирост: ',jsx('span',{style:{color:evolutionResult.gain>0?'#88ff88':'#ff8888',fontWeight:'bold'},children:(evolutionResult.gain>0?'+':'')+evolutionResult.gain})]}),
-                jsx('div',{style:{color:'rgba(255,255,255,0.5)',fontSize:10},children:'Стволов: '+((evolutionResult.tank.barrels||[]).length)}),
-                jsx('div',{style:{color:'rgba(255,255,255,0.5)',fontSize:10},children:'DPS: '+parseFloat((evolutionResult.tank.barrels||[]).reduce(function(s,b){return s+(b.bDmg||1)/(b.reload||1);},0).toFixed(1))}),
+          /* ── Настройки (только когда не запущено) ── */
+          !evolutionRunning && !evolutionResult && jsxs('div',{style:{display:'flex',flexDirection:'column',gap:8},children:[
+            /* Цель эволюции */
+            jsxs('div',{style:{},children:[
+              jsx('div',{style:{color:'rgba(255,255,255,0.45)',fontSize:10,fontWeight:'bold',marginBottom:5},children:'ЦЕЛЬ ЭВОЛЮЦИИ'}),
+              jsxs('div',{style:{display:'flex',gap:5,flexWrap:'wrap'},children:[
+                ['dps','⚔ Максимум урона'],['hp','🛡 Максимум выживаемости'],['balanced','⚖ Баланс DPS+HP'],['symmetry','🔀 Симметрия стволов']
+                .map(function(pair){
+                  var k=pair[0],l=pair[1];
+                  var active=evoGoal===k;
+                  return jsx('button',{key:k,onClick:function(){setEvoGoal(k);},
+                    style:{padding:'5px 10px',borderRadius:7,border:active?'1.5px solid #cc88ff':'1.5px solid rgba(255,255,255,0.12)',
+                      background:active?'rgba(100,20,200,0.55)':'rgba(255,255,255,0.04)',color:active?'#cc88ff':'rgba(255,255,255,0.5)',
+                      cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},
+                    children:l});
+                })
               ]}),
             ]}),
-            jsxs('div',{style:{display:'flex',gap:6},children:[
+            /* Поколения */
+            jsxs('div',{style:{},children:[
+              jsx('div',{style:{color:'rgba(255,255,255,0.45)',fontSize:10,fontWeight:'bold',marginBottom:5},children:'ПОКОЛЕНИЙ'}),
+              jsxs('div',{style:{display:'flex',gap:5},children:[
+                [20,50,100].map(function(g){
+                  var active=evoGens===g;
+                  return jsx('button',{key:g,onClick:function(){setEvoGens(g);},
+                    style:{flex:1,padding:'6px',borderRadius:7,border:active?'1.5px solid #cc88ff':'1.5px solid rgba(255,255,255,0.12)',
+                      background:active?'rgba(100,20,200,0.55)':'rgba(255,255,255,0.04)',color:active?'#cc88ff':'rgba(255,255,255,0.5)',
+                      cursor:'pointer',fontFamily:'Arial',fontSize:11,fontWeight:'bold',touchAction:'manipulation'},
+                    children:g});
+                })
+              ]}),
+            ]}),
+            jsx('button',{
+              onClick:function(){
+                setEvolutionRunning(true);
+                setEvoProgress(0);
+                var goal=evoGoal, gens=evoGens;
+                /* Функция оценки по цели */
+                function scoreFor(def, g) {
+                  var b=def.barrels||[];
+                  var dps=b.reduce(function(s,x){return s+(x.bDmg||1)/(x.reload||1);},0);
+                  var hp=(def.hpSlider||1)*((TIER_PRESETS[def.tier||3]||TIER_PRESETS[3]).hp||1);
+                  if(g==='dps') return dps*3+hp*0.5;
+                  if(g==='hp') return hp*3+dps*0.5;
+                  if(g==='symmetry'){
+                    var angles=b.map(function(x){return x.angle||0;});
+                    var symScore=0;
+                    for(var ai=0;ai<angles.length;ai++){
+                      for(var aj=ai+1;aj<angles.length;aj++){
+                        var diff=Math.abs(angles[ai]+angles[aj]);
+                        if(diff<0.15||Math.abs(diff-Math.PI*2)<0.15) symScore+=2;
+                      }
+                    }
+                    return symScore*2+dps+hp;
+                  }
+                  return dps*2+hp*1.5;
+                }
+                /* evolveOnce с учётом цели симметрии */
+                function evolveForGoal(def) {
+                  var mutated=evolveOnce(def);
+                  if(goal==='symmetry' && mutated.barrels.length>=1 && Math.random()<0.3){
+                    /* Добавить зеркало случайного ствола */
+                    var src=mutated.barrels[Math.floor(Math.random()*mutated.barrels.length)];
+                    var mirAngle=parseFloat((-(src.angle||0)).toFixed(4));
+                    var alreadyHas=mutated.barrels.some(function(x){return Math.abs((x.angle||0)-mirAngle)<0.05;});
+                    if(!alreadyHas && mutated.barrels.length<8){
+                      mutated=Object.assign({},mutated,{barrels:mutated.barrels.concat([Object.assign({},src,{id:Date.now()+Math.random(),angle:mirAngle,lateral:-(src.lateral||0)})])});
+                    }
+                  }
+                  return mutated;
+                }
+                /* TOP-3: сохраняем лучших */
+                var population=[editing];
+                var scores=[scoreFor(editing,goal)];
+                var top3=[{tank:editing,score:scores[0]}];
+                var batchSize=Math.ceil(gens/5);
+                var done=0;
+                function runBatch(){
+                  var end=Math.min(done+batchSize,gens);
+                  for(var g=done;g<end;g++){
+                    var parent=population[Math.floor(Math.random()*population.length)];
+                    var candidate=evolveForGoal(parent);
+                    var s=scoreFor(candidate,goal);
+                    population.push(candidate); scores.push(s);
+                    if(population.length>20){
+                      /* Держим топ-20 */
+                      var idx=scores.indexOf(Math.min.apply(null,scores));
+                      population.splice(idx,1); scores.splice(idx,1);
+                    }
+                    /* Обновляем top-3 */
+                    top3.push({tank:candidate,score:s});
+                    top3.sort(function(a,b){return b.score-a.score;});
+                    top3=top3.slice(0,3);
+                  }
+                  done=end;
+                  setEvoProgress(Math.round(done/gens*100));
+                  if(done<gens){
+                    setTimeout(runBatch,0);
+                  } else {
+                    var origScore=scoreFor(editing,goal);
+                    setEvolutionResult({
+                      top3:top3.map(function(x){
+                        return {tank:x.tank,score:parseFloat(x.score.toFixed(2)),gain:parseFloat((x.score-origScore).toFixed(2))};
+                      }),
+                      selected:0
+                    });
+                    setEvolutionRunning(false);
+                  }
+                }
+                setTimeout(runBatch,50);
+              },
+              style:Object.assign({},S.saveBtn,{background:'linear-gradient(90deg,#4400aa,#8833ff)'}),
+              children:'▶ Запустить эволюцию'
+            }),
+          ]}),
+          /* Прогресс */
+          evolutionRunning && jsxs('div',{style:{display:'flex',flexDirection:'column',gap:10,padding:'10px 0'},children:[
+            jsxs('div',{style:{textAlign:'center',color:'#cc99ff'},children:[
+              jsx('div',{style:{fontSize:24,marginBottom:6},children:'🧬'}),
+              jsx('div',{style:{fontSize:13,fontWeight:'bold'},children:'Идёт эволюция... '+evoProgress+'%'}),
+            ]}),
+            jsx('div',{style:{height:8,borderRadius:4,background:'rgba(255,255,255,0.08)',overflow:'hidden'},children:
+              jsx('div',{style:{height:'100%',width:evoProgress+'%',background:'linear-gradient(90deg,#4400aa,#cc44ff)',transition:'width .1s',borderRadius:4}})
+            }),
+          ]}),
+          /* Результаты — топ-3 */
+          evolutionResult && jsxs('div',{style:{display:'flex',flexDirection:'column',gap:8},children:[
+            jsx('div',{style:{color:'rgba(255,255,255,0.45)',fontSize:10,fontWeight:'bold'},children:'ТОП-3 РЕЗУЛЬТАТА — выбери лучший:'}),
+            evolutionResult.top3.map(function(r,ri){
+              var isSelected=evolutionResult.selected===ri;
+              var b=r.tank.barrels||[];
+              var dps=parseFloat(b.reduce(function(s,x){return s+(x.bDmg||1)/(x.reload||1);},0).toFixed(1));
+              return jsxs('div',{key:ri,
+                onClick:function(){setEvolutionResult(function(prev){return Object.assign({},prev,{selected:ri});});},
+                style:{padding:'10px 12px',borderRadius:10,cursor:'pointer',
+                  background:isSelected?'rgba(80,0,150,0.45)':'rgba(255,255,255,0.04)',
+                  border:'1.5px solid '+(isSelected?'rgba(180,80,255,0.7)':'rgba(255,255,255,0.08)'),
+                  transition:'background .15s'},
+                children:[
+                  jsxs('div',{style:{display:'flex',alignItems:'center',gap:6,marginBottom:4},children:[
+                    jsx('div',{style:{width:10,height:10,borderRadius:'50%',background:r.tank.color||'#22cc55',flexShrink:0}}),
+                    jsx('div',{style:{color:isSelected?'#cc88ff':'#fff',fontWeight:'bold',fontSize:12,flex:1},children:'Вариант '+(ri+1)}),
+                    jsx('div',{style:{color:r.gain>0?'#88ff88':'#ff8888',fontSize:11,fontWeight:'bold'},children:(r.gain>0?'▲+':r.gain<0?'▼':'=')+Math.abs(r.gain)}),
+                  ]}),
+                  jsxs('div',{style:{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:3},children:[
+                    jsxs('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9},children:['DPS ',jsx('span',{style:{color:'#ff8040',fontWeight:'bold'},children:dps})]}),
+                    jsxs('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9},children:['Стволов ',jsx('span',{style:{color:'#cc80ff',fontWeight:'bold'},children:b.length})]}),
+                    jsxs('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9},children:['Оценка ',jsx('span',{style:{color:'#ffdd00',fontWeight:'bold'},children:r.score})]}),
+                  ]}),
+                ]
+              });
+            }),
+            jsxs('div',{style:{display:'flex',gap:6,marginTop:2},children:[
               jsx('button',{
                 onClick:function(){
-                  var t=evolutionResult.tank;
-                  setEditing(Object.assign({},t,{id:editing.id,name:editing.name||t.name}));
-                  pushHistory(t);
+                  var r=evolutionResult.top3[evolutionResult.selected];
+                  if(!r) return;
+                  setEditing(Object.assign({},r.tank,{id:editing.id,name:editing.name||r.tank.name,color:editing.color||r.tank.color}));
+                  pushHistory(r.tank);
                   bulletsRef.current=[];
                   setShowEvolution(false);
                   setEvolutionResult(null);
                 },
                 style:Object.assign({},S.saveBtn,{flex:2,margin:0,background:'linear-gradient(90deg,#4400aa,#8833ff)'}),
-                children:'✅ Применить лучшего'
+                children:'✅ Применить выбранный'
               }),
               jsx('button',{
                 onClick:function(){ setEvolutionResult(null); },
@@ -2248,47 +2628,91 @@ function TankBuilder({ onClose }) {
 
     /* ══ #12 КОНТР-БИЛД ══ */
     showCounter && jsx('div',{style:S.modalOverlay,onClick:function(){setShowCounter(null);},children:
-      jsx('div',{style:Object.assign({},S.modalBox,{maxWidth:460}),onClick:function(e){e.stopPropagation();},children:
+      jsx('div',{style:Object.assign({},S.modalBox,{maxWidth:480}),onClick:function(e){e.stopPropagation();},children:
         jsxs('div',{style:{display:'flex',flexDirection:'column',gap:10},children:[
           jsxs('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between'},children:[
             jsx('div',{style:S.modalTitle,children:'⚔ Контр-билд'}),
             jsx('button',{onClick:function(){setShowCounter(null);},style:S.btn('rgba(100,30,30,0.5)'),children:'✕'}),
           ]}),
-          jsx('div',{style:{color:'rgba(255,255,255,0.35)',fontSize:10},children:'Выбери противника из сохранённых танков:'}),
+          jsx('div',{style:{color:'rgba(255,255,255,0.35)',fontSize:10},children:'Выбери противника — получишь 3 разных контр-варианта с шансом победы.'}),
+          /* Список всех танков — с прокруткой */
           (function(){
             var list=loadTanks().filter(function(t){return t.id!==editing.id;});
             if(list.length===0) return jsx('div',{style:{textAlign:'center',padding:12,color:'rgba(255,255,255,0.25)',fontSize:12},children:'Нет сохранённых танков-противников.'});
-            return jsx('div',{style:{display:'flex',gap:5,flexWrap:'wrap',marginBottom:4},children:
-              list.slice(0,8).map(function(t){
+            return jsx('div',{style:{display:'flex',gap:5,flexWrap:'wrap',maxHeight:80,overflowY:'auto',padding:'2px 0',marginBottom:2},children:
+              list.map(function(t){
                 var isSelected=showCounter&&showCounter.id===t.id;
+                var tierP=TIER_PRESETS[t.tier||3]||TIER_PRESETS[3];
                 return jsx('button',{key:t.id,
                   onClick:function(){setShowCounter(t);},
-                  style:{padding:'5px 10px',borderRadius:7,border:isSelected?'1.5px solid #ff8844':'1.5px solid rgba(255,255,255,0.15)',background:isSelected?'rgba(150,50,0,0.5)':'rgba(255,255,255,0.05)',color:isSelected?'#ffcc88':'rgba(255,255,255,0.5)',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},
-                  children:(t.tier?'T'+t.tier+' ':'')+t.name.slice(0,10)
+                  style:{padding:'5px 10px',borderRadius:7,
+                    border:isSelected?'1.5px solid #ff8844':'1.5px solid rgba(255,255,255,0.12)',
+                    background:isSelected?'rgba(150,50,0,0.45)':'rgba(255,255,255,0.04)',
+                    color:isSelected?'#ffcc88':'rgba(255,255,255,0.5)',
+                    cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation',flexShrink:0},
+                  children:jsxs('span',{children:[
+                    jsx('span',{style:{color:tierP.color,marginRight:3},children:'T'+(t.tier||3)}),
+                    (t.name||'?').slice(0,12)
+                  ]})
                 });
               })
             });
           })(),
+          /* Анализ и топ-3 контр-варианта */
           showCounter && showCounter.id && (function(){
-            var c = computeCounterBuild(showCounter);
-            return jsxs('div',{style:{display:'flex',flexDirection:'column',gap:6},children:[
-              jsxs('div',{style:{padding:'10px 12px',borderRadius:10,background:'rgba(40,20,0,0.4)',border:'1px solid rgba(255,140,40,0.25)'},children:[
-                jsx('div',{style:{color:'#ffaa44',fontSize:11,fontWeight:'bold',marginBottom:6},children:'Анализ противника: '+(showCounter.name||'?')+' (T'+(showCounter.tier||3)+')'}),
-                c.tips.map(function(tip,i){
-                  return jsxs('div',{key:i,style:{color:'rgba(255,255,255,0.6)',fontSize:11,lineHeight:1.5,marginBottom:3},children:['• ',tip]});
+            var result = computeCounterOptions(showCounter);
+            var threat = result.threat;
+            return jsxs('div',{style:{display:'flex',flexDirection:'column',gap:8},children:[
+              /* Угроза противника */
+              jsxs('div',{style:{padding:'8px 12px',borderRadius:9,background:'rgba(40,20,0,0.4)',border:'1px solid rgba(255,140,40,0.2)'},children:[
+                jsxs('div',{style:{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:5},children:[
+                  jsx('div',{style:{color:'#ffaa44',fontSize:11,fontWeight:'bold'},children:'Противник: '+(showCounter.name||'?')+' (T'+(showCounter.tier||3)+')'}),
+                  jsxs('div',{style:{fontSize:10},children:[
+                    jsx('span',{style:{color:'rgba(255,255,255,0.4)'},children:'Угроза: '}),
+                    jsx('span',{style:{color:threat>70?'#ff5555':threat>45?'#ffaa44':'#88ff88',fontWeight:'bold'},children:threat+'%'}),
+                  ]}),
+                ]}),
+                /* Угроза-бар */
+                jsx('div',{style:{height:5,borderRadius:3,background:'rgba(255,255,255,0.08)',overflow:'hidden'},children:
+                  jsx('div',{style:{height:'100%',width:threat+'%',background:threat>70?'#ff4444':threat>45?'#ff9900':'#44cc44',borderRadius:3,transition:'width .3s'}})
                 }),
               ]}),
-              jsxs('div',{style:{padding:'10px 12px',borderRadius:10,background:'rgba(0,60,40,0.3)',border:'1px solid rgba(40,200,100,0.2)'},children:[
-                jsx('div',{style:{color:'#88ffaa',fontSize:11,fontWeight:'bold',marginBottom:4},children:'Рекомендуемый контр-шаблон: '+c.templateName}),
-                jsx('button',{
-                  onClick:function(){
-                    applyTemplate(c.template);
-                    setShowCounter(null);
-                  },
-                  style:Object.assign({},S.saveBtn,{margin:0,padding:'8px',background:'linear-gradient(90deg,#006030,#00aa55)'}),
-                  children:'⚡ Применить шаблон «'+c.templateName+'»'
-                }),
-              ]}),
+              /* Топ-3 контр-варианта */
+              jsx('div',{style:{color:'rgba(255,255,255,0.45)',fontSize:10,fontWeight:'bold'},children:'ТОП-3 КОНТР-ВАРИАНТА:'}),
+              result.options.map(function(opt,oi){
+                var pct=opt.matchup;
+                var pctColor=pct>=70?'#44ff88':pct>=55?'#ffcc44':'#ff8844';
+                return jsxs('div',{key:oi,style:{padding:'10px 12px',borderRadius:10,background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)'},children:[
+                  /* Заголовок варианта */
+                  jsxs('div',{style:{display:'flex',alignItems:'center',gap:6,marginBottom:5},children:[
+                    jsx('div',{style:{width:9,height:9,borderRadius:'50%',background:opt.template?opt.template.color||'#888':'#888',flexShrink:0}}),
+                    jsx('div',{style:{flex:1,color:'#fff',fontWeight:'bold',fontSize:12},children:opt.tplName}),
+                    jsxs('div',{style:{color:pctColor,fontWeight:'bold',fontSize:12},children:[pct,'% победы']}),
+                  ]}),
+                  /* Мини-бар matchup */
+                  jsx('div',{style:{height:4,borderRadius:2,background:'rgba(255,255,255,0.07)',marginBottom:6,overflow:'hidden'},children:
+                    jsx('div',{style:{height:'100%',width:pct+'%',background:pctColor,borderRadius:2}})
+                  }),
+                  /* Причина */
+                  jsx('div',{style:{color:'rgba(255,200,100,0.7)',fontSize:10,marginBottom:4,lineHeight:1.4},children:opt.reason}),
+                  /* Тактика */
+                  jsxs('div',{style:{display:'flex',flexDirection:'column',gap:2,marginBottom:6},children:
+                    opt.tips.map(function(tip,ti){
+                      return jsx('div',{key:ti,style:{color:'rgba(255,255,255,0.5)',fontSize:10,lineHeight:1.4},children:'• '+tip});
+                    })
+                  }),
+                  /* Кнопка применить */
+                  jsx('button',{
+                    onClick:function(){
+                      applyTemplate(opt.template);
+                      setShowCounter(null);
+                    },
+                    style:{width:'100%',padding:'7px',borderRadius:7,border:'none',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',
+                      background:'linear-gradient(90deg,#005025,#00884a)',color:'#fff',touchAction:'manipulation'},
+                    children:'⚡ Применить «'+opt.tplName+'»'
+                  }),
+                ]});
+              }),
             ]});
           })(),
           jsx('button',{onClick:function(){setShowCounter(null);},style:Object.assign({},S.exportBtn('rgba(40,40,60,0.8)'),{width:'100%'}),children:'Закрыть'}),

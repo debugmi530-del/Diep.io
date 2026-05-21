@@ -21,10 +21,10 @@ public class MainActivity extends Activity {
             finishAffinity();
         }
 
-        /* #18 Виджет: JS вызывает этот метод при сохранении танка */
+        /* Виджет: обновление всего списка танков (JSON) из JS */
         @JavascriptInterface
-        public void updateWidget(String name, int tier, double dps, int hpPct, int barrels) {
-            TankWidget.saveTankData(MainActivity.this, name, tier, dps, hpPct, barrels);
+        public void updateWidgetAll(String tanksJson) {
+            TankWidget.saveAllTanks(MainActivity.this, tanksJson);
         }
     }
 

@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0D0D1F">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="18dp">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Настройки виджета"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:layout_marginBottom="6dp"/>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Выберите параметры отображения"
+            android:textColor="#88FFFFFF"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Tank preview -->
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp">
+
+            <ImageView
+                android:id="@+id/cfg_tank_preview"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:layout_gravity="center"
+                android:scaleType="fitCenter"/>
+
+            <TextView
+                android:id="@+id/cfg_preview_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:text=""
+                android:textColor="#CCFFFFFF"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:layout_marginTop="8dp"/>
+        </FrameLayout>
+
+        <!-- Section: Select tank -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ВЫБОР ТАНКА"
+            android:textColor="#8800CCFF"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.12"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:id="@+id/cfg_tank_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Section: Theme -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ТЕМА ВИДЖЕТА"
+            android:textColor="#8800CCFF"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.12"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="20dp">
+
+            <Button
+                android:id="@+id/cfg_theme_dark"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="🌙 Тёмная"
+                android:textSize="11sp"
+                android:background="#334488FF"
+                android:textColor="#FFFFFF"/>
+
+            <Button
+                android:id="@+id/cfg_theme_neon"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:text="⚡ Неон"
+                android:textSize="11sp"
+                android:background="#221144"
+                android:textColor="#CCCCCC"/>
+
+            <Button
+                android:id="@+id/cfg_theme_minimal"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="🌕 Минимал"
+                android:textSize="11sp"
+                android:background="#221144"
+                android:textColor="#CCCCCC"/>
+
+        </LinearLayout>
+
+        <!-- Section: Stats visibility -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="ОТОБРАЖАЕМЫЕ ПАРАМЕТРЫ"
+            android:textColor="#8800CCFF"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.12"
+            android:layout_marginBottom="10dp"/>
+
+        <CheckBox
+            android:id="@+id/cfg_show_dps"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🔥 Показывать DPS"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:checked="true"
+            android:buttonTint="#00CCFF"
+            android:layout_marginBottom="6dp"/>
+
+        <CheckBox
+            android:id="@+id/cfg_show_hp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="💚 Показывать HP (+ полоска)"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:checked="true"
+            android:buttonTint="#00CCFF"
+            android:layout_marginBottom="6dp"/>
+
+        <CheckBox
+            android:id="@+id/cfg_show_barrels"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🔫 Показывать количество стволов"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:checked="true"
+            android:buttonTint="#00CCFF"
+            android:layout_marginBottom="6dp"/>
+
+        <CheckBox
+            android:id="@+id/cfg_show_speed"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="💨 Показывать скорость"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:checked="true"
+            android:buttonTint="#00CCFF"
+            android:layout_marginBottom="6dp"/>
+
+        <CheckBox
+            android:id="@+id/cfg_show_desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📝 Показывать описание танка"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:checked="true"
+            android:buttonTint="#00CCFF"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Section: Animation -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="АНИМАЦИЯ"
+            android:textColor="#8800CCFF"
+            android:textSize="10sp"
+            android:textStyle="bold"
+            android:letterSpacing="0.12"
+            android:layout_marginBottom="8dp"/>
+
+        <CheckBox
+            android:id="@+id/cfg_anim_pulse"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="✨ Пульсирующая анимация танка"
+            android:textColor="#FFFFFF"
+            android:textSize="13sp"
+            android:checked="true"
+            android:buttonTint="#00CCFF"
+            android:layout_marginBottom="20dp"/>
+
+        <!-- Save button -->
+        <Button
+            android:id="@+id/cfg_save_btn"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:text="✓ Сохранить настройки"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:background="#FF0055CC"
+            android:layout_marginTop="4dp"/>
+
+        <Button
+            android:id="@+id/cfg_cancel_btn"
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:text="Отмена"
+            android:textSize="13sp"
+            android:textColor="#88FFFFFF"
+            android:background="@android:color/transparent"
+            android:layout_marginTop="8dp"/>
+
+    </LinearLayout>
+</ScrollView>

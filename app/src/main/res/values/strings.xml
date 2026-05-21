@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Diep Clone</string>
+    <string name="widget_desc">Показывает твоих танков с фото, статами и анимацией</string>
 </resources>

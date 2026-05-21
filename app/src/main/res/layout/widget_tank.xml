@@ -1,92 +1,263 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<FrameLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="12dp"
-    android:gravity="center"
-    android:background="#CC0D0D1F">
+    android:padding="6dp">
 
-    <TextView
-        android:id="@+id/widget_tank_icon"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="🛡"
-        android:textSize="28sp"
-        android:gravity="center"/>
-
-    <TextView
-        android:id="@+id/widget_tank_name"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Нет танка"
-        android:textColor="#FFFFFF"
-        android:textSize="13sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:maxLines="1"
-        android:ellipsize="end"
-        android:layout_marginTop="4dp"/>
-
-    <TextView
-        android:id="@+id/widget_tank_tier"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Tier —"
-        android:textColor="#8800CCFF"
-        android:textSize="10sp"
-        android:gravity="center"
-        android:layout_marginTop="2dp"/>
-
+    <!-- Background card -->
     <LinearLayout
+        android:id="@+id/widget_card"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center"
-        android:layout_marginTop="6dp">
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:background="@drawable/widget_bg"
+        android:padding="8dp">
 
-        <TextView
-            android:id="@+id/widget_tank_dps"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="DPS\n—"
-            android:textColor="#FFFF8040"
-            android:textSize="9sp"
-            android:gravity="center"
-            android:lines="2"/>
+        <!-- Top row: tier badge + name + settings button -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-        <TextView
-            android:id="@+id/widget_tank_hp"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="HP\n—"
-            android:textColor="#FF80FF60"
-            android:textSize="9sp"
-            android:gravity="center"
-            android:lines="2"/>
+            <TextView
+                android:id="@+id/widget_tier_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:text="T3"
+                android:textColor="#FFFFFF"
+                android:textSize="9sp"
+                android:textStyle="bold"
+                android:paddingStart="5dp"
+                android:paddingEnd="5dp"
+                android:paddingTop="2dp"
+                android:paddingBottom="2dp"
+                android:background="@drawable/widget_tier_bg"/>
 
+            <TextView
+                android:id="@+id/widget_tank_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/widget_tier_badge"
+                android:layout_toStartOf="@id/widget_settings_btn"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="5dp"
+                android:layout_marginEnd="4dp"
+                android:text="Нет танка"
+                android:textColor="#FFFFFF"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:maxLines="1"
+                android:ellipsize="end"/>
+
+            <ImageView
+                android:id="@+id/widget_settings_btn"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:src="@android:drawable/ic_menu_preferences"
+                android:alpha="0.6"/>
+
+        </RelativeLayout>
+
+        <!-- Tank photo: ViewFlipper with animated frames -->
+        <ViewFlipper
+            android:id="@+id/widget_tank_flipper"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_marginTop="4dp"
+            android:autoStart="true"
+            android:flipInterval="1800"
+            android:inAnimation="@anim/widget_pulse_in"
+            android:outAnimation="@anim/widget_pulse_out">
+
+            <ImageView
+                android:id="@+id/widget_tank_image_a"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:scaleType="fitCenter"
+                android:src="@android:drawable/ic_menu_gallery"/>
+
+            <ImageView
+                android:id="@+id/widget_tank_image_b"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:scaleType="fitCenter"
+                android:src="@android:drawable/ic_menu_gallery"/>
+
+        </ViewFlipper>
+
+        <!-- HP bar -->
+        <ProgressBar
+            android:id="@+id/widget_hp_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="5dp"
+            android:layout_marginTop="4dp"
+            android:progressDrawable="@drawable/widget_hp_progress"
+            android:max="240"
+            android:progress="155"/>
+
+        <!-- Description -->
         <TextView
-            android:id="@+id/widget_tank_barrels"
-            android:layout_width="0dp"
+            android:id="@+id/widget_tank_desc"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Стволов\n—"
-            android:textColor="#FFCC80FF"
-            android:textSize="9sp"
+            android:layout_marginTop="3dp"
+            android:text=""
+            android:textColor="#99FFFFFF"
+            android:textSize="8sp"
             android:gravity="center"
-            android:lines="2"/>
+            android:maxLines="1"
+            android:ellipsize="end"/>
+
+        <!-- Stats row -->
+        <LinearLayout
+            android:id="@+id/widget_stats_row"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="4dp">
+
+            <LinearLayout
+                android:id="@+id/widget_stat_dps_wrap"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="DPS"
+                    android:textColor="#66FFFFFF"
+                    android:textSize="7sp"/>
+                <TextView
+                    android:id="@+id/widget_tank_dps"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="—"
+                    android:textColor="#FFFF8040"
+                    android:textSize="10sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/widget_stat_hp_wrap"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="HP"
+                    android:textColor="#66FFFFFF"
+                    android:textSize="7sp"/>
+                <TextView
+                    android:id="@+id/widget_tank_hp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="—"
+                    android:textColor="#FF80FF60"
+                    android:textSize="10sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/widget_stat_barrels_wrap"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="СТВОЛОВ"
+                    android:textColor="#66FFFFFF"
+                    android:textSize="7sp"/>
+                <TextView
+                    android:id="@+id/widget_tank_barrels"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="—"
+                    android:textColor="#FFCC80FF"
+                    android:textSize="10sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/widget_stat_speed_wrap"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="СКОР"
+                    android:textColor="#66FFFFFF"
+                    android:textSize="7sp"/>
+                <TextView
+                    android:id="@+id/widget_tank_speed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="—"
+                    android:textColor="#FF40CCFF"
+                    android:textSize="10sp"
+                    android:textStyle="bold"/>
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Nav row: PREV · counter · NEXT -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="5dp">
+
+            <TextView
+                android:id="@+id/widget_prev_btn"
+                android:layout_width="36dp"
+                android:layout_height="24dp"
+                android:text="◀"
+                android:textColor="#AAFFFFFF"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:background="@drawable/widget_nav_btn_bg"/>
+
+            <TextView
+                android:id="@+id/widget_tank_counter"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="1 / 1"
+                android:textColor="#55FFFFFF"
+                android:textSize="8sp"
+                android:gravity="center"/>
+
+            <TextView
+                android:id="@+id/widget_next_btn"
+                android:layout_width="36dp"
+                android:layout_height="24dp"
+                android:text="▶"
+                android:textColor="#AAFFFFFF"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:background="@drawable/widget_nav_btn_bg"/>
+
+        </LinearLayout>
+
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/widget_open_hint"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Нажми для открытия"
-        android:textColor="#44FFFFFF"
-        android:textSize="8sp"
-        android:gravity="center"
-        android:layout_marginTop="4dp"/>
-</LinearLayout>
+</FrameLayout>
