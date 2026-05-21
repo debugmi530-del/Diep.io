@@ -2092,7 +2092,7 @@ function TankBuilder({ onClose }) {
           });
         })(),
       ]})
-    ]),
+    ]}),
 
     /* ══ СРАВНЕНИЕ ТАНКОВ ══ */
     compareWith && jsx('div', { style:Object.assign({},S.modalOverlay,{zIndex:3100}), onClick:function(){setCompareWith(null);}, children:
@@ -2151,7 +2151,7 @@ function TankBuilder({ onClose }) {
           jsx('button',{onClick:function(){setCompareWith(null);},style:Object.assign({},S.exportBtn('rgba(60,60,80,0.8)'),{width:'100%'}),children:'Закрыть'}),
         ]})
       })
-    ),
+    }),
 
     /* ══ #10 УЛУЧШИ МОЙ ТАНК ══ */
     showSuggest && jsx('div',{style:S.modalOverlay,onClick:function(){setShowSuggest(false);},children:
@@ -2176,7 +2176,7 @@ function TankBuilder({ onClose }) {
           jsx('button',{onClick:function(){setShowSuggest(false);},style:Object.assign({},S.exportBtn('rgba(60,60,80,0.8)'),{width:'100%',marginTop:4}),children:'Закрыть'}),
         ]})
       })
-    ),
+    }),
 
     /* ══ #11 ЭВОЛЮЦИЯ ══ */
     showEvolution && jsx('div',{style:S.modalOverlay,onClick:function(){if(!evolutionRunning)setShowEvolution(false);},children:
@@ -2244,7 +2244,7 @@ function TankBuilder({ onClose }) {
           !evolutionRunning && jsx('button',{onClick:function(){setShowEvolution(false);setEvolutionResult(null);},style:Object.assign({},S.exportBtn('rgba(40,40,60,0.8)'),{width:'100%'}),children:'Закрыть'}),
         ]})
       })
-    ),
+    }),
 
     /* ══ #12 КОНТР-БИЛД ══ */
     showCounter && jsx('div',{style:S.modalOverlay,onClick:function(){setShowCounter(null);},children:
@@ -2267,7 +2267,7 @@ function TankBuilder({ onClose }) {
                   children:(t.tier?'T'+t.tier+' ':'')+t.name.slice(0,10)
                 });
               })
-            );
+            });
           })(),
           showCounter && showCounter.id && (function(){
             var c = computeCounterBuild(showCounter);
@@ -2294,7 +2294,7 @@ function TankBuilder({ onClose }) {
           jsx('button',{onClick:function(){setShowCounter(null);},style:Object.assign({},S.exportBtn('rgba(40,40,60,0.8)'),{width:'100%'}),children:'Закрыть'}),
         ]})
       })
-    ),
+    }),
 
     /* ══ МОДАЛ УДАЛЕНИЯ ══ */
     deletePending && jsx('div', { style: S.modalOverlay, onClick: function(){ setDeletePending(null); }, children:
