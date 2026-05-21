@@ -333,6 +333,7 @@ function TankBuilder({ onClose }) {
   var _tab = useState('editor');   var tab         = _tab[0]; var setTab        = _tab[1];
   var _prv = useState(false);      var previewing  = _prv[0]; var setPreviewing = _prv[1];
   var _sq  = useState('');         var searchQuery = _sq[0];  var setSearchQuery = _sq[1];
+  var _lv  = useState(0);          var setListVersion = _lv[1];
 
   /* ── Подтверждение удаления ─────────────────────────────────── */
   var _dp = useState(null); var deletePending = _dp[0]; var setDeletePending = _dp[1];
@@ -851,7 +852,7 @@ function TankBuilder({ onClose }) {
     list.push(copy);
     saveTanks(list);
     registerTank(copy);
-    alert('Создана копия «' + copy.name + '»');
+    setListVersion(function(v){ return v + 1; }); /* принудительный ре-рендер списка */
   }
 
   var tankList = loadTanks();
@@ -1047,33 +1048,34 @@ function TankBuilder({ onClose }) {
           children: 'Ничего не найдено по запросу «' + searchQuery + '»',
         }),
 
-        /* Карточки танков — сгруппированные по категориям */
-        catGroups.map(function(group) {
-          return [
-            group.cat ? jsx('div', { key:'cat_'+group.cat,
+        /* Карточки танков — сгруппированные по категориям (flat reduce, без вложенных массивов) */
+        catGroups.reduce(function(acc, group) {
+          if (group.cat) {
+            acc.push(jsx('div', { key:'cat_'+group.cat,
               style:{color:'rgba(255,200,80,0.75)',fontSize:10,fontWeight:'bold',letterSpacing:1,
-                textTransform:'uppercase',marginTop:8,marginBottom:5,paddingLeft:4,
+                textTransform:'uppercase',marginTop:8,marginBottom:5,
                 borderLeft:'2px solid rgba(255,200,80,0.4)',paddingLeft:7},
-              children: '📁 ' + group.cat }) : null,
-            group.tanks.map(function(def) {
-              var tp = TIER_PRESETS[def.tier] || TIER_PRESETS[3];
-              var froms = Array.isArray(def.upgradesFrom) ? def.upgradesFrom : [def.upgradesFrom||'Basic'];
-              return jsxs('div', { key:def.id, style:S.listCard, children:[
-                jsx('div', { style: S.dot(def.color||tp.color) }),
-                jsxs('div', { style:{flex:1,minWidth:0}, children:[
-                  jsx('div', { style:{color:'#fff',fontWeight:'bold',fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}, children: def.name }),
-                  jsxs('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:11,marginTop:2}, children:[tp.label,' · ',def.barrels?def.barrels.length:0,' стволов · ',froms.join(', ')] }),
-                ]}),
-                jsxs('div', { style:{display:'flex',gap:4,flexShrink:0,flexWrap:'wrap',justifyContent:'flex-end'}, children:[
-                  jsx('button', { onClick:function(){ editExisting(def); },   style:S.btn(),                         title:'Редактировать',    children:'✏' }),
-                  jsx('button', { onClick:function(){ cloneTank(def); },      style:S.btn('rgba(60,90,160,0.8)'),    title:'Дублировать',      children:'📋' }),
-                  jsx('button', { onClick:function(){ openExport(def); },     style:S.btn('rgba(0,100,60,0.8)'),     title:'Экспортировать',   children:'📤' }),
-                  jsx('button', { onClick:function(){ deleteTank(def.id); },  style:S.btn('rgba(180,30,30,0.7)'),    title:'Удалить',          children:'🗑' }),
-                ]}),
-              ]});
-            }),
-          ];
-        }),
+              children: '📁 ' + group.cat }));
+          }
+          group.tanks.forEach(function(def) {
+            var tp = TIER_PRESETS[def.tier] || TIER_PRESETS[3];
+            var froms = Array.isArray(def.upgradesFrom) ? def.upgradesFrom : [def.upgradesFrom||'Basic'];
+            acc.push(jsxs('div', { key:def.id, style:S.listCard, children:[
+              jsx('div', { style: S.dot(def.color||tp.color) }),
+              jsxs('div', { style:{flex:1,minWidth:0}, children:[
+                jsx('div', { style:{color:'#fff',fontWeight:'bold',fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}, children: def.name }),
+                jsxs('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:11,marginTop:2}, children:[tp.label,' · ',def.barrels?def.barrels.length:0,' ств. · ',froms.join(', ')] }),
+              ]}),
+              jsxs('div', { style:{display:'flex',gap:4,flexShrink:0,flexWrap:'wrap',justifyContent:'flex-end'}, children:[
+                jsx('button', { onClick:function(){ editExisting(def); },   style:S.btn(),                         title:'Редактировать',  children:'✏' }),
+                jsx('button', { onClick:function(){ cloneTank(def); },      style:S.btn('rgba(60,90,160,0.8)'),    title:'Дублировать',    children:'📋' }),
+                jsx('button', { onClick:function(){ openExport(def); },     style:S.btn('rgba(0,100,60,0.8)'),     title:'Экспортировать', children:'📤' }),
+                jsx('button', { onClick:function(){ deleteTank(def.id); },  style:S.btn('rgba(180,30,30,0.7)'),    title:'Удалить',        children:'🗑' }),
+              ]}),
+            ]}));
+          });
+          return acc;
+        }, []),
       ]}),
 
       /* ── EDITOR TAB ─────────────────────────────────────────── */
