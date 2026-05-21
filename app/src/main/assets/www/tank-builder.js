@@ -1499,7 +1499,7 @@ function mountBuilderButton() {
 
     /* ── обработчик тапа по невидимой зоне ── */
     function handleZoneTap() {
-      if (window._gamePhase !== 'menu') return; /* только на главном меню */
+      if (window._gamePhase && window._gamePhase !== 'menu') return; /* только на главном меню */
       var now = Date.now();
       tapsRef.current.push(now);
       tapsRef.current = tapsRef.current.filter(function(t){ return now - t < 10000; });
