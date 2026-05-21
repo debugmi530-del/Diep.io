@@ -178,6 +178,31 @@
     <script src="./game.js"></script>
     <script src="./tank-builder.js"></script>
 
+    <!-- Конструктор — скрываем кнопку до ввода PIN -->
+    <script>
+    (function() {
+      var BUILDER_TEXT = '⚙ Конструктор';
+      /* Скрываем/показываем кнопку */
+      function setBuilderBtnVisible(visible) {
+        document.querySelectorAll('button').forEach(function(btn) {
+          if (btn.textContent && btn.textContent.trim() === BUILDER_TEXT) {
+            btn.style.display = visible ? '' : 'none';
+          }
+        });
+      }
+      /* Наблюдаем за добавлением новых кнопок */
+      var _obs = new MutationObserver(function() {
+        if (!window._builderUnlocked) setBuilderBtnVisible(false);
+      });
+      _obs.observe(document.body, { childList: true, subtree: true });
+      /* После ввода PIN — показываем */
+      window.addEventListener('builderUnlocked', function() {
+        _obs.disconnect();
+        setBuilderBtnVisible(true);
+      });
+    })();
+    </script>
+
     <!-- Admin Panel -->
     <script>
     (function() {

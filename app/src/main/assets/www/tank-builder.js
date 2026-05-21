@@ -388,6 +388,10 @@ function TankBuilder({ onClose }) {
   var _lk = useState(false); var viewLocked = _lk[0]; var setViewLocked = _lk[1];
   /* Счётчик для принудительного обновления отображения zoom% */
   var _vc = useState(0); var setViewCounter = _vc[1];
+  /* ── Wizard state ── */
+  var _step  = useState(0);    var wizStep       = _step[0];  var setWizStep       = _step[1];
+  var _abi   = useState(0);    var activeBarrelIdx = _abi[0]; var setActiveBarrelIdx = _abi[1];
+  var _drExp = useState(true); var drawerExpanded = _drExp[0]; var setDrawerExpanded  = _drExp[1];
 
   var canvasRef      = useRef(null);
   var canvasWrapRef  = useRef(null);
@@ -973,759 +977,455 @@ function TankBuilder({ onClose }) {
   var stats = computeStats(editing);
 
   /* ══════════════════════════════════════════════════════════════
-     RENDER
+     WIZARD STEP RENDERER
      ══════════════════════════════════════════════════════════════ */
-  return jsxs('div', { style: S.root, children: [
-
-    /* HEADER */
-    jsxs('div', { style: S.header, children: [
-      jsxs('div', { style:{display:'flex',alignItems:'center',gap:10}, children:[
-        jsx('span', { style: S.title, children: 'КОНСТРУКТОР ТАНКА' }),
-        jsx('span', { style:{fontSize:10,color:'rgba(255,255,255,0.3)',marginTop:2}, children:'Beta' }),
-      ]}),
-      jsxs('div', { style:{display:'flex',gap:6,alignItems:'center'}, children:[
-        jsx('button', {
-          onClick: undo,
-          disabled: !canUndoRef.current,
-          title: 'Отменить (Ctrl+Z)',
-          style: Object.assign({}, S.btn('rgba(80,60,120,0.7)'), { opacity: canUndoRef.current ? 1 : 0.35 }),
-          children: '↩ Отмена',
-        }),
-        jsx('button', {
-          onClick: redo,
-          disabled: !canRedoRef.current,
-          title: 'Вернуть (Ctrl+Y)',
-          style: Object.assign({}, S.btn('rgba(40,100,140,0.7)'), { opacity: canRedoRef.current ? 1 : 0.35 }),
-          children: '↪ Возврат',
-        }),
-        jsx('button', { onClick: onClose, style: S.btn('rgba(180,30,30,0.6)'), children: '✕ Закрыть' }),
-      ]}),
-    ]}),
-
-    /* TABS */
-    jsxs('div', { style: S.tabs, children: [
-      jsx('button', { style: S.tab(tab==='editor'), onClick: function(){ setTab('editor'); },
-        children: tab==='editor' && !selectedDef ? '✏ Новый танк' : '✏ Редактор' }),
-      jsxs('button', { style: S.tab(tab==='list'), onClick: function(){ setTab('list'); },
-        children: ['📋 Мои танки', tankList.length > 0 ? ' (' + tankList.length + ')' : ''] }),
-      jsx('button', { style: S.tab(tab==='graph'), onClick: function(){ setTab('graph'); },
-        children: '🌿 Граф' }),
-    ]}),
-
-    /* BODY — список и редактор всегда в DOM; скрываем CSS чтобы рефы на canvas
-       не становились null при переключении вкладок. Иначе rAF-цикл продолжает
-       рисовать на отмонтированный canvas и новый canvas остаётся пустым. */
-    jsxs('div', { style: S.body, children:[
-
-      /* ── LIST TAB ───────────────────────────────────────────── */
-      jsxs('div', { style:Object.assign({flex:1,overflowY:'auto',padding:14}, tab!=='list'?{display:'none'}:{}), children:[
-        /* Шапка: счётчик + импорт + создать */
-        jsxs('div', { style:{display:'flex',gap:6,alignItems:'center',marginBottom:7,flexWrap:'wrap'}, children:[
-          jsx('div', { style:{color:'rgba(255,255,255,0.6)',fontSize:13,flex:1,minWidth:60},
-            children: tankList.length===0 ? 'Нет сохранённых танков' : tankList.length+' танк(ов)' }),
-          jsx('button', { onClick: openImport, style: S.btn('rgba(0,100,60,0.8)'), children: '📥 Импорт' }),
-          jsx('button', { onClick: startNew,   style: S.btn('rgba(0,140,60,0.7)'), children: '+ Создать' }),
-        ]}),
-
-        /* Поиск */
-        jsx('input', {
-          value: searchQuery,
-          onChange: function(e){ setSearchQuery(e.target.value); },
-          placeholder: '🔍 Поиск по имени или категории...',
-          style: Object.assign({}, S.input, { marginBottom:10, fontSize:12 }),
-        }),
-
-        /* Пустой список */
-        tankList.length === 0 && jsxs('div', { style:{textAlign:'center',padding:'40px 20px',color:'rgba(255,255,255,0.25)',fontSize:13,lineHeight:2}, children:[
-          'У тебя ещё нет кастомных танков.',jsx('br',{}),
-          'Нажми «+ Создать» чтобы начать,',jsx('br',{}),
-          'или «📥 Импорт» чтобы загрузить чужой код.',
-        ]}),
-
-        /* Нет результатов поиска */
-        tankList.length > 0 && filteredList.length === 0 && jsx('div', {
-          style:{textAlign:'center',padding:'30px 20px',color:'rgba(255,255,255,0.25)',fontSize:13},
-          children: 'Ничего не найдено по запросу «' + searchQuery + '»',
-        }),
-
-        /* Карточки танков — сгруппированные по категориям (flat reduce, без вложенных массивов) */
-        catGroups.reduce(function(acc, group) {
-          if (group.cat) {
-            acc.push(jsx('div', { key:'cat_'+group.cat,
-              style:{color:'rgba(255,200,80,0.75)',fontSize:10,fontWeight:'bold',letterSpacing:1,
-                textTransform:'uppercase',marginTop:8,marginBottom:5,
-                borderLeft:'2px solid rgba(255,200,80,0.4)',paddingLeft:7},
-              children: '📁 ' + group.cat }));
-          }
-          group.tanks.forEach(function(def) {
-            var tp = TIER_PRESETS[def.tier] || TIER_PRESETS[3];
-            var froms = Array.isArray(def.upgradesFrom) ? def.upgradesFrom : [def.upgradesFrom||'Basic'];
-            acc.push(jsxs('div', { key:def.id, style:S.listCard, children:[
-              jsx('div', { style: S.dot(def.color||tp.color) }),
-              jsxs('div', { style:{flex:1,minWidth:0}, children:[
-                jsx('div', { style:{color:'#fff',fontWeight:'bold',fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}, children: def.name }),
-                jsxs('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:11,marginTop:2}, children:[tp.label,' · ',def.barrels?def.barrels.length:0,' ств. · ',froms.join(', ')] }),
-              ]}),
-              jsxs('div', { style:{display:'flex',gap:4,flexShrink:0,flexWrap:'wrap',justifyContent:'flex-end'}, children:[
-                jsx('button', { onClick:function(){ editExisting(def); },   style:S.btn(),                         title:'Редактировать',  children:'✏' }),
-                jsx('button', { onClick:function(){ cloneTank(def); },      style:S.btn('rgba(60,90,160,0.8)'),    title:'Дублировать',    children:'📋' }),
-                jsx('button', { onClick:function(){ openExport(def); },     style:S.btn('rgba(0,100,60,0.8)'),     title:'Экспортировать', children:'📤' }),
-                jsx('button', { onClick:function(){ deleteTank(def.id); },  style:S.btn('rgba(180,30,30,0.7)'),    title:'Удалить',        children:'🗑' }),
-              ]}),
-            ]}));
-          });
-          return acc;
-        }, []),
-      ]}),
-
-      /* ── EDITOR TAB ─────────────────────────────────────────── */
-      jsxs('div', { style: Object.assign({}, S.body, tab!=='editor'?{display:'none'}:{}), children: [
-
-        /* ════ Левая колонка — холст с навигацией ════ */
-        jsxs('div', { style: S.leftCol, children: [
-
-          /* Холст — занимает всё свободное пространство */
-          jsxs('div', { ref: canvasWrapRef, style: S.canvasWrap, children: [
-            jsx('canvas', {
-              ref: canvasRef,
-              width: 260,
-              height: 320,
-              style: S.canvas,
-            }),
-
-            /* Подсказка управления (левый верх) */
-            jsx('div', { style:{
-              position:'absolute',top:6,left:7,pointerEvents:'none',
-              color:'rgba(255,255,255,0.22)',fontSize:9,lineHeight:1.7,fontFamily:'Arial',
-            }, children: viewLocked ? '🔒 Вид заблокирован' : '🖱 тащи · 🤏 щуп · ⬆ колесо' }),
-
-            /* Кнопка превью стрельбы (правый верх) */
-            jsx('button', {
-              onClick: function(){ setPreviewing(function(p){ return !p; }); bulletsRef.current = []; },
-              style:{
-                position:'absolute',top:6,right:6,padding:'4px 9px',borderRadius:6,border:'none',
-                background: previewing ? 'rgba(255,140,0,0.85)' : 'rgba(0,80,180,0.8)',
-                color:'#fff',fontSize:10,fontWeight:'bold',cursor:'pointer',touchAction:'manipulation',
-              },
-              children: previewing ? '⏹ Стоп' : '▶ Стрельба',
-            }),
-          ]}),
-
-          /* ── ПАНЕЛЬ УПРАВЛЕНИЯ ВИДОМ ── */
-          jsxs('div', { style: S.viewBar, children: [
-
-            /* Блокировка вида */
-            jsx('button', {
-              onClick: function(){ setViewLocked(function(l){ return !l; }); },
-              style: S.viewBtn(viewLocked, 'rgba(220,120,0,0.8)'),
-              title: viewLocked ? 'Разблокировать вид' : 'Заблокировать вид',
-              children: viewLocked ? '🔒' : '🔓',
-            }),
-
-            /* Разделитель */
-            jsx('div', { style:{width:1,height:18,background:'rgba(255,255,255,0.12)',flexShrink:0} }),
-
-            /* Zoom out */
-            jsx('button', {
-              onClick: function(){ zoomBy(-0.2); },
-              style: S.viewBtn(false),
-              title: 'Уменьшить',
-              children: '−',
-            }),
-
-            /* Zoom % */
-            jsx('div', { style: S.viewZoomLabel, children: zoomPct + '%' }),
-
-            /* Zoom in */
-            jsx('button', {
-              onClick: function(){ zoomBy(+0.2); },
-              style: S.viewBtn(false),
-              title: 'Увеличить',
-              children: '+',
-            }),
-
-            /* Разделитель */
-            jsx('div', { style:{width:1,height:18,background:'rgba(255,255,255,0.12)',flexShrink:0} }),
-
-            /* Сброс вида */
-            jsx('button', {
-              onClick: resetView,
-              style: S.viewBtn(false, 'rgba(0,100,200,0.7)'),
-              title: 'Сбросить вид (центр, 100%)',
-              children: '⌂',
-            }),
-
-            /* Spacer */
-            jsx('div', { style:{flex:1} }),
-
-            /* Статы мини */
-            jsx('div', { style:{fontSize:9,color:'rgba(255,255,255,0.3)',lineHeight:1.7,textAlign:'right'}, children:
-              stats ? ('DPS ' + stats.dps + '  R×' + editing.barrels.length) : ('B×' + editing.barrels.length)
-            }),
-          ]}),
-
-          /* ── Нижний блок левой колонки: цвет + превью стрельбы ── */
-          jsxs('div', { style: S.leftBottom, children: [
-            /* Цвет */
-            jsxs('div', { style:{display:'flex',alignItems:'center',gap:8}, children:[
-              jsx('div', { style:{color:'rgba(255,255,255,0.45)',fontSize:10,whiteSpace:'nowrap'}, children:'ЦВЕТ:' }),
-              jsx('input', { type:'color', value: editing.color||'#22cc55',
-                onChange: function(e){ setEditing(function(p){ return Object.assign({},p,{color:e.target.value}); }); },
-                style:{flex:1,height:30,borderRadius:6,border:'none',cursor:'pointer',background:'none'}
-              }),
-            ]}),
-          ]}),
-
-        ]}),
-
-        /* ════ Правая колонка — настройки ════ */
-        jsxs('div', { style: S.rightCol, children: [
-
-          /* ── Шаблоны-стартовые точки ───────────────────────────── */
-          jsxs('div', { style: S.section, children: [
-            jsx('div', { style: S.sectionTitle, children: '📦 Шаблоны (стартовая точка)' }),
-            jsx('div', { style:{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:4}, children:
-              TANK_TEMPLATES.map(function(tpl) {
-                return jsx('button', { key:tpl._tpl, title: tpl.name + ' — ' + tpl.description,
-                  style:{padding:'6px 2px',borderRadius:7,border:'1.5px solid rgba(68,136,255,0.25)',
-                    background:'rgba(0,40,100,0.4)',color:'#aaddff',cursor:'pointer',
-                    fontFamily:'Arial',fontSize:11,fontWeight:'bold',touchAction:'manipulation',
-                    display:'flex',flexDirection:'column',alignItems:'center',gap:1},
-                  onClick: function(){ applyTemplate(tpl); },
-                  children: [tpl.icon, jsx('span',{style:{fontSize:8,opacity:0.7},children:tpl.name.split(' ')[0]})] });
+  function renderWizardStep() {
+    switch(wizStep) {
+      case 0: /* Основа */
+        return jsxs('div',{style:{display:'flex',flexDirection:'column',gap:10},children:[
+          jsxs('div',{style:S.section,children:[
+            jsx('div',{style:S.sectionTitle,children:'📦 Стартовый шаблон'}),
+            jsx('div',{style:{display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:4},children:
+              TANK_TEMPLATES.map(function(tpl){
+                return jsx('button',{key:tpl._tpl,title:tpl.name+' — '+tpl.description,
+                  style:{padding:'6px 2px',borderRadius:7,border:'1.5px solid rgba(68,136,255,0.25)',background:'rgba(0,40,100,0.4)',color:'#aaddff',cursor:'pointer',fontFamily:'Arial',fontSize:11,fontWeight:'bold',touchAction:'manipulation',display:'flex',flexDirection:'column',alignItems:'center',gap:1},
+                  onClick:function(){applyTemplate(tpl);},
+                  children:[tpl.icon,jsx('span',{style:{fontSize:8,opacity:0.7},children:tpl.name.split(' ')[0]})]});
               })
             }),
-            jsx('div', { style:{color:'rgba(255,255,255,0.25)',fontSize:10,marginTop:4},
-              children:'Нажми иконку — загрузит пресет в редактор. Имя и настройки можно изменить.' }),
           ]}),
-
-          /* ── Расчётная статистика ──────────────────────────────── */
-          stats && jsxs('div', { style: Object.assign({}, S.section, {background:'rgba(0,60,20,0.2)',borderColor:'rgba(0,200,100,0.2)'}), children: [
-            jsx('div', { style: S.sectionTitle, children: '📊 Расчётная статистика' }),
-            jsx('div', { style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:5}, children:[
-              jsxs('div', { style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'}, children:[
-                jsx('div', { style:{color:'#ff8040',fontSize:14,fontWeight:900}, children: stats.dps }),
-                jsx('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1}, children:'DPS' }),
-              ]}),
-              jsxs('div', { style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'}, children:[
-                jsx('div', { style:{color:'#40c0ff',fontSize:14,fontWeight:900}, children: stats.range }),
-                jsx('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1}, children:'Дальность' }),
-              ]}),
-              jsxs('div', { style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'}, children:[
-                jsx('div', { style:{color:'#80ff60',fontSize:14,fontWeight:900}, children: stats.hp+'%' }),
-                jsx('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1}, children:'HP' }),
-              ]}),
-              jsxs('div', { style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'}, children:[
-                jsx('div', { style:{color:'#ffee40',fontSize:14,fontWeight:900}, children: stats.speed+'%' }),
-                jsx('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1}, children:'Скорость' }),
-              ]}),
-              jsxs('div', { style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'}, children:[
-                jsx('div', { style:{color:'#cc80ff',fontSize:14,fontWeight:900}, children: stats.barrels }),
-                jsx('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1}, children:'Стволов' }),
-              ]}),
-              jsxs('div', { style:{background:'rgba(255,200,0,0.12)',borderRadius:7,padding:'6px 8px',textAlign:'center',border:'1px solid rgba(255,200,0,0.2)'}, children:[
-                jsx('div', { style:{color:'#ffdd00',fontSize:14,fontWeight:900}, children: stats.firepower }),
-                jsx('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1}, children:'Мощь' }),
-              ]}),
-            ]}),
-          ]}),
-
-          /* Имя */
-          jsxs('div', { style: S.section, children: [
-            jsx('div', { style: S.sectionTitle, children: 'Имя танка' }),
-            jsx('input', { value:editing.name, maxLength:18, placeholder:'Название...', style:S.input,
-              onChange: function(e){ setEditing(function(p){ return Object.assign({},p,{name:e.target.value}); }); },
+          jsxs('div',{style:S.section,children:[
+            jsx('div',{style:S.sectionTitle,children:'Название танка'}),
+            jsx('input',{value:editing.name,maxLength:18,placeholder:'Например: Снайпер-Х...',style:S.input,
+              onChange:function(e){setEditing(function(p){return Object.assign({},p,{name:e.target.value});});},
             }),
           ]}),
-
-          /* Тир */
-          jsxs('div', { style: S.section, children: [
-            jsx('div', { style: S.sectionTitle, children: 'Тир' }),
-            jsx('div', { style:{display:'flex',gap:4}, children:
+          jsxs('div',{style:S.section,children:[
+            jsx('div',{style:S.sectionTitle,children:'Цвет и Тир'}),
+            jsxs('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:10},children:[
+              jsx('div',{style:{color:'rgba(255,255,255,0.45)',fontSize:11},children:'ЦВЕТ:'}),
+              jsx('input',{type:'color',value:editing.color||'#22cc55',
+                onChange:function(e){setEditing(function(p){return Object.assign({},p,{color:e.target.value});});},
+                style:{flex:1,height:36,borderRadius:6,border:'none',cursor:'pointer',background:'none'}}),
+            ]}),
+            jsx('div',{style:{display:'flex',gap:4},children:
               [1,2,3,4,5].map(function(t){
-                var tp2 = TIER_PRESETS[t];
-                return jsx('button', { key:t, style: S.tierBtn(editing.tier===t, tp2.color),
-                  onClick: function(){ setEditing(function(p){ return Object.assign({},p,{tier:t}); }); },
-                  title: tp2.label + ' — разблокируется на уровне ' + tp2.requiredLevel,
-                  children: 'T'+t+' ('+tp2.requiredLevel+')' });
+                var tp2=TIER_PRESETS[t];
+                return jsx('button',{key:t,style:S.tierBtn(editing.tier===t,tp2.color),
+                  onClick:function(){setEditing(function(p){return Object.assign({},p,{tier:t});});},
+                  title:tp2.label,children:'T'+t+' ('+tp2.requiredLevel+')'});
               })
             }),
-            jsx('div', { style:{color:'rgba(255,255,255,0.3)',fontSize:10,marginTop:5},
-              children: preset.label + '  ·  Уровень ' + preset.requiredLevel }),
+            jsx('div',{style:{color:'rgba(255,255,255,0.3)',fontSize:10,marginTop:5},children:preset.label+'  ·  Уровень '+preset.requiredLevel}),
           ]}),
+          jsxs('div',{style:S.section,children:[
+            jsx('div',{style:S.sectionTitle,children:'Описание и категория'}),
+            jsx('input',{value:editing.category||'',maxLength:24,placeholder:'Категория (необязательно)...',
+              style:Object.assign({},S.input,{marginBottom:8}),
+              onChange:function(e){setEditing(function(p){return Object.assign({},p,{category:e.target.value});});},
+            }),
+            jsx('input',{value:editing.description||'',maxLength:80,placeholder:'Описание (необязательно)...',style:S.input,
+              onChange:function(e){setEditing(function(p){return Object.assign({},p,{description:e.target.value});});},
+            }),
+          ]}),
+        ]});
 
-          /* Родитель(и) */
-          jsxs('div', { style: S.section, children: [
-            jsx('div', { style: S.sectionTitle, children: 'Родитель(и) в дереве прокачки' }),
-            jsx('div', { style:{display:'flex',flexWrap:'wrap',gap:4,maxHeight:110,overflowY:'auto',paddingRight:2}, children:
-              parentOptions.map(function(k){
-                var label = (window.W1&&window.W1[k]) ? window.W1[k] : k;
-                var froms = Array.isArray(editing.upgradesFrom) ? editing.upgradesFrom : [editing.upgradesFrom||'Basic'];
-                var isOn = froms.indexOf(k) >= 0;
-                return jsx('button', { key:k,
-                  style:{padding:'4px 9px',borderRadius:6,cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',
-                    touchAction:'manipulation',flexShrink:0,
-                    border: isOn?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.12)',
-                    background: isOn?'rgba(0,100,200,0.55)':'rgba(255,255,255,0.05)',
-                    color: isOn?'#fff':'rgba(255,255,255,0.45)'},
-                  onClick: function(){
-                    setEditing(function(p){
-                      var arr = Array.isArray(p.upgradesFrom) ? p.upgradesFrom.slice() : [p.upgradesFrom||'Basic'];
-                      var i = arr.indexOf(k);
-                      if (i >= 0) { if (arr.length > 1) arr.splice(i,1); }
-                      else arr.push(k);
-                      var next = Object.assign({},p,{upgradesFrom:arr});
-                      pushHistory(next); return next;
-                    });
-                  },
-                  children: (isOn?'✔ ':'')+label });
+      case 1: /* Стволы */
+        return jsxs('div',{style:{display:'flex',flexDirection:'column',gap:10},children:[
+          jsxs('div',{style:{display:'flex',gap:6,flexWrap:'wrap'},children:[
+            jsx('button',{onClick:function(){var ni=editing.barrels.length;addBarrel(BARREL_PRESETS[0]);setActiveBarrelIdx(ni);},style:S.btn('rgba(0,100,60,0.7)'),children:'+ Добавить ствол'}),
+            editing.barrels.length>0 && jsx('button',{onClick:function(){removeBarrel(activeBarrelIdx);setActiveBarrelIdx(Math.max(0,activeBarrelIdx-1));},style:S.btn('rgba(180,30,30,0.6)'),children:'🗑 Удалить'}),
+            editing.barrels.length>0 && jsx('button',{onClick:function(){mirrorBarrel(activeBarrelIdx);},style:S.btn('rgba(60,80,140,0.7)'),children:'⇄ Зеркало'}),
+          ]}),
+          editing.barrels.length > 0 ? jsxs('div',{children:[
+            jsx('div',{
+              style:{display:'flex',gap:8,overflowX:'auto',padding:'4px 0 8px',scrollSnapType:'x mandatory',WebkitOverflowScrolling:'touch',scrollbarWidth:'none',msOverflowStyle:'none'},
+              children: editing.barrels.map(function(b,bi){
+                var isActive=bi===activeBarrelIdx;
+                return jsxs('button',{key:b.id||bi,onClick:function(){setActiveBarrelIdx(bi);},
+                  style:{scrollSnapAlign:'center',flexShrink:0,width:isActive?'82%':'58%',padding:isActive?12:8,borderRadius:12,
+                    border:isActive?'2px solid #00b2e1':'1.5px solid rgba(255,255,255,0.12)',
+                    background:isActive?'rgba(0,80,160,0.5)':'rgba(255,255,255,0.04)',
+                    cursor:'pointer',textAlign:'left',transition:'all 0.2s',touchAction:'manipulation',color:'#fff'},
+                  children:[
+                    jsxs('div',{style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:isActive?6:2},children:[
+                      jsx('span',{style:{color:isActive?'#00ccff':'#fff',fontWeight:'bold',fontSize:12},children:'Ствол '+(bi+1)}),
+                      jsx('span',{style:{color:'rgba(255,255,255,0.4)',fontSize:9},children:b.label||'Custom'}),
+                    ]}),
+                    isActive && jsx('div',{style:{height:Math.max(4,(b.width||14)*0.35),background:'#aaa',borderRadius:2,width:((b.length||48)/100*88)+'%',marginBottom:5}}),
+                    jsx('div',{style:{color:'rgba(255,255,255,0.45)',fontSize:9,lineHeight:1.6},
+                      children:isActive ? ('Длина: '+(b.length||48)+' · Ширина: '+(b.width||14)) : ((b.length||48)+'×'+(b.width||14))}),
+                  ]},bi);
               })
             }),
-            jsx('div', { style:{color:'rgba(255,255,255,0.3)',fontSize:10,marginTop:5},
-              children:'Можно выбрать несколько (минимум 1). Танк появится как апгрейд из каждого выбранного.' }),
-          ]}),
-
-          /* HP / Скорость */
-          jsxs('div', { style: S.section, children: [
-            jsx('div', { style: S.sectionTitle, children: 'Характеристики' }),
-            jsxs('div', { style: S.sliderRow, children:[
-              jsx('div', { style:S.sliderLabel, children:'HP: '+hpEff+'%' }),
-              jsx('input', { type:'range',min:0.4,max:2.0,step:0.05,value:editing.hpSlider,
-                onChange:function(e){ setEditing(function(p){ return Object.assign({},p,{hpSlider:parseFloat(e.target.value)}); }); },
-                style:S.slider }),
-              jsx('div', { style:S.sliderVal, children:(editing.hpSlider*100).toFixed(0)+'%' }),
-            ]}),
-            jsxs('div', { style: S.sliderRow, children:[
-              jsx('div', { style:S.sliderLabel, children:'Скорость: +'+spdPts+' очк.' }),
-              jsx('input', { type:'range',min:0.5,max:2.0,step:0.05,value:editing.speedSlider,
-                onChange:function(e){ setEditing(function(p){ return Object.assign({},p,{speedSlider:parseFloat(e.target.value)}); }); },
-                style:S.slider }),
-              jsx('div', { style:S.sliderVal, children:(editing.speedSlider*100).toFixed(0)+'%' }),
-            ]}),
-          ]}),
-
-          /* Стволы */
-          jsxs('div', { style: S.section, children: [
-            jsx('div', { style:S.sectionTitle, children:'СТВОЛЫ ('+editing.barrels.length+')' }),
-            jsx('div', { style: S.presetGrid, children:
-              BARREL_PRESETS.map(function(p){
-                return jsx('button', { key:p.id, style:S.presetBtn, onClick:function(){ addBarrel(p); },
-                  children:'+ '+p.label });
-              })
-            }),
-            editing.barrels.length === 0 && jsx('div', { style:{color:'rgba(255,255,255,0.25)',fontSize:11,textAlign:'center',padding:'10px 0'},
-              children:'Нажми на пресет выше чтобы добавить ствол' }),
-            editing.barrels.map(function(b, bi) {
-              return jsxs('div', { key: b.id||bi, style: S.barrelCard, children:[
-                jsxs('div', { style:{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:7}, children:[
-                  jsx('div', { style:{color:'#00ccff',fontWeight:'bold',fontSize:11}, children:'Ствол #'+(bi+1)+' — '+(b.label||'Custom') }),
-                  jsxs('div', { style:{display:'flex',gap:4}, children:[
-                    jsx('button', {
-                      onClick:function(){ mirrorBarrel(bi); },
-                      title:'Добавить зеркальный ствол',
-                      style:{background:'rgba(0,80,180,0.5)',border:'none',borderRadius:4,color:'#88ccff',fontSize:11,padding:'2px 7px',cursor:'pointer',touchAction:'manipulation'},
-                      children:'⇄' }),
-                    jsx('button', { onClick:function(){ removeBarrel(bi); },
-                      style:{background:'rgba(200,30,30,0.5)',border:'none',borderRadius:4,color:'#ff8888',fontSize:12,padding:'2px 7px',cursor:'pointer',touchAction:'manipulation'},
-                      children:'✕' }),
-                  ]}),
-                ]}),
+            (function(){
+              var activeB=editing.barrels[activeBarrelIdx];
+              if(!activeB) return null;
+              var bi=activeBarrelIdx;
+              return jsxs('div',{style:{marginTop:4},children:[
+                jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:10,marginBottom:5,fontWeight:'bold'},children:'Быстрые пресеты:'}),
+                jsx('div',{style:S.presetGrid,children:
+                  BARREL_PRESETS.map(function(p){
+                    return jsx('button',{key:p.id,style:S.presetBtn,
+                      onClick:function(){
+                        setEditing(function(prev){
+                          return Object.assign({},prev,{barrels:prev.barrels.map(function(b,i){
+                            if(i!==bi) return b;
+                            return Object.assign({},b,{label:p.label,length:p.length,width:p.width,reload:p.reload,bSize:p.bSize,bSpeed:p.bSpeed,bDmg:p.bDmg});
+                          })});
+                        });
+                      },
+                      children:p.label});
+                  })
+                }),
                 [
-                  ['angle',   'Угол',         -3.14159,3.14159,0.05,  function(v){ return Math.round(v*180/Math.PI)+'°'; }],
-                  ['length',  'Длина',         20,100,1,              function(v){ return v; }],
-                  ['width',   'Ширина',         5,36,1,               function(v){ return v; }],
-                  ['lateral', 'Смещение',      -30,30,1,              function(v){ return v; }],
-                  ['reload',  'Перезарядка',    0.2,5.0,0.05,         function(v){ return '×'+parseFloat(v).toFixed(2); }],
-                  ['bSpeed',  'Скор.пули',      0.3,4.0,0.05,         function(v){ return '×'+parseFloat(v).toFixed(2); }],
-                  ['bDmg',    'Урон',           0.2,5.0,0.05,         function(v){ return '×'+parseFloat(v).toFixed(2); }],
-                  ['bSize',   'Размер пули',    0.3,3.0,0.05,         function(v){ return '×'+parseFloat(v).toFixed(2); }],
-                ].map(function(row) {
-                  var key=row[0], label=row[1], mn=row[2], mx=row[3], step=row[4], fmt=row[5];
-                  var val = b[key] !== undefined ? b[key] : (key==='angle'?0:key==='lateral'?0:key.startsWith('b')?1.0:key==='reload'?1.0:key==='length'?48:14);
-                  return jsxs('div', { key:key, style: S.sliderRow, children:[
-                    jsx('div', { style:S.sliderLabel, children: label+': '+fmt(val) }),
-                    jsx('input', { type:'range',min:mn,max:mx,step:step,value:val,
-                      onChange:function(e){ updateBarrel(bi,key,step%1!==0?parseFloat(e.target.value):parseInt(e.target.value)); },
-                      style:S.slider }),
+                  ['angle','Угол',-3.14159,3.14159,0.05,function(v){return Math.round(v*180/Math.PI)+'°';}],
+                  ['length','Длина',20,100,1,function(v){return v;}],
+                  ['width','Ширина',5,36,1,function(v){return v;}],
+                  ['lateral','Смещение',-30,30,1,function(v){return v;}],
+                  ['reload','Перезарядка',0.2,5.0,0.05,function(v){return '×'+parseFloat(v).toFixed(2);}],
+                  ['bSpeed','Скор.пули',0.3,4.0,0.05,function(v){return '×'+parseFloat(v).toFixed(2);}],
+                  ['bDmg','Урон',0.2,5.0,0.05,function(v){return '×'+parseFloat(v).toFixed(2);}],
+                  ['bSize','Размер пули',0.3,3.0,0.05,function(v){return '×'+parseFloat(v).toFixed(2);}],
+                  ['penetration','Пробивание',1,5,1,function(v){return v+' цел.';}],
+                  ['recoil','Отдача',0,3,0.1,function(v){return '×'+parseFloat(v).toFixed(1);}],
+                ].map(function(row){
+                  var key=row[0],label=row[1],mn=row[2],mx=row[3],step=row[4],fmt=row[5];
+                  var val=activeB[key]!==undefined?activeB[key]:(key==='angle'?0:key==='lateral'?0:key==='penetration'?1:key==='recoil'?0:key.startsWith('b')?1.0:key==='reload'?1.0:key==='length'?48:14);
+                  return jsxs('div',{key:key,style:S.sliderRow,children:[
+                    jsx('div',{style:S.sliderLabel,children:label+': '+fmt(val)}),
+                    jsx('input',{type:'range',min:mn,max:mx,step:step,value:val,
+                      onChange:function(e){updateBarrel(bi,key,step%1!==0?parseFloat(e.target.value):parseInt(e.target.value));},
+                      style:S.slider}),
+                    jsx('div',{style:S.sliderVal,children:fmt(val)}),
                   ]});
                 }),
-                /* Тип снаряда ствола */
-                jsxs('div', { style:{marginTop:7}, children:[
-                  jsx('div', { style:{color:'rgba(255,255,255,0.45)',fontSize:10,marginBottom:5,fontWeight:'bold',letterSpacing:.5}, children:'ТИП СНАРЯДА:' }),
-                  jsx('div', { style:{display:'flex',gap:5,flexWrap:'wrap'}, children:
+                jsxs('div',{style:{marginTop:6},children:[
+                  jsx('div',{style:{color:'rgba(255,255,255,0.45)',fontSize:10,marginBottom:5,fontWeight:'bold',letterSpacing:.5},children:'ТИП СНАРЯДА:'}),
+                  jsx('div',{style:{display:'flex',gap:5},children:
                     [['normal','🔵 Пуля'],['trap','🟡 Мина']].map(function(p2){
-                      var v2=p2[0],l2=p2[1],a2=(b.bulletType||'normal')===v2;
+                      var v2=p2[0],l2=p2[1],a2=(activeB.bulletType||'normal')===v2;
                       return jsx('button',{key:v2,
-                        style:{padding:'5px 10px',borderRadius:6,
-                          border:a2?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.18)',
-                          background:a2?'rgba(0,100,200,0.5)':'rgba(255,255,255,0.05)',
-                          color:a2?'#fff':'rgba(255,255,255,0.5)',cursor:'pointer',
-                          fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},
-                        onClick:function(){ updateBarrel(bi,'bulletType',v2); },
-                        children:l2});
+                        style:{padding:'5px 10px',borderRadius:6,border:a2?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.18)',background:a2?'rgba(0,100,200,0.5)':'rgba(255,255,255,0.05)',color:a2?'#fff':'rgba(255,255,255,0.5)',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},
+                        onClick:function(){updateBarrel(bi,'bulletType',v2);},children:l2});
                     })
                   }),
                 ]}),
-                /* Группа стрельбы (fireGroup) */
-                jsxs('div', { style:{marginTop:8}, children:[
-                  jsx('div', { style:{color:'rgba(255,255,255,0.45)',fontSize:10,marginBottom:5,fontWeight:'bold',letterSpacing:.5},
-                    children:'🔢 ГРУППА СТРЕЛЬБЫ:' }),
-                  jsx('div', { style:{display:'flex',gap:4}, children:
+                jsxs('div',{style:{marginTop:8},children:[
+                  jsx('div',{style:{color:'rgba(255,255,255,0.45)',fontSize:10,marginBottom:5,fontWeight:'bold',letterSpacing:.5},children:'🔢 ГРУППА СТРЕЛЬБЫ:'}),
+                  jsx('div',{style:{display:'flex',gap:4},children:
                     [[0,'Все'],[1,'1'],[2,'2'],[3,'3'],[4,'4']].map(function(pair){
-                      var gv=pair[0], gl=pair[1];
-                      var ga=(b.fireGroup||0)===gv;
+                      var gv=pair[0],gl=pair[1],ga=(activeB.fireGroup||0)===gv;
                       return jsx('button',{key:gv,
-                        style:{flex:1,padding:'4px 2px',borderRadius:5,cursor:'pointer',fontFamily:'Arial',fontSize:10,
-                          fontWeight:'bold',touchAction:'manipulation',
+                        style:{flex:1,padding:'4px 2px',borderRadius:5,cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation',
                           border:ga?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.12)',
                           background:ga?'rgba(0,100,200,0.55)':'rgba(255,255,255,0.06)',
                           color:ga?'#fff':'rgba(255,255,255,0.45)'},
-                        onClick:function(){ updateBarrel(bi,'fireGroup',gv); },
-                        children:gl});
+                        onClick:function(){updateBarrel(bi,'fireGroup',gv);},children:gl});
                     })
                   }),
-                  jsx('div', { style:{color:'rgba(255,255,255,0.22)',fontSize:9,marginTop:3},
-                    children:'«Все» = независимо. 1→2→3→4 = поочерёдный залп.' }),
-                ]}),
-                /* Пробивание */
-                jsxs('div', { style: Object.assign({}, S.sliderRow, {marginTop:7}), children:[
-                  jsx('div', { style:S.sliderLabel, children:'Пробивание: '+(b.penetration||1)+' цел.' }),
-                  jsx('input', { type:'range',min:1,max:5,step:1,value:b.penetration||1,
-                    onChange:function(e){ updateBarrel(bi,'penetration',parseInt(e.target.value)); },
-                    style:S.slider }),
-                  jsx('div', { style:S.sliderVal, children:b.penetration||1 }),
-                ]}),
-                /* Отдача ствола */
-                jsxs('div', { style: S.sliderRow, children:[
-                  jsx('div', { style:S.sliderLabel, children:'Отдача ствола: ×'+parseFloat(b.recoil||0).toFixed(1) }),
-                  jsx('input', { type:'range',min:0,max:3,step:0.1,value:b.recoil||0,
-                    onChange:function(e){ updateBarrel(bi,'recoil',parseFloat(e.target.value)); },
-                    style:S.slider }),
-                  jsx('div', { style:S.sliderVal, children:parseFloat(b.recoil||0).toFixed(1) }),
                 ]}),
               ]});
-            }),
-          ]}),
+            })(),
+          ]}) :
+          jsx('div',{style:{textAlign:'center',padding:'30px',color:'rgba(255,255,255,0.3)',fontSize:13},children:'Нет стволов — нажми «+ Добавить ствол»'}),
+        ]});
 
-          /* Тип снаряда / стиль стрельбы */
-          jsxs('div', { style: S.section, children: [
-            jsx('div', { style: S.sectionTitle, children: 'ТИП СНАРЯДА / СТИЛЬ' }),
-            jsx('div', { style:{display:'flex',flexWrap:'wrap',gap:5,marginBottom:6}, children:
-              [['normal','🔵 Обычный'],['rocket','🚀 Ракета'],['laser','⚡ Лазер'],
-               ['drone','🤖 Дрон'],['homing','🎯 Наводящийся'],['splitting','💥 Дробовой'],
-               ['vampire','🧛 Вампиризм']].map(function(pair) {
-                var val=pair[0], lbl=pair[1];
-                var act=(editing.specialType||'normal')===val;
+      case 2: /* Статы */
+        return jsxs('div',{style:{display:'flex',flexDirection:'column',gap:10},children:[
+          jsxs('div',{style:S.section,children:[
+            jsx('div',{style:S.sectionTitle,children:'Характеристики'}),
+            jsxs('div',{style:S.sliderRow,children:[
+              jsx('div',{style:S.sliderLabel,children:'HP: '+hpEff+'%'}),
+              jsx('input',{type:'range',min:0.4,max:2.0,step:0.05,value:editing.hpSlider,onChange:function(e){setEditing(function(p){return Object.assign({},p,{hpSlider:parseFloat(e.target.value)});});},style:S.slider}),
+              jsx('div',{style:S.sliderVal,children:(editing.hpSlider*100).toFixed(0)+'%'}),
+            ]}),
+            jsxs('div',{style:S.sliderRow,children:[
+              jsx('div',{style:S.sliderLabel,children:'Скорость: +'+spdPts+' очк.'}),
+              jsx('input',{type:'range',min:0.5,max:2.0,step:0.05,value:editing.speedSlider,onChange:function(e){setEditing(function(p){return Object.assign({},p,{speedSlider:parseFloat(e.target.value)});});},style:S.slider}),
+              jsx('div',{style:S.sliderVal,children:(editing.speedSlider*100).toFixed(0)+'%'}),
+            ]}),
+          ]}),
+          jsxs('div',{style:S.section,children:[
+            jsx('div',{style:S.sectionTitle,children:'ТИП СНАРЯДА / СТИЛЬ'}),
+            jsx('div',{style:{display:'flex',flexWrap:'wrap',gap:5,marginBottom:6},children:
+              [['normal','🔵 Обычный'],['rocket','🚀 Ракета'],['laser','⚡ Лазер'],['drone','🤖 Дрон'],['homing','🎯 Наводящийся'],['splitting','💥 Дробовой'],['vampire','🧛 Вампиризм']].map(function(pair){
+                var val=pair[0],lbl=pair[1],act=(editing.specialType||'normal')===val;
                 return jsx('button',{key:val,
-                  style:{padding:'6px 10px',borderRadius:8,
-                    border:act?'2px solid #00ccff':'2px solid rgba(255,255,255,0.15)',
-                    background:act?'rgba(0,100,200,0.55)':'rgba(255,255,255,0.05)',
-                    color:act?'#fff':'rgba(255,255,255,0.55)',cursor:'pointer',
-                    fontFamily:'Arial',fontSize:11,fontWeight:'bold',touchAction:'manipulation'},
-                  onClick:function(){ setEditing(function(p){ return Object.assign({},p,{specialType:val}); }); },
-                  children:lbl});
+                  style:{padding:'6px 10px',borderRadius:8,border:act?'2px solid #00ccff':'2px solid rgba(255,255,255,0.15)',background:act?'rgba(0,100,200,0.55)':'rgba(255,255,255,0.05)',color:act?'#fff':'rgba(255,255,255,0.55)',cursor:'pointer',fontFamily:'Arial',fontSize:11,fontWeight:'bold',touchAction:'manipulation'},
+                  onClick:function(){setEditing(function(p){return Object.assign({},p,{specialType:val});});},children:lbl});
               })
             }),
-            jsx('div', { style:{color:'rgba(255,255,255,0.25)',fontSize:10,marginTop:3,lineHeight:1.6},
-              children: ({
-                normal:'Стандартные пули.',
-                rocket:'Снаряды как ракеты — треугольная форма.',
-                laser:'Лазерные лучи — мгновенные, прямые.',
-                drone:'Дроны — летят к ближайшему врагу.',
-                homing:'Самонаводящиеся снаряды.',
-                splitting:'Снаряды разлетаются на осколки.',
-                vampire:'Снаряды лечат при нанесении урона.',
-              })[editing.specialType||'normal'],
-            }),
+            jsx('div',{style:{color:'rgba(255,255,255,0.25)',fontSize:10,marginTop:3,lineHeight:1.6},
+              children:({normal:'Стандартные пули.',rocket:'Снаряды как ракеты.',laser:'Лазерные лучи.',drone:'Дроны к ближайшему врагу.',homing:'Самонаводящиеся снаряды.',splitting:'Снаряды разлетаются.',vampire:'Снаряды лечат.'})[editing.specialType||'normal']}),
           ]}),
-
-          /* ── Авто-режим стрельбы ───────────────────────────────── */
-          jsxs('div', { style: S.section, children: [
-            jsx('div', { style: S.sectionTitle, children: '🤖 Авто-режим стрельбы' }),
-            jsxs('div', { style:{display:'flex',gap:6,flexWrap:'wrap',marginBottom:6}, children:[
-              /* Авто-стрельба */
-              jsx('button', {
-                style:{padding:'8px 12px',borderRadius:8,flex:1,border:'none',cursor:'pointer',
-                  fontFamily:'Arial',fontWeight:'bold',fontSize:11,touchAction:'manipulation',
-                  background: editing.autoGun ? 'rgba(255,140,0,0.7)' : 'rgba(255,255,255,0.07)',
-                  color: editing.autoGun ? '#fff' : 'rgba(255,255,255,0.45)'},
-                onClick: function(){
-                  setEditing(function(p){
-                    var next = Object.assign({},p,{autoGun:!p.autoGun, turretDeploy: p.autoGun?p.turretDeploy:false});
-                    pushHistory(next); return next;
-                  });
-                },
-                children: (editing.autoGun ? '✔ ' : '') + '⚡ Авто-стрельба',
-              }),
-              /* Авто-турели */
-              jsx('button', {
-                style:{padding:'8px 12px',borderRadius:8,flex:1,border:'none',cursor:'pointer',
-                  fontFamily:'Arial',fontWeight:'bold',fontSize:11,touchAction:'manipulation',
-                  background: editing.turretDeploy ? 'rgba(0,160,255,0.7)' : 'rgba(255,255,255,0.07)',
-                  color: editing.turretDeploy ? '#fff' : 'rgba(255,255,255,0.45)'},
-                onClick: function(){
-                  setEditing(function(p){
-                    var next = Object.assign({},p,{turretDeploy:!p.turretDeploy, autoGun: p.turretDeploy?p.autoGun:false});
-                    pushHistory(next); return next;
-                  });
-                },
-                children: (editing.turretDeploy ? '✔ ' : '') + '🔫 Авто-турели',
-              }),
+          jsxs('div',{style:S.section,children:[
+            jsx('div',{style:S.sectionTitle,children:'🤖 Авто-режим'}),
+            jsxs('div',{style:{display:'flex',gap:6,flexWrap:'wrap',marginBottom:6},children:[
+              jsx('button',{
+                style:{padding:'8px 12px',borderRadius:8,flex:1,border:'none',cursor:'pointer',fontFamily:'Arial',fontWeight:'bold',fontSize:11,touchAction:'manipulation',background:editing.autoGun?'rgba(255,140,0,0.7)':'rgba(255,255,255,0.07)',color:editing.autoGun?'#fff':'rgba(255,255,255,0.45)'},
+                onClick:function(){setEditing(function(p){var next=Object.assign({},p,{autoGun:!p.autoGun,turretDeploy:p.autoGun?p.turretDeploy:false});pushHistory(next);return next;});},
+                children:(editing.autoGun?'✔ ':'')+'⚡ Авто-стрельба'}),
+              jsx('button',{
+                style:{padding:'8px 12px',borderRadius:8,flex:1,border:'none',cursor:'pointer',fontFamily:'Arial',fontWeight:'bold',fontSize:11,touchAction:'manipulation',background:editing.turretDeploy?'rgba(0,160,255,0.7)':'rgba(255,255,255,0.07)',color:editing.turretDeploy?'#fff':'rgba(255,255,255,0.45)'},
+                onClick:function(){setEditing(function(p){var next=Object.assign({},p,{turretDeploy:!p.turretDeploy,autoGun:p.turretDeploy?p.autoGun:false});pushHistory(next);return next;});},
+                children:(editing.turretDeploy?'✔ ':'')+'🔫 Авто-турели'}),
             ]}),
-            jsx('div', { style:{color:'rgba(255,255,255,0.25)',fontSize:10,lineHeight:1.6},
-              children: editing.autoGun
-                ? '⚡ Стволы стреляют автоматически и наводятся на врагов.'
-                : editing.turretDeploy
-                  ? '🔫 При выстреле размещает авто-турели, которые сами стреляют по врагам.'
-                  : 'Стрельба вручную — без авто-режима.' }),
-
-            /* Настройки авто-турелей */
-            editing.turretDeploy && jsxs('div', { style:{marginTop:8,borderTop:'1px solid rgba(255,255,255,0.08)',paddingTop:8,display:'flex',flexDirection:'column',gap:5}, children:[
-              jsx('div', { style:{color:'rgba(0,180,255,0.7)',fontSize:10,fontWeight:'bold',letterSpacing:.5,marginBottom:3}, children:'НАСТРОЙКИ АВТО-ТУРЕЛЕЙ:' }),
-              [
-                ['maxTurrets','Макс. турелей',  1,   8,   1,  function(v){ return v; }],
-                ['fireRate',  'Скор. огня (↓=быстрее)', 20, 120, 5, function(v){ return v; }],
-                ['health',    'HP турели',      20,  500, 10, function(v){ return v; }],
-                ['lifetime',  'Время жизни',   200, 1500,50, function(v){ return v+'ф'; }],
-                ['damage',    'Урон',            2,   80,  1, function(v){ return v; }],
-                ['speed',     'Скор. пули',      3,   20,0.5, function(v){ return v; }],
-                ['size',      'Размер пули',     3,   25,  1, function(v){ return v; }],
-              ].map(function(row){
+            editing.turretDeploy && jsxs('div',{style:{marginTop:8,borderTop:'1px solid rgba(255,255,255,0.08)',paddingTop:8,display:'flex',flexDirection:'column',gap:5},children:[
+              jsx('div',{style:{color:'rgba(0,180,255,0.7)',fontSize:10,fontWeight:'bold',letterSpacing:.5,marginBottom:3},children:'НАСТРОЙКИ АВТО-ТУРЕЛЕЙ:'}),
+              [['maxTurrets','Макс. турелей',1,8,1,function(v){return v;}],['fireRate','Скор. огня',20,120,5,function(v){return v;}],['health','HP турели',20,500,10,function(v){return v;}],['damage','Урон',2,80,1,function(v){return v;}],['speed','Скор. пули',3,20,0.5,function(v){return v;}]].map(function(row){
                 var k=row[0],lbl=row[1],mn=row[2],mx=row[3],step=row[4],fmt=row[5];
-                var tc = editing.turretCfg || {};
-                var val = tc[k] !== undefined ? tc[k] : (k==='maxTurrets'?3:k==='fireRate'?55:k==='health'?90:k==='lifetime'?700:k==='damage'?9:k==='speed'?8.5:7);
-                return jsxs('div', { key:k, style: S.sliderRow, children:[
-                  jsx('div', { style:S.sliderLabel, children: lbl+': '+fmt(val) }),
-                  jsx('input', { type:'range',min:mn,max:mx,step:step,value:val,
-                    onChange:function(e){
-                      var nv = step%1!==0 ? parseFloat(e.target.value) : parseInt(e.target.value);
-                      setEditing(function(p){
-                        var tc2 = Object.assign({}, p.turretCfg||{});
-                        tc2[k] = nv;
-                        return Object.assign({},p,{turretCfg:tc2});
-                      });
-                    },
-                    style:S.slider }),
+                var tc=editing.turretCfg||{};
+                var val=tc[k]!==undefined?tc[k]:(k==='maxTurrets'?3:k==='fireRate'?55:k==='health'?90:k==='damage'?9:8.5);
+                return jsxs('div',{key:k,style:S.sliderRow,children:[
+                  jsx('div',{style:S.sliderLabel,children:lbl+': '+fmt(val)}),
+                  jsx('input',{type:'range',min:mn,max:mx,step:step,value:val,
+                    onChange:function(e){var nv=step%1!==0?parseFloat(e.target.value):parseInt(e.target.value);setEditing(function(p){var tc2=Object.assign({},p.turretCfg||{});tc2[k]=nv;return Object.assign({},p,{turretCfg:tc2});});},
+                    style:S.slider}),
                 ]});
               }),
-              /* Наводящиеся пули */
-              jsxs('div', { style:{display:'flex',alignItems:'center',gap:8,marginTop:4}, children:[
-                jsx('input', { type:'checkbox', id:'_tcHoming',
-                  checked: !!(editing.turretCfg && editing.turretCfg.homing),
-                  onChange: function(e){
-                    setEditing(function(p){
-                      var tc2 = Object.assign({}, p.turretCfg||{}, {homing: e.target.checked});
-                      return Object.assign({},p,{turretCfg:tc2});
-                    });
-                  } }),
-                jsx('label', { htmlFor:'_tcHoming', style:{color:'rgba(255,255,255,0.6)',fontSize:11,cursor:'pointer'}, children:'🎯 Наводящиеся снаряды турелей' }),
-              ]}),
             ]}),
           ]}),
+        ]});
 
-          /* ── Дерево кастомных апгрейдов ────────────────────────── */
+      case 3: /* Апгрейды */
+        return jsxs('div',{style:{display:'flex',flexDirection:'column',gap:10},children:[
+          jsxs('div',{style:S.section,children:[
+            jsx('div',{style:S.sectionTitle,children:'Родитель(и) в дереве прокачки'}),
+            jsx('div',{style:{display:'flex',flexWrap:'wrap',gap:4,maxHeight:130,overflowY:'auto'},children:
+              parentOptions.map(function(k){
+                var label=(window.W1&&window.W1[k])?window.W1[k]:k;
+                var froms=Array.isArray(editing.upgradesFrom)?editing.upgradesFrom:[editing.upgradesFrom||'Basic'];
+                var isOn=froms.indexOf(k)>=0;
+                return jsx('button',{key:k,
+                  style:{padding:'5px 10px',borderRadius:6,cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation',flexShrink:0,
+                    border:isOn?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.12)',
+                    background:isOn?'rgba(0,100,200,0.55)':'rgba(255,255,255,0.05)',
+                    color:isOn?'#fff':'rgba(255,255,255,0.45)'},
+                  onClick:function(){setEditing(function(p){var arr=Array.isArray(p.upgradesFrom)?p.upgradesFrom.slice():[p.upgradesFrom||'Basic'];var i=arr.indexOf(k);if(i>=0){if(arr.length>1)arr.splice(i,1);}else arr.push(k);var next=Object.assign({},p,{upgradesFrom:arr});pushHistory(next);return next;});},
+                  children:(isOn?'✔ ':'')+label});
+              })
+            }),
+            jsx('div',{style:{color:'rgba(255,255,255,0.3)',fontSize:10,marginTop:5},children:'Можно выбрать несколько (минимум 1).'}),
+          ]}),
           (function(){
-            var myTanks = loadTanks().filter(function(t){ return t.id !== editing.id; });
-            if (myTanks.length === 0) return null;
-            var upgTo = editing.upgradesTo || [];
-            return jsxs('div', { style: S.section, children: [
-              jsx('div', { style: S.sectionTitle, children: '🌿 Апгрейды этого танка (Куда идёт прокачка)' }),
-              jsx('div', { style:{display:'flex',flexWrap:'wrap',gap:5}, children:
+            var myTanks=loadTanks().filter(function(t){return t.id!==editing.id;});
+            if(myTanks.length===0) return null;
+            var upgTo=editing.upgradesTo||[];
+            return jsxs('div',{style:S.section,children:[
+              jsx('div',{style:S.sectionTitle,children:'🌿 Куда прокачивается (кастомные)'}),
+              jsx('div',{style:{display:'flex',flexWrap:'wrap',gap:5},children:
                 myTanks.map(function(t){
-                  var isOn = upgTo.indexOf(t.id) >= 0;
-                  return jsx('button', { key:t.id,
-                    style:{padding:'5px 10px',borderRadius:7,border: isOn?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.15)',
-                      background: isOn?'rgba(0,100,200,0.5)':'rgba(255,255,255,0.05)',
-                      color: isOn?'#fff':'rgba(255,255,255,0.5)',cursor:'pointer',
-                      fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},
-                    onClick: function(){
-                      setEditing(function(p){
-                        var arr = (p.upgradesTo||[]).slice();
-                        var i = arr.indexOf(t.id);
-                        if (i>=0) arr.splice(i,1); else arr.push(t.id);
-                        var next = Object.assign({},p,{upgradesTo:arr});
-                        pushHistory(next); return next;
-                      });
-                    },
-                    children: (isOn?'✔ ':'')+t.name });
+                  var isOn=upgTo.indexOf(t.id)>=0;
+                  return jsx('button',{key:t.id,
+                    style:{padding:'5px 10px',borderRadius:7,border:isOn?'1.5px solid #00ccff':'1.5px solid rgba(255,255,255,0.15)',background:isOn?'rgba(0,100,200,0.5)':'rgba(255,255,255,0.05)',color:isOn?'#fff':'rgba(255,255,255,0.5)',cursor:'pointer',fontFamily:'Arial',fontSize:10,fontWeight:'bold',touchAction:'manipulation'},
+                    onClick:function(){setEditing(function(p){var arr=(p.upgradesTo||[]).slice();var i=arr.indexOf(t.id);if(i>=0)arr.splice(i,1);else arr.push(t.id);var next=Object.assign({},p,{upgradesTo:arr});pushHistory(next);return next;});},
+                    children:(isOn?'✔ ':'')+t.name});
                 })
               }),
-              jsx('div', { style:{color:'rgba(255,255,255,0.25)',fontSize:10,marginTop:4,lineHeight:1.5},
-                children:'Выбери кастомные танки, в которые апгрейдится этот. Они появятся как варианты прокачки в игре.' }),
             ]});
           })(),
+        ]});
 
-          /* Категория */
-          jsxs('div', { style: S.section, children: [
-            jsx('div', { style: S.sectionTitle, children: '📁 Категория (необязательно)' }),
-            jsx('input', { value:editing.category||'', maxLength:24, placeholder:'Например: Снайперы, Пулемёты, Мои...', style:S.input,
-              onChange:function(e){ setEditing(function(p){ return Object.assign({},p,{category:e.target.value}); }); },
-            }),
-            jsx('div', { style:{color:'rgba(255,255,255,0.25)',fontSize:10,marginTop:4},
-              children:'Группирует танки в табе «Мои танки»' }),
+      default: /* Готово */
+        return jsxs('div',{style:{display:'flex',flexDirection:'column',gap:10},children:[
+          stats && jsxs('div',{style:Object.assign({},S.section,{background:'rgba(0,60,20,0.2)',borderColor:'rgba(0,200,100,0.2)'}),children:[
+            jsx('div',{style:S.sectionTitle,children:'📊 Расчётная статистика'}),
+            jsx('div',{style:{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:5},children:[
+              jsxs('div',{style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'},children:[jsx('div',{style:{color:'#ff8040',fontSize:14,fontWeight:900},children:stats.dps}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'DPS'})]}),
+              jsxs('div',{style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'},children:[jsx('div',{style:{color:'#40c0ff',fontSize:14,fontWeight:900},children:stats.range}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'Дальность'})]}),
+              jsxs('div',{style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'},children:[jsx('div',{style:{color:'#80ff60',fontSize:14,fontWeight:900},children:stats.hp+'%'}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'HP'})]}),
+              jsxs('div',{style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'},children:[jsx('div',{style:{color:'#ffee40',fontSize:14,fontWeight:900},children:stats.speed+'%'}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'Скорость'})]}),
+              jsxs('div',{style:{background:'rgba(255,255,255,0.05)',borderRadius:7,padding:'6px 8px',textAlign:'center'},children:[jsx('div',{style:{color:'#cc80ff',fontSize:14,fontWeight:900},children:stats.barrels}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'Стволов'})]}),
+              jsxs('div',{style:{background:'rgba(255,200,0,0.12)',borderRadius:7,padding:'6px 8px',textAlign:'center',border:'1px solid rgba(255,200,0,0.2)'},children:[jsx('div',{style:{color:'#ffdd00',fontSize:14,fontWeight:900},children:stats.firepower}),jsx('div',{style:{color:'rgba(255,255,255,0.4)',fontSize:9,marginTop:1},children:'Мощь'})]}),
+            ]}),
           ]}),
-
-          /* Описание */
-          jsxs('div', { style: S.section, children: [
-            jsx('div', { style: S.sectionTitle, children: 'Описание (необязательно)' }),
-            jsx('input', { value:editing.description||'', maxLength:80, placeholder:'Краткое описание...', style:S.input,
-              onChange:function(e){ setEditing(function(p){ return Object.assign({},p,{description:e.target.value}); }); },
-            }),
+          jsxs('div',{style:S.section,children:[
+            jsx('div',{style:S.sectionTitle,children:'Сводка'}),
+            jsxs('div',{style:{display:'flex',alignItems:'center',gap:10,marginBottom:8},children:[
+              jsx('div',{style:{width:28,height:28,borderRadius:'50%',background:editing.color||'#22cc55',border:'2px solid rgba(255,255,255,0.2)',flexShrink:0}}),
+              jsxs('div',{children:[
+                jsx('div',{style:{color:'#fff',fontWeight:'bold',fontSize:14},children:editing.name||'(без имени)'}),
+                jsx('div',{style:{color:'rgba(255,255,255,0.45)',fontSize:11},children:preset.label+' · '+editing.barrels.length+' ствол(а)'}),
+              ]}),
+            ]}),
+            jsx('div',{style:{color:'rgba(255,255,255,0.3)',fontSize:11,lineHeight:1.6},children:editing.description||'Без описания.'}),
           ]}),
+          jsx('button',{onClick:saveTank,style:S.saveBtn,children:'💾 Сохранить и добавить в игру'}),
+          jsx('button',{onClick:saveAndExport,style:Object.assign({},S.saveBtn,{background:'linear-gradient(90deg,#007a40,#00b060)',marginTop:4}),children:'📤 Сохранить и получить код'}),
+          jsx('div',{style:{height:10}}),
+        ]});
+    }
+  }
 
-          /* Сохранить */
-          jsx('button', { onClick: saveTank, style: S.saveBtn, children: '💾 Сохранить и добавить в игру' }),
+  /* ══════════════════════════════════════════════════════════════
+     RENDER — WIZARD LAYOUT (canvas + bottom sheet drawer)
+     ══════════════════════════════════════════════════════════════ */
+  return jsxs('div', { style: S.root, children: [
 
-          /* Сохранить + экспортировать */
-          jsx('button', {
-            onClick: saveAndExport,
-            style: Object.assign({}, S.saveBtn, { background:'linear-gradient(90deg,#007a40,#00b060)', marginTop:0 }),
-            children: '📤 Сохранить и получить код',
-          }),
-
-          jsx('div', { style:{height:20} }),
-
-        ]}),
+    /* ── Canvas layer (always rendered — rAF loop needs a live canvas) ── */
+    jsxs('div', { ref: canvasWrapRef, style:{position:'absolute',inset:0,background:'rgba(10,14,38,0.95)',cursor:viewLocked?'default':'grab',zIndex:1}, children:[
+      jsx('canvas', { ref:canvasRef, width:400, height:600, style:{display:'block',width:'100%',height:'100%'} }),
+      jsx('button', {
+        onClick:function(){setPreviewing(function(p){return !p;});bulletsRef.current=[];},
+        style:{position:'absolute',top:56,right:10,padding:'6px 12px',borderRadius:7,border:'none',background:previewing?'rgba(255,140,0,0.9)':'rgba(0,80,180,0.85)',color:'#fff',fontSize:11,fontWeight:'bold',cursor:'pointer',touchAction:'manipulation',zIndex:5},
+        children:previewing?'⏹ Стоп':'▶ Стрельба',
+      }),
+      jsxs('div', {style:{position:'absolute',top:56,left:8,display:'flex',flexDirection:'column',gap:4,zIndex:5},children:[
+        jsx('button',{onClick:function(){zoomBy(+0.2);},style:Object.assign({},S.viewBtn(false),{width:32,height:32,padding:0,display:'flex',alignItems:'center',justifyContent:'center'}),children:'+'}),
+        jsx('div',{style:{color:'rgba(255,255,255,0.45)',fontSize:10,textAlign:'center',background:'rgba(0,0,0,0.55)',borderRadius:4,padding:'2px 0'},children:zoomPct+'%'}),
+        jsx('button',{onClick:function(){zoomBy(-0.2);},style:Object.assign({},S.viewBtn(false),{width:32,height:32,padding:0,display:'flex',alignItems:'center',justifyContent:'center'}),children:'−'}),
+        jsx('button',{onClick:resetView,style:Object.assign({},S.viewBtn(false),{width:32,height:32,padding:0,display:'flex',alignItems:'center',justifyContent:'center',marginTop:2}),children:'⌂'}),
       ]}),
+    ]}),
 
-      /* ── GRAPH TAB ──────────────────────────────────────────── */
-      jsxs('div', { style:Object.assign({flex:1,overflowY:'auto',padding:'12px 14px'}, tab!=='graph'?{display:'none'}:{}), children:[
-        jsx('div', { style:{color:'rgba(255,255,255,0.55)',fontSize:11,marginBottom:10,lineHeight:1.6},
-          children:'🌿 Граф кастомных апгрейдов. Нажми на узел чтобы открыть танк в редакторе.' }),
-        (function(){
-          var allTanks = loadTanks();
-          if (allTanks.length === 0) return jsx('div', {
-            style:{textAlign:'center',padding:'40px',color:'rgba(255,255,255,0.22)',fontSize:13},
-            children:'Нет сохранённых танков. Создай хотя бы один.' });
+    /* ── Top bar ── */
+    jsxs('div', {style:{position:'absolute',top:0,left:0,right:0,zIndex:10,display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 10px',background:'rgba(0,0,0,0.85)',borderBottom:'1.5px solid rgba(68,136,255,0.3)'},children:[
+      jsx('span',{style:{color:'#00b2e1',fontSize:14,fontWeight:900,letterSpacing:2},children:'КОНСТРУКТОР'}),
+      jsxs('div',{style:{display:'flex',gap:4,alignItems:'center'},children:[
+        jsx('button',{onClick:function(){setTab('list');},style:S.btn('rgba(60,80,140,0.8)'),children:'📋 Танки'}),
+        jsx('button',{onClick:function(){setTab('graph');},style:S.btn('rgba(40,80,40,0.8)'),children:'🌿 Граф'}),
+        jsx('button',{onClick:openImport,style:S.btn('rgba(0,80,50,0.8)'),children:'📥'}),
+        jsx('button',{onClick:undo,disabled:!canUndoRef.current,style:Object.assign({},S.btn('rgba(80,60,120,0.7)'),{opacity:canUndoRef.current?1:0.35}),children:'↩'}),
+        jsx('button',{onClick:redo,disabled:!canRedoRef.current,style:Object.assign({},S.btn('rgba(40,100,140,0.7)'),{opacity:canRedoRef.current?1:0.35}),children:'↪'}),
+        jsx('button',{onClick:onClose,style:S.btn('rgba(180,30,30,0.6)'),children:'✕'}),
+      ]}),
+    ]}),
 
-          /* Layout: X = tier column, Y = index within tier */
-          var tierGroups = {};
-          allTanks.forEach(function(t) {
-            var tr = t.tier || 3;
-            if (!tierGroups[tr]) tierGroups[tr] = [];
-            tierGroups[tr].push(t);
-          });
-          var nodeW = 110, nodeH = 40, hGap = 32, vGap = 14;
-          var colX = {};
-          [1,2,3,4,5].forEach(function(tr,i){ colX[tr] = 8 + i*(nodeW+hGap); });
-          var nodePos = {};
-          [1,2,3,4,5].forEach(function(tr) {
-            (tierGroups[tr]||[]).forEach(function(t, i) {
-              nodePos[t.id] = { x: colX[tr], y: 24 + i*(nodeH+vGap) };
-            });
-          });
-          var svgW = 8 + 5*(nodeW+hGap) - hGap + 8;
-          var maxCount = 1;
-          [1,2,3,4,5].forEach(function(tr){ var c=(tierGroups[tr]||[]).length; if(c>maxCount) maxCount=c; });
-          var svgH = 24 + maxCount*(nodeH+vGap) + 8;
+    /* ── List panel (full-screen overlay) ── */
+    tab === 'list' && jsxs('div', {style:{position:'absolute',inset:0,top:48,background:'rgba(10,14,38,0.97)',overflowY:'auto',padding:14,zIndex:9},children:[
+      jsxs('div', { style:{display:'flex',gap:6,alignItems:'center',marginBottom:7,flexWrap:'wrap'}, children:[
+        jsx('div', { style:{color:'rgba(255,255,255,0.6)',fontSize:13,flex:1,minWidth:60}, children: tankList.length===0 ? 'Нет сохранённых танков' : tankList.length+' танк(ов)' }),
+        jsx('button', { onClick: openImport, style: S.btn('rgba(0,100,60,0.8)'), children: '📥 Импорт' }),
+        jsx('button', { onClick: startNew,   style: S.btn('rgba(0,140,60,0.7)'), children: '+ Создать' }),
+      ]}),
+      jsx('input', { value: searchQuery, onChange: function(e){ setSearchQuery(e.target.value); }, placeholder: '🔍 Поиск...', style: Object.assign({}, S.input, { marginBottom:10, fontSize:12 }) }),
+      tankList.length === 0 && jsxs('div', { style:{textAlign:'center',padding:'40px 20px',color:'rgba(255,255,255,0.25)',fontSize:13,lineHeight:2}, children:['У тебя ещё нет кастомных танков.',jsx('br',{}),'Нажми «+ Создать» чтобы начать.'] }),
+      tankList.length > 0 && filteredList.length === 0 && jsx('div', { style:{textAlign:'center',padding:'30px 20px',color:'rgba(255,255,255,0.25)',fontSize:13}, children: 'Ничего не найдено по запросу «' + searchQuery + '»' }),
+      catGroups.reduce(function(acc, group) {
+        if (group.cat) {
+          acc.push(jsx('div', { key:'cat_'+group.cat, style:{color:'rgba(255,200,80,0.75)',fontSize:10,fontWeight:'bold',letterSpacing:1,textTransform:'uppercase',marginTop:8,marginBottom:5,borderLeft:'2px solid rgba(255,200,80,0.4)',paddingLeft:7}, children: '📁 ' + group.cat }));
+        }
+        group.tanks.forEach(function(def) {
+          var tp = TIER_PRESETS[def.tier] || TIER_PRESETS[3];
+          var froms = Array.isArray(def.upgradesFrom) ? def.upgradesFrom : [def.upgradesFrom||'Basic'];
+          acc.push(jsxs('div', { key:def.id, style:S.listCard, children:[
+            jsx('div', { style: S.dot(def.color||tp.color) }),
+            jsxs('div', { style:{flex:1,minWidth:0}, children:[
+              jsx('div', { style:{color:'#fff',fontWeight:'bold',fontSize:13,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}, children: def.name }),
+              jsxs('div', { style:{color:'rgba(255,255,255,0.4)',fontSize:11,marginTop:2}, children:[tp.label,' · ',def.barrels?def.barrels.length:0,' ств. · ',froms.join(', ')] }),
+            ]}),
+            jsxs('div', { style:{display:'flex',gap:4,flexShrink:0,flexWrap:'wrap',justifyContent:'flex-end'}, children:[
+              jsx('button', { onClick:function(){ editExisting(def); setTab('editor'); }, style:S.btn(), title:'Редактировать', children:'✏' }),
+              jsx('button', { onClick:function(){ cloneTank(def); }, style:S.btn('rgba(60,90,160,0.8)'), title:'Дублировать', children:'📋' }),
+              jsx('button', { onClick:function(){ openExport(def); }, style:S.btn('rgba(0,100,60,0.8)'), title:'Экспортировать', children:'📤' }),
+              jsx('button', { onClick:function(){ deleteTank(def.id); }, style:S.btn('rgba(180,30,30,0.7)'), title:'Удалить', children:'🗑' }),
+            ]}),
+          ]}));
+        });
+        return acc;
+      }, []),
+    ]}),
 
-          /* Edges */
-          var nodeIds = {};
-          allTanks.forEach(function(t){ nodeIds[t.id]=true; });
-          var edges = [], seen = {};
-          allTanks.forEach(function(t) {
-            var froms = Array.isArray(t.upgradesFrom) ? t.upgradesFrom : [t.upgradesFrom||'Basic'];
-            froms.forEach(function(p) {
-              if (nodeIds[p]) {
-                var k=p+'→'+t.id; if(!seen[k]){seen[k]=1;edges.push({from:p,to:t.id});}
-              }
-            });
-            (t.upgradesTo||[]).forEach(function(cid) {
-              if (nodeIds[cid]) {
-                var k=t.id+'→'+cid; if(!seen[k]){seen[k]=1;edges.push({from:t.id,to:cid});}
-              }
-            });
-          });
+    /* ── Graph panel (full-screen overlay) ── */
+    tab === 'graph' && jsxs('div', {style:{position:'absolute',inset:0,top:48,background:'rgba(10,14,38,0.97)',overflowY:'auto',padding:'12px 14px',zIndex:9},children:[
+      jsx('div', { style:{color:'rgba(255,255,255,0.55)',fontSize:11,marginBottom:10,lineHeight:1.6}, children:'🌿 Граф кастомных апгрейдов. Нажми на узел чтобы открыть танк в редакторе.' }),
+      (function(){
+        var allTanks = loadTanks();
+        if (allTanks.length === 0) return jsx('div', { style:{textAlign:'center',padding:'40px',color:'rgba(255,255,255,0.22)',fontSize:13}, children:'Нет сохранённых танков. Создай хотя бы один.' });
+        var tierGroups = {};
+        allTanks.forEach(function(t) { var tr = t.tier || 3; if (!tierGroups[tr]) tierGroups[tr] = []; tierGroups[tr].push(t); });
+        var nodeW = 110, nodeH = 40, hGap = 32, vGap = 14;
+        var colX = {}; [1,2,3,4,5].forEach(function(tr,i){ colX[tr] = 8 + i*(nodeW+hGap); });
+        var nodePos = {}; [1,2,3,4,5].forEach(function(tr){ (tierGroups[tr]||[]).forEach(function(t,i){ nodePos[t.id]={x:colX[tr],y:24+i*(nodeH+vGap)}; }); });
+        var svgW = 8+5*(nodeW+hGap)-hGap+8;
+        var maxCount=1; [1,2,3,4,5].forEach(function(tr){ var c=(tierGroups[tr]||[]).length; if(c>maxCount) maxCount=c; });
+        var svgH = 24+maxCount*(nodeH+vGap)+8;
+        var nodeIds={}; allTanks.forEach(function(t){ nodeIds[t.id]=true; });
+        var edges=[],seen={};
+        allTanks.forEach(function(t){
+          var froms=Array.isArray(t.upgradesFrom)?t.upgradesFrom:[t.upgradesFrom||'Basic'];
+          froms.forEach(function(p){ if(nodeIds[p]){var k=p+'→'+t.id;if(!seen[k]){seen[k]=1;edges.push({from:p,to:t.id});}} });
+          (t.upgradesTo||[]).forEach(function(cid){ if(nodeIds[cid]){var k=t.id+'→'+cid;if(!seen[k]){seen[k]=1;edges.push({from:t.id,to:cid});}} });
+        });
+        return jsx('div',{style:{overflowX:'auto'},children:
+          jsx('svg',{xmlns:'http://www.w3.org/2000/svg',width:svgW,height:svgH,style:{display:'block',minWidth:svgW},children:[
+            jsx('g',{key:'hdr',children:[1,2,3,4,5].map(function(tr){ var tp=TIER_PRESETS[tr]; return jsx('text',{key:'h'+tr,x:colX[tr]+nodeW/2,y:14,textAnchor:'middle',fill:tp.color,fontSize:9,fontFamily:'Arial',fontWeight:'bold',children:'T'+tr+' ('+tp.requiredLevel+'ур)'}); })}),
+            jsx('defs',{key:'defs',children:jsx('marker',{id:'_arw',markerWidth:6,markerHeight:6,refX:5,refY:3,orient:'auto',children:jsx('path',{d:'M0,0 L6,3 L0,6 Z',fill:'rgba(0,180,255,0.7)'})})}),
+            jsx('g',{key:'edges',children:edges.map(function(e,i){ var fp=nodePos[e.from],tp2=nodePos[e.to]; if(!fp||!tp2) return null; var x1=fp.x+nodeW,y1=fp.y+nodeH/2,x2=tp2.x,y2=tp2.y+nodeH/2,mx=(x1+x2)/2; return jsx('path',{key:'e'+i,d:'M '+x1+' '+y1+' C '+mx+' '+y1+' '+mx+' '+y2+' '+x2+' '+y2,fill:'none',stroke:'rgba(0,180,255,0.4)',strokeWidth:1.5,markerEnd:'url(#_arw)'}); })}),
+            jsx('g',{key:'nodes',children:allTanks.map(function(t){ var p=nodePos[t.id]; if(!p) return null; var tp=TIER_PRESETS[t.tier]||TIER_PRESETS[3],col=t.color||tp.color,label=t.name.length>13?t.name.slice(0,12)+'…':t.name,sub=(t.category?'📁'+t.category+' · ':'')+(t.barrels?t.barrels.length:0)+'б'; return jsxs('g',{key:t.id,style:{cursor:'pointer'},onClick:function(){editExisting(t);setTab('editor');},children:[jsx('rect',{x:p.x,y:p.y,width:nodeW,height:nodeH,rx:7,fill:col+'28',stroke:col,strokeWidth:1.5}),jsx('text',{x:p.x+nodeW/2,y:p.y+15,textAnchor:'middle',fill:'#fff',fontSize:10,fontFamily:'Arial',fontWeight:'bold',children:label}),jsx('text',{x:p.x+nodeW/2,y:p.y+29,textAnchor:'middle',fill:'rgba(255,255,255,0.38)',fontSize:8,fontFamily:'Arial',children:sub})]}); })})
+          ]})
+        });
+      })(),
+    ]}),
 
-          return jsx('div', { style:{overflowX:'auto'}, children:
-            jsx('svg', { xmlns:'http://www.w3.org/2000/svg', width:svgW, height:svgH,
-              style:{display:'block',minWidth:svgW},
-              children:[
-                /* Tier headers */
-                jsx('g', { key:'hdr', children:
-                  [1,2,3,4,5].map(function(tr){
-                    var tp=TIER_PRESETS[tr];
-                    return jsx('text',{key:'h'+tr,x:colX[tr]+nodeW/2,y:14,
-                      textAnchor:'middle',fill:tp.color,fontSize:9,fontFamily:'Arial',fontWeight:'bold',
-                      children:'T'+tr+' ('+tp.requiredLevel+'ур)'});
-                  })
-                }),
-                /* Defs: arrowhead */
-                jsx('defs',{key:'defs',children:
-                  jsx('marker',{id:'_arw',markerWidth:6,markerHeight:6,refX:5,refY:3,orient:'auto',children:
-                    jsx('path',{d:'M0,0 L6,3 L0,6 Z',fill:'rgba(0,180,255,0.7)'})
-                  })
-                }),
-                /* Edges */
-                jsx('g',{key:'edges',children:
-                  edges.map(function(e,i){
-                    var fp=nodePos[e.from],tp2=nodePos[e.to];
-                    if(!fp||!tp2) return null;
-                    var x1=fp.x+nodeW, y1=fp.y+nodeH/2, x2=tp2.x, y2=tp2.y+nodeH/2;
-                    var mx=(x1+x2)/2;
-                    return jsx('path',{key:'e'+i,
-                      d:'M '+x1+' '+y1+' C '+mx+' '+y1+' '+mx+' '+y2+' '+x2+' '+y2,
-                      fill:'none',stroke:'rgba(0,180,255,0.4)',strokeWidth:1.5,markerEnd:'url(#_arw)'});
-                  })
-                }),
-                /* Nodes */
-                jsx('g',{key:'nodes',children:
-                  allTanks.map(function(t){
-                    var p=nodePos[t.id]; if(!p) return null;
-                    var tp=TIER_PRESETS[t.tier]||TIER_PRESETS[3];
-                    var col=t.color||tp.color;
-                    var label=t.name.length>13?t.name.slice(0,12)+'…':t.name;
-                    var sub=(t.category?'📁'+t.category+' · ':'')+(t.barrels?t.barrels.length:0)+'б';
-                    return jsxs('g',{key:t.id,style:{cursor:'pointer'},
-                      onClick:function(){editExisting(t);setTab('editor');},
-                      children:[
-                        jsx('rect',{x:p.x,y:p.y,width:nodeW,height:nodeH,rx:7,
-                          fill:col+'28',stroke:col,strokeWidth:1.5}),
-                        jsx('text',{x:p.x+nodeW/2,y:p.y+15,textAnchor:'middle',
-                          fill:'#fff',fontSize:10,fontFamily:'Arial',fontWeight:'bold',children:label}),
-                        jsx('text',{x:p.x+nodeW/2,y:p.y+29,textAnchor:'middle',
-                          fill:'rgba(255,255,255,0.38)',fontSize:8,fontFamily:'Arial',children:sub}),
-                      ]});
-                  })
-                }),
-              ]
+    /* ── Bottom sheet wizard drawer (only in editor tab) ── */
+    tab === 'editor' && jsxs('div', {
+      style:{position:'absolute',bottom:0,left:0,right:0,zIndex:8,
+        height:drawerExpanded?'60%':'52px',
+        transition:'height 0.28s cubic-bezier(0.4,0,0.2,1)',
+        background:'rgba(10,14,38,0.96)',
+        borderTop:'1.5px solid rgba(68,136,255,0.35)',
+        borderRadius:'18px 18px 0 0',
+        display:'flex',flexDirection:'column',
+        boxShadow:'0 -8px 32px rgba(0,0,0,0.6)'},
+      children:[
+        /* Step tabs + progress bar */
+        jsxs('div', {style:{flexShrink:0,position:'relative'},children:[
+          jsx('div', {style:{display:'flex'},children:
+            ['Основа','Стволы','Статы','Апгрейды','Готово'].map(function(s,i){
+              var isActive=i===wizStep, isDone=i<wizStep;
+              return jsx('button',{key:s,
+                onClick:function(){setWizStep(i);if(!drawerExpanded)setDrawerExpanded(true);},
+                style:{flex:1,padding:'10px 2px',border:'none',cursor:'pointer',fontFamily:'Arial',fontSize:9,fontWeight:'bold',
+                  background:isActive?'rgba(0,90,180,0.7)':isDone?'rgba(0,50,100,0.4)':'transparent',
+                  color:isActive?'#fff':isDone?'rgba(100,180,255,0.8)':'rgba(255,255,255,0.3)',
+                  borderBottom:isActive?'2px solid #00b2e1':isDone?'2px solid rgba(68,136,255,0.4)':'2px solid transparent',
+                  touchAction:'manipulation'},
+                children:[(isDone?'✓ ':'')+s]},i);
             })
-          });
-        })(),
-      ]}),
+          }),
+          jsx('div',{style:{height:2,background:'rgba(255,255,255,0.06)'},children:
+            jsx('div',{style:{height:'100%',width:((wizStep+1)/5*100)+'%',background:'linear-gradient(90deg,#0088cc,#00d4ff)',transition:'width 0.3s ease'}})
+          }),
+          jsx('button', {
+            onClick:function(){setDrawerExpanded(function(v){return !v;});},
+            style:{position:'absolute',top:6,right:8,padding:'2px 8px',borderRadius:5,border:'none',cursor:'pointer',background:'rgba(255,255,255,0.1)',color:'rgba(255,255,255,0.6)',fontSize:13,touchAction:'manipulation'},
+            children: drawerExpanded?'▼':'▲',
+          }),
+        ]}),
+        /* Scrollable step content */
+        jsx('div',{style:{flex:1,overflowY:'auto',padding:'12px 14px',display:drawerExpanded?'block':'none'},
+          children: renderWizardStep()
+        }),
+        /* Navigation footer */
+        drawerExpanded && jsxs('div',{style:{flexShrink:0,padding:'8px 14px',borderTop:'1px solid rgba(255,255,255,0.08)',display:'flex',gap:8},children:[
+          wizStep>0 && jsx('button',{onClick:function(){setWizStep(function(s){return s-1;});},style:Object.assign({},S.btn('rgba(60,60,100,0.7)'),{flex:1,padding:'10px'}),children:'← Назад'}),
+          wizStep<4
+            ? jsx('button',{onClick:function(){setWizStep(function(s){return s+1;});},style:Object.assign({},S.btn('rgba(0,100,200,0.8)'),{flex:2,padding:'10px',fontWeight:'bold',fontSize:14}),children:'Далее →'})
+            : jsx('button',{onClick:saveTank,style:Object.assign({},S.saveBtn,{flex:2,padding:'10px'}),children:'💾 Сохранить в игру'}),
+        ]}),
+      ],
+    }),
 
-    ]}), /* body */
-
-    /* ══ МОДАЛ УДАЛЕНИЯ ════════════════════════════════════════ */
+    /* ══ МОДАЛ УДАЛЕНИЯ ══ */
     deletePending && jsx('div', { style: S.modalOverlay, onClick: function(){ setDeletePending(null); }, children:
       jsx('div', { style: Object.assign({}, S.modalBox, {maxWidth:340,gap:12}), onClick: function(e){ e.stopPropagation(); }, children:
         jsxs('div', { style:{display:'flex',flexDirection:'column',gap:14}, children:[
           jsx('div', { style:{color:'#ff6060',fontSize:15,fontWeight:900}, children:'🗑 Удалить танк?' }),
-          jsx('div', { style:{color:'rgba(255,255,255,0.6)',fontSize:13,lineHeight:1.6},
-            children:'Этот танк будет удалён из коллекции и дерева прокачки. Необратимо.' }),
+          jsx('div', { style:{color:'rgba(255,255,255,0.6)',fontSize:13,lineHeight:1.6}, children:'Этот танк будет удалён из коллекции и дерева прокачки. Необратимо.' }),
           jsxs('div', { style:{display:'flex',gap:8}, children:[
-            jsx('button', { onClick: function(){ confirmDelete(deletePending); },
-              style:{flex:1,padding:'11px',borderRadius:9,border:'none',cursor:'pointer',
-                fontFamily:'Arial',fontWeight:'bold',fontSize:13,
-                background:'rgba(200,30,30,0.85)',color:'#fff',touchAction:'manipulation'},
-              children:'🗑 Удалить' }),
-            jsx('button', { onClick: function(){ setDeletePending(null); },
-              style:{flex:1,padding:'11px',borderRadius:9,border:'none',cursor:'pointer',
-                fontFamily:'Arial',fontWeight:'bold',fontSize:13,
-                background:'rgba(60,60,80,0.8)',color:'rgba(255,255,255,0.7)',touchAction:'manipulation'},
-              children:'Отмена' }),
+            jsx('button', { onClick: function(){ confirmDelete(deletePending); }, style:{flex:1,padding:'11px',borderRadius:9,border:'none',cursor:'pointer',fontFamily:'Arial',fontWeight:'bold',fontSize:13,background:'rgba(200,30,30,0.85)',color:'#fff',touchAction:'manipulation'}, children:'🗑 Удалить' }),
+            jsx('button', { onClick: function(){ setDeletePending(null); }, style:{flex:1,padding:'11px',borderRadius:9,border:'none',cursor:'pointer',fontFamily:'Arial',fontWeight:'bold',fontSize:13,background:'rgba(60,60,80,0.8)',color:'rgba(255,255,255,0.7)',touchAction:'manipulation'}, children:'Отмена' }),
           ]}),
         ]})
       })
     }),
 
-    /* ══ МОДАЛ ЭКСПОРТА / ИМПОРТА ══════════════════════════════ */
+    /* ══ МОДАЛ ЭКСПОРТА / ИМПОРТА ══ */
     modal && jsx('div', { style: S.modalOverlay, onClick: closeModal, children:
       jsx('div', { style: S.modalBox, onClick: function(e){ e.stopPropagation(); }, children:
-
         modal.type === 'export' ? jsxs('div', { style:{display:'flex',flexDirection:'column',gap:12}, children:[
-
-          /* — Заголовок — */
           jsxs('div', { style:{display:'flex',alignItems:'center',justifyContent:'space-between'}, children:[
             jsxs('div', { children:[
               jsx('div', { style: S.modalTitle, children: '📤 Код танка' }),
@@ -1733,78 +1433,28 @@ function TankBuilder({ onClose }) {
             ]}),
             jsx('button', { onClick: closeModal, style: S.btn('rgba(100,30,30,0.5)'), children: '✕' }),
           ]}),
-
-          /* — Код — */
-          jsx('textarea', { readOnly: true, value: modal.code, style: S.modalCode,
-            onFocus: function(e){ e.target.select(); } }),
-
-          /* — Подсказка — */
-          jsx('div', { style: S.modalHint, children:
-            'Скопируй этот код и отправь другому игроку. Он сможет вставить его через «📥 Импорт» и сразу получить твой танк в свой редактор.' }),
-
-          /* — Кнопки — */
+          jsx('textarea', { readOnly: true, value: modal.code, style: S.modalCode, onFocus: function(e){ e.target.select(); } }),
+          jsx('div', { style: S.modalHint, children: 'Скопируй этот код и отправь другому игроку. Он сможет вставить его через «📥 Импорт» и сразу получить твой танк в свой редактор.' }),
           jsxs('div', { style: S.modalBtnRow, children:[
-            jsx('button', {
-              onClick: function(){ doCopy(modal.code); },
-              style: S.exportBtn(copied ? 'rgba(0,160,80,0.9)' : 'rgba(0,100,60,0.8)'),
-              children: copied ? '✔ Скопировано!' : '📋 Скопировать код',
-            }),
-            jsx('button', {
-              onClick: function(){
-                /* Поделиться через Web Share API если доступен */
-                if (navigator.share) {
-                  navigator.share({ title: 'Diep Tank: ' + modal.defName, text: modal.code })
-                    .catch(function(){});
-                } else { doCopy(modal.code); }
-              },
-              style: S.exportBtn('rgba(0,80,180,0.8)'),
-              children: '🔗 Поделиться',
-            }),
+            jsx('button', { onClick: function(){ doCopy(modal.code); }, style: S.exportBtn(copied ? 'rgba(0,160,80,0.9)' : 'rgba(0,100,60,0.8)'), children: copied ? '✔ Скопировано!' : '📋 Скопировать код' }),
+            jsx('button', { onClick: function(){ if (navigator.share) { navigator.share({ title: 'Diep Tank: ' + modal.defName, text: modal.code }).catch(function(){}); } else { doCopy(modal.code); } }, style: S.exportBtn('rgba(0,80,180,0.8)'), children: '🔗 Поделиться' }),
             jsx('button', { onClick: closeModal, style: S.exportBtn('rgba(60,60,80,0.8)'), children: 'Закрыть' }),
           ]}),
-
         ]}) :
-
-        /* — Импорт — */
         jsxs('div', { style:{display:'flex',flexDirection:'column',gap:12}, children:[
-
-          /* — Заголовок — */
           jsxs('div', { style:{display:'flex',alignItems:'center',justifyContent:'space-between'}, children:[
             jsx('div', { style: S.modalTitle, children: '📥 Импорт танка' }),
             jsx('button', { onClick: closeModal, style: S.btn('rgba(100,30,30,0.5)'), children: '✕' }),
           ]}),
-
-          /* — Поле ввода — */
-          jsx('textarea', {
-            value: importCode,
-            placeholder: 'Вставь сюда код танка (начинается с DIEPTANK1_...)',
-            style: S.modalImportArea,
-            onChange: function(e){ setImportCode(e.target.value); setImportErr(''); },
-            spellCheck: false,
-            autoCorrect: 'off',
-            autoCapitalize: 'none',
-          }),
-
-          /* — Ошибка — */
+          jsx('textarea', { value: importCode, placeholder: 'Вставь сюда код танка (начинается с DIEPTANK1_...)', style: S.modalImportArea, onChange: function(e){ setImportCode(e.target.value); setImportErr(''); }, spellCheck: false, autoCorrect: 'off', autoCapitalize: 'none' }),
           importErr && jsx('div', { style: S.modalErr, children: '⚠ ' + importErr }),
-
-          /* — Подсказка — */
-          jsx('div', { style: S.modalHint, children:
-            'Танк загрузится в редактор для просмотра и настройки. Нажми «💾 Сохранить» чтобы добавить его в игру.' }),
-
-          /* — Кнопки — */
+          jsx('div', { style: S.modalHint, children: 'Танк загрузится в редактор для просмотра и настройки. Нажми «💾 Сохранить» чтобы добавить его в игру.' }),
           jsxs('div', { style: S.modalBtnRow, children:[
-            jsx('button', {
-              onClick: doImport,
-              style: S.exportBtn(importCode.trim() ? 'rgba(0,100,200,0.85)' : 'rgba(40,40,60,0.7)'),
-              children: '✔ Загрузить в редактор',
-            }),
+            jsx('button', { onClick: doImport, style: S.exportBtn(importCode.trim() ? 'rgba(0,100,200,0.85)' : 'rgba(40,40,60,0.7)'), children: '✔ Загрузить в редактор' }),
             jsx('button', { onClick: closeModal, style: S.exportBtn('rgba(60,60,80,0.8)'), children: 'Отмена' }),
           ]}),
-
         ]})
-
-      })
+      ])
     }),
 
   ]}); /* root */
@@ -1840,12 +1490,16 @@ function mountBuilderButton() {
 
     /* внешний вызов window._openTankBuilder сохраняем, но ничего не показываем в UI */
     useEffect(function() {
-      window._openTankBuilder = function(){ setOpen(true); };
+      window._openTankBuilder = function(){
+        if (unlockedRef.current) { setOpen(true); }
+        else { setPinCode(''); setPinErr(false); setPinModal(true); }
+      };
       return function(){ window._openTankBuilder = null; };
     }, [setOpen]);
 
     /* ── обработчик тапа по невидимой зоне ── */
     function handleZoneTap() {
+      if (window._gamePhase !== 'menu') return; /* только на главном меню */
       var now = Date.now();
       tapsRef.current.push(now);
       tapsRef.current = tapsRef.current.filter(function(t){ return now - t < 10000; });
@@ -1866,6 +1520,8 @@ function mountBuilderButton() {
     function handlePinSubmit() {
       if (pinCode === '2009') {
         unlockedRef.current = true;
+        window._builderUnlocked = true;
+        try { window.dispatchEvent(new Event('builderUnlocked')); } catch(e){}
         setPinModal(false);
         setPinCode('');
         setOpen(true);
