@@ -211,6 +211,7 @@ function registerTank(def) {
     turretBulletRadius:(def.turretCfg && def.turretCfg.size)        || 7,
     turretBulletHoming:!!(def.turretCfg && def.turretCfg.homing),
     _speedMultiplier: spdMult,
+    _initMovementSpeed: Math.min(10, Math.max(0, Math.round(Math.log(Math.max(0.001, spdMult)) / Math.log(1.07)))),
     _isCustom: true,
   };
 
@@ -252,6 +253,24 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
 } else {
   window.addEventListener('DOMContentLoaded', function(){ setTimeout(registerAllCustomTanks, 600); });
 }
+
+/* ── Хук скорости: применяем _initMovementSpeed при смене класса ── */
+(function() {
+  var _prevClass = null;
+  setInterval(function() {
+    try {
+      var gs = window._gs;
+      if (!gs || !gs.player) return;
+      var p = gs.player;
+      var cls = p.className;
+      if (cls === _prevClass) return;
+      _prevClass = cls;
+      var td = window._t && window._t[cls];
+      if (!td || !td._isCustom || !td._initMovementSpeed) return;
+      p.stats.movementSpeed = Math.min(10, td._initMovementSpeed);
+    } catch(e) {}
+  }, 200);
+})();
 
 /* ═══════════════════════════════════════════════════════════════
    REACT UI
@@ -804,6 +823,7 @@ function TankBuilder({ onClose }) {
   var preset = TIER_PRESETS[tier] || TIER_PRESETS[3];
   var hpEff  = Math.round(preset.hp    * editing.hpSlider    * 100);
   var spdEff = Math.round(preset.speed * editing.speedSlider * 100);
+  var spdPts = Math.min(10, Math.max(0, Math.round(Math.log(Math.max(0.001, preset.speed * editing.speedSlider)) / Math.log(1.07))));
   var zoomPct = Math.round((viewRef.current.zoom || 1) * 100);
 
   /* ── Стили ──────────────────────────────────────────────────── */
@@ -1167,7 +1187,7 @@ function TankBuilder({ onClose }) {
               jsx('div', { style:S.sliderVal, children:(editing.hpSlider*100).toFixed(0)+'%' }),
             ]}),
             jsxs('div', { style: S.sliderRow, children:[
-              jsx('div', { style:S.sliderLabel, children:'Скорость: '+spdEff+'%' }),
+              jsx('div', { style:S.sliderLabel, children:'Скорость: +'+spdPts+' очк.' }),
               jsx('input', { type:'range',min:0.5,max:2.0,step:0.05,value:editing.speedSlider,
                 onChange:function(e){ setEditing(function(p){ return Object.assign({},p,{speedSlider:parseFloat(e.target.value)}); }); },
                 style:S.slider }),
