@@ -3404,3 +3404,429 @@ window._gs = null; // populated by G0 wrapper below
     };
   } catch(e) {}
 })();
+
+// ── Tank Builder (⚙ Конструктор) ─────────────────────────────────────────────
+;(function setupTankBuilder(){
+  'use strict';
+  var SK = 'diep_custom_tanks';
+  var _el = function(i,h,o,s,T,v,E,B){
+    var dm = (E > 1) ? 1 + (E-1)*0.65 : E;
+    var r = {angleOffset:i,length:h,width:o,reloadMultiplier:s,bulletSizeMultiplier:T,bulletSpeedMultiplier:v,bulletDamageMultiplier:dm};
+    if(B !== undefined) r.spread = B;
+    return r;
+  };
+
+  // ── Register one tank definition into _t / W1 ─────────────────────────────
+  function _reg(tank){
+    if(!tank || !tank.name) return;
+    var barrels = (tank.barrels||[]).map(function(b){
+      return _el(b.ao||0, b.len||50, b.w||14, b.rel||1, b.bsz||1, b.bsp||1, b.bdm||1, b.spr||0);
+    });
+    var noB = barrels.length === 0;
+    _t[tank.name] = {
+      name: tank.name,
+      color: tank.color || '#4488ff',
+      requiredLevel: tank.lvl || 45,
+      upgradesFrom: Array.isArray(tank.from) ? tank.from : [tank.from || 'Basic'],
+      description: tank.desc || '',
+      barrels: barrels,
+      noBarrels: noB,
+      bodyDamageMultiplier: tank.bdm || (noB ? 4 : 1),
+      radiusMultiplier: tank.rad || 1.2
+    };
+    if(typeof W1 !== 'undefined') W1[tank.name] = tank.name;
+  }
+
+  // ── Load saved tanks and register them on startup ─────────────────────────
+  function _loadAll(){
+    try{
+      var list = JSON.parse(localStorage.getItem(SK)||'[]');
+      list.forEach(_reg);
+    } catch(e){}
+  }
+
+  function _saveAll(list){
+    try{ localStorage.setItem(SK, JSON.stringify(list)); } catch(e){}
+  }
+
+  function _getAll(){
+    try{ return JSON.parse(localStorage.getItem(SK)||'[]'); } catch(e){ return []; }
+  }
+
+  _loadAll(); // register saved tanks immediately
+
+  // ── Vanilla-JS Modal UI ───────────────────────────────────────────────────
+  var _modal = null;
+
+  function _parentOptions(){
+    // All existing tank names as options for "upgrade from"
+    var names = Object.keys(_t).filter(function(n){ return n && _t[n] && _t[n].name; });
+    names.sort();
+    return names;
+  }
+
+  var _state = {
+    tab: 'edit',   // 'edit' | 'list'
+    editing: null, // currently edited tank object
+    barrels: [],   // list of barrel config objects
+    msg: ''
+  };
+
+  function _buildModal(){
+    var ov = document.createElement('div');
+    ov.id = '_tbOv';
+    ov.style.cssText = [
+      'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);',
+      'display:none;align-items:center;justify-content:center;',
+      'font-family:Arial,sans-serif;padding:12px;box-sizing:border-box;overflow-y:auto;'
+    ].join('');
+    ov.onclick = function(e){ if(e.target===ov) _close(); };
+
+    var panel = document.createElement('div');
+    panel.id = '_tbPanel';
+    panel.style.cssText = [
+      'background:#0d1525;border:1.5px solid rgba(68,136,255,0.4);border-radius:16px;',
+      'padding:20px;width:100%;max-width:560px;box-sizing:border-box;',
+      'max-height:90vh;overflow-y:auto;position:relative;'
+    ].join('');
+
+    ov.appendChild(panel);
+    document.body.appendChild(ov);
+    _modal = ov;
+    return ov;
+  }
+
+  function _close(){
+    if(_modal) _modal.style.display = 'none';
+  }
+
+  function _open(){
+    if(!_modal) _buildModal();
+    _modal.style.display = 'flex';
+    _state.tab = 'list';
+    _state.editing = null;
+    _state.barrels = [];
+    _render();
+  }
+
+  // ── Render the whole panel ─────────────────────────────────────────────────
+  function _render(){
+    var p = document.getElementById('_tbPanel');
+    if(!p) return;
+    p.innerHTML = '';
+
+    // Header
+    var hdr = document.createElement('div');
+    hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;';
+    hdr.innerHTML = '<div style="color:#fff;font-size:18px;font-weight:bold;">⚙ Конструктор танков</div>';
+    var xBtn = document.createElement('button');
+    xBtn.textContent = '✕';
+    xBtn.style.cssText = 'background:none;border:none;color:rgba(255,255,255,0.5);font-size:22px;cursor:pointer;padding:0 4px;';
+    xBtn.onclick = _close;
+    hdr.appendChild(xBtn);
+    p.appendChild(hdr);
+
+    // Tab bar
+    var tabs = document.createElement('div');
+    tabs.style.cssText = 'display:flex;gap:8px;margin-bottom:16px;';
+    ['list','edit'].forEach(function(tab){
+      var b = document.createElement('button');
+      b.textContent = tab === 'list' ? '📋 Мои танки' : '✏️ Создать / Редактировать';
+      var active = _state.tab === tab;
+      b.style.cssText = 'flex:1;padding:8px;border-radius:8px;border:none;font-weight:bold;font-size:13px;cursor:pointer;' +
+        'background:' + (active ? 'rgba(0,120,200,0.7)' : 'rgba(255,255,255,0.07)') + ';' +
+        'color:' + (active ? '#fff' : 'rgba(255,255,255,0.45)') + ';';
+      b.onclick = function(){ _state.tab = tab; _render(); };
+      tabs.appendChild(b);
+    });
+    p.appendChild(tabs);
+
+    if(_state.msg){
+      var msg = document.createElement('div');
+      msg.style.cssText = 'background:rgba(0,180,80,0.18);border:1px solid rgba(0,180,80,0.4);border-radius:8px;padding:8px 12px;color:#66ff99;font-size:12px;margin-bottom:10px;';
+      msg.textContent = _state.msg;
+      p.appendChild(msg);
+      setTimeout(function(){ _state.msg=''; if(_modal && _modal.style.display!=='none') _render(); }, 2500);
+    }
+
+    if(_state.tab === 'list') _renderList(p);
+    else _renderEdit(p);
+  }
+
+  // ── List tab ───────────────────────────────────────────────────────────────
+  function _renderList(p){
+    var list = _getAll();
+    var addBtn = document.createElement('button');
+    addBtn.textContent = '+ Создать новый танк';
+    addBtn.style.cssText = 'width:100%;padding:11px;border-radius:10px;border:2px dashed rgba(68,136,255,0.5);background:rgba(0,40,80,0.3);color:#88ccff;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:14px;';
+    addBtn.onclick = function(){
+      _state.tab = 'edit';
+      _state.editing = null;
+      _state.barrels = [{ao:0,len:50,w:14,rel:1,bsz:1,bsp:1,bdm:1,spr:0}];
+      _render();
+    };
+    p.appendChild(addBtn);
+
+    if(list.length === 0){
+      var empty = document.createElement('div');
+      empty.style.cssText = 'color:rgba(255,255,255,0.35);text-align:center;padding:30px 0;font-size:13px;';
+      empty.textContent = 'Нет сохранённых танков. Создайте первый!';
+      p.appendChild(empty);
+      return;
+    }
+
+    list.forEach(function(tank, idx){
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);margin-bottom:8px;';
+
+      var dot = document.createElement('div');
+      dot.style.cssText = 'width:16px;height:16px;border-radius:50%;background:' + (tank.color||'#4488ff') + ';flex-shrink:0;';
+      row.appendChild(dot);
+
+      var info = document.createElement('div');
+      info.style.cssText = 'flex:1;min-width:0;';
+      info.innerHTML = '<div style="color:#fff;font-weight:bold;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + tank.name + '</div>' +
+        '<div style="color:rgba(255,255,255,0.4);font-size:11px;">Уровень ' + (tank.lvl||45) + ' · После: ' + (Array.isArray(tank.from)?tank.from.join('/'):tank.from) + ' · ' + (tank.barrels||[]).length + ' ствол(а)</div>';
+      row.appendChild(info);
+
+      var editBtn = document.createElement('button');
+      editBtn.textContent = '✏️';
+      editBtn.style.cssText = 'padding:6px 10px;border-radius:7px;border:1px solid rgba(68,136,255,0.4);background:rgba(0,40,80,0.5);color:#88ccff;cursor:pointer;font-size:13px;';
+      editBtn.onclick = function(){
+        _state.tab = 'edit';
+        _state.editing = Object.assign({}, tank);
+        _state.barrels = (tank.barrels||[]).map(function(b){ return Object.assign({},b); });
+        _render();
+      };
+      row.appendChild(editBtn);
+
+      var delBtn = document.createElement('button');
+      delBtn.textContent = '🗑';
+      delBtn.style.cssText = 'padding:6px 10px;border-radius:7px;border:1px solid rgba(200,40,40,0.4);background:rgba(80,10,10,0.5);color:#ff8888;cursor:pointer;font-size:13px;';
+      delBtn.onclick = function(){
+        if(!confirm('Удалить танк "' + tank.name + '"?')) return;
+        var all = _getAll();
+        all.splice(idx, 1);
+        _saveAll(all);
+        // remove from _t
+        delete _t[tank.name];
+        _state.msg = 'Танк "' + tank.name + '" удалён.';
+        _render();
+      };
+      row.appendChild(delBtn);
+      p.appendChild(row);
+    });
+  }
+
+  // ── Edit tab ──────────────────────────────────────────────────────────────
+  function _renderEdit(p){
+    var t = _state.editing || {};
+
+    function _inp(label, id, val, type, extra){
+      var wr = document.createElement('div');
+      wr.style.cssText = 'margin-bottom:12px;';
+      var lb = document.createElement('label');
+      lb.style.cssText = 'display:block;color:rgba(255,255,255,0.6);font-size:12px;margin-bottom:4px;';
+      lb.textContent = label;
+      wr.appendChild(lb);
+      var inp = document.createElement(type==='select'?'select':type==='textarea'?'textarea':'input');
+      if(type && type !== 'select' && type !== 'textarea') inp.type = type;
+      inp.id = id;
+      inp.value = val || '';
+      if(type==='textarea') inp.rows = 2;
+      inp.style.cssText = 'width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(68,136,255,0.3);background:rgba(255,255,255,0.07);color:#fff;font-size:13px;box-sizing:border-box;' + (extra||'');
+      if(type==='select'){
+        var opts = ['-- выберите --'].concat(_parentOptions());
+        opts.forEach(function(opt){
+          var o = document.createElement('option');
+          o.value = opt.startsWith('--') ? '' : opt;
+          o.textContent = opt;
+          if(opt === (Array.isArray(t.from)?t.from[0]:t.from)) o.selected = true;
+          inp.appendChild(o);
+        });
+      }
+      wr.appendChild(inp);
+      p.appendChild(wr);
+    }
+
+    // Name
+    _inp('Название танка (уникальное, латиница)', '_tb_name', t.name, 'text');
+
+    // Color
+    _inp('Цвет', '_tb_color', t.color||'#4488ff', 'color', 'height:36px;padding:2px 6px;cursor:pointer;');
+
+    // Level
+    var lvlWr = document.createElement('div');
+    lvlWr.style.cssText = 'margin-bottom:12px;';
+    lvlWr.innerHTML = '<div style="color:rgba(255,255,255,0.6);font-size:12px;margin-bottom:6px;">Требуемый уровень</div>';
+    var lvlRow = document.createElement('div');
+    lvlRow.style.cssText = 'display:flex;gap:8px;';
+    [5,15,30,45].forEach(function(lv){
+      var lb = document.createElement('button');
+      lb.textContent = lv;
+      lb.dataset.lv = lv;
+      var active = (t.lvl||45) === lv;
+      lb.style.cssText = 'flex:1;padding:8px;border-radius:8px;font-weight:bold;font-size:14px;cursor:pointer;border:2px solid ' +
+        (active?'rgba(68,136,255,0.8)':'rgba(255,255,255,0.15)') + ';background:' +
+        (active?'rgba(0,80,160,0.5)':'rgba(255,255,255,0.04)') + ';color:' + (active?'#fff':'rgba(255,255,255,0.4)') + ';';
+      lb.onclick = function(){
+        _state.editing = _state.editing || {};
+        _state.editing.lvl = parseInt(lb.dataset.lv);
+        lvlRow.querySelectorAll('button').forEach(function(b){
+          var act = parseInt(b.dataset.lv) === _state.editing.lvl;
+          b.style.border = '2px solid ' + (act?'rgba(68,136,255,0.8)':'rgba(255,255,255,0.15)');
+          b.style.background = act?'rgba(0,80,160,0.5)':'rgba(255,255,255,0.04)';
+          b.style.color = act?'#fff':'rgba(255,255,255,0.4)';
+        });
+      };
+      lvlRow.appendChild(lb);
+    });
+    lvlWr.appendChild(lvlRow);
+    p.appendChild(lvlWr);
+
+    // Parent tank
+    _inp('После какого танка (upgradesFrom)', '_tb_from', null, 'select');
+
+    // Description
+    _inp('Описание', '_tb_desc', t.desc, 'textarea');
+
+    // Body damage multiplier
+    function _slider(label, id, val, min, max, step){
+      var wr = document.createElement('div');
+      wr.style.cssText = 'margin-bottom:10px;';
+      var valEl;
+      wr.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
+        '<span style="color:rgba(255,255,255,0.6);font-size:12px;">' + label + '</span>' +
+        '<span id="' + id + '_v" style="color:#88ccff;font-size:12px;font-weight:bold;">' + val + '</span></div>';
+      var sl = document.createElement('input');
+      sl.type = 'range'; sl.id = id; sl.min = min; sl.max = max; sl.step = step; sl.value = val;
+      sl.style.cssText = 'width:100%;accent-color:#4488ff;cursor:pointer;';
+      sl.oninput = function(){ var el = document.getElementById(id+'_v'); if(el) el.textContent = parseFloat(sl.value).toFixed(2); };
+      wr.appendChild(sl);
+      p.appendChild(wr);
+    }
+
+    _slider('Урон корпусом (bodyDamageMultiplier)', '_tb_bdm', t.bdm||1, 0.5, 15, 0.1);
+    _slider('Размер (radiusMultiplier)', '_tb_rad', t.rad||1.2, 0.7, 2.0, 0.05);
+
+    // Barrels section
+    var bSec = document.createElement('div');
+    bSec.style.cssText = 'margin-top:16px;border-top:1px solid rgba(255,255,255,0.12);padding-top:14px;';
+    var bHdr = document.createElement('div');
+    bHdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;';
+    bHdr.innerHTML = '<div style="color:#fff;font-size:13px;font-weight:bold;">Стволы (' + _state.barrels.length + ')</div>';
+    var addB = document.createElement('button');
+    addB.textContent = '+ Добавить ствол';
+    addB.style.cssText = 'padding:6px 12px;border-radius:8px;border:1px solid rgba(68,136,255,0.4);background:rgba(0,40,80,0.4);color:#88ccff;font-size:12px;cursor:pointer;';
+    addB.onclick = function(){
+      _state.barrels.push({ao:0,len:50,w:14,rel:1,bsz:1,bsp:1,bdm:1,spr:0});
+      _render();
+    };
+    bHdr.appendChild(addB);
+    bSec.appendChild(bHdr);
+
+    _state.barrels.forEach(function(br, bi){
+      var bRow = document.createElement('div');
+      bRow.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;margin-bottom:10px;';
+
+      var bRHdr = document.createElement('div');
+      bRHdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;';
+      bRHdr.innerHTML = '<span style="color:rgba(255,255,255,0.7);font-weight:bold;font-size:12px;">Ствол ' + (bi+1) + '</span>';
+      var delBr = document.createElement('button');
+      delBr.textContent = '✕';
+      delBr.style.cssText = 'background:rgba(200,40,40,0.3);border:1px solid rgba(200,40,40,0.4);border-radius:5px;color:#ff8888;cursor:pointer;padding:2px 7px;font-size:12px;';
+      delBr.dataset.bi = bi;
+      delBr.onclick = function(){ _state.barrels.splice(parseInt(delBr.dataset.bi),1); _render(); };
+      bRHdr.appendChild(delBr);
+      bRow.appendChild(bRHdr);
+
+      var grid = document.createElement('div');
+      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;';
+
+      function _bSlider(lbl, key, val, min, max, step){
+        var id = '_tbr_'+bi+'_'+key;
+        var wr = document.createElement('div');
+        wr.innerHTML = '<div style="display:flex;justify-content:space-between;"><span style="color:rgba(255,255,255,0.5);font-size:11px;">' + lbl + '</span><span id="'+id+'_v" style="color:#88ccff;font-size:11px;">' + val + '</span></div>';
+        var sl = document.createElement('input');
+        sl.type='range'; sl.id=id; sl.min=min; sl.max=max; sl.step=step; sl.value=val;
+        sl.style.cssText='width:100%;accent-color:#4488ff;cursor:pointer;margin-top:2px;';
+        sl.dataset.bi=bi; sl.dataset.key=key;
+        sl.oninput=function(){
+          var vv = parseFloat(sl.value);
+          _state.barrels[parseInt(sl.dataset.bi)][sl.dataset.key] = vv;
+          var ve = document.getElementById(id+'_v'); if(ve) ve.textContent = vv.toFixed(2);
+        };
+        wr.appendChild(sl);
+        return wr;
+      }
+
+      grid.appendChild(_bSlider('Угол (°)', 'ao', br.ao||0, -3.14, 3.14, 0.01));
+      grid.appendChild(_bSlider('Длина', 'len', br.len||50, 15, 100, 1));
+      grid.appendChild(_bSlider('Ширина', 'w', br.w||14, 5, 35, 1));
+      grid.appendChild(_bSlider('Перезаряд ×', 'rel', br.rel||1, 0.2, 5, 0.05));
+      grid.appendChild(_bSlider('Скорость ×', 'bsp', br.bsp||1, 0.3, 3, 0.05));
+      grid.appendChild(_bSlider('Урон ×', 'bdm', br.bdm||1, 0.1, 5, 0.05));
+      bRow.appendChild(grid);
+      bSec.appendChild(bRow);
+    });
+
+    p.appendChild(bSec);
+
+    // Save button
+    var saveBtn = document.createElement('button');
+    saveBtn.textContent = '💾 Сохранить танк';
+    saveBtn.style.cssText = 'width:100%;margin-top:16px;padding:13px;font-size:15px;font-weight:bold;border-radius:10px;border:none;background:linear-gradient(90deg,#0068a8,#22aadd);color:#fff;cursor:pointer;';
+    saveBtn.onclick = function(){
+      var name = (document.getElementById('_tb_name')||{}).value || '';
+      name = name.trim().replace(/\s+/g,'');
+      if(!name){ alert('Введите название танка!'); return; }
+      if(!/^[A-Za-z0-9_]+$/.test(name)){ alert('Название: только латинские буквы, цифры, _'); return; }
+      var fromEl = document.getElementById('_tb_from');
+      var from = fromEl ? fromEl.value : '';
+      if(!from){ alert('Выберите родительский танк!'); return; }
+      var color = (document.getElementById('_tb_color')||{}).value || '#4488ff';
+      var desc = (document.getElementById('_tb_desc')||{}).value || '';
+      var bdm = parseFloat((document.getElementById('_tb_bdm')||{}).value||1);
+      var rad = parseFloat((document.getElementById('_tb_rad')||{}).value||1.2);
+      var lvl = (_state.editing && _state.editing.lvl) || t.lvl || 45;
+
+      var newTank = {
+        name: name,
+        color: color,
+        lvl: lvl,
+        from: [from],
+        desc: desc,
+        bdm: bdm,
+        rad: rad,
+        barrels: _state.barrels.map(function(b){ return Object.assign({},b); })
+      };
+
+      var all = _getAll();
+      // Replace if editing same-named tank, otherwise push
+      var found = false;
+      for(var i=0;i<all.length;i++){
+        if(all[i].name === name){ all[i] = newTank; found = true; break; }
+      }
+      if(!found) all.push(newTank);
+      _saveAll(all);
+      _reg(newTank);
+
+      _state.msg = '✅ Танк "' + name + '" сохранён и активирован в игре!';
+      _state.tab = 'list';
+      _state.editing = null;
+      _state.barrels = [];
+      _render();
+    };
+    p.appendChild(saveBtn);
+
+    // Cancel
+    var canBtn = document.createElement('button');
+    canBtn.textContent = '← Назад к списку';
+    canBtn.style.cssText = 'width:100%;margin-top:8px;padding:10px;font-size:13px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.5);cursor:pointer;';
+    canBtn.onclick = function(){ _state.tab='list'; _state.editing=null; _state.barrels=[]; _render(); };
+    p.appendChild(canBtn);
+  }
+
+  window._openTankBuilder = _open;
+  window._reloadCustomTanks = _loadAll; // for dev use
+})();
