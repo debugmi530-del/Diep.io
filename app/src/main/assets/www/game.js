@@ -3435,429 +3435,327 @@ window._gs = null; // populated by G0 wrapper below
 // ── Tank Builder (⚙ Конструктор) ─────────────────────────────────────────────
 ;(function setupTankBuilder(){
   'use strict';
-  var SK = 'diep_custom_tanks';
-  var _el = function(i,h,o,s,T,v,E,B){
-    var dm = (E > 1) ? 1 + (E-1)*0.65 : E;
-    var r = {angleOffset:i,length:h,width:o,reloadMultiplier:s,bulletSizeMultiplier:T,bulletSpeedMultiplier:v,bulletDamageMultiplier:dm};
-    if(B !== undefined) r.spread = B;
-    return r;
-  };
+  var SK='diep_custom_tanks';
+  var _el=function(i,h,o,s,T,v,E,B){var dm=(E>1)?1+(E-1)*0.65:E;var r={angleOffset:i,length:h,width:o,reloadMultiplier:s,bulletSizeMultiplier:T,bulletSpeedMultiplier:v,bulletDamageMultiplier:dm};if(B!==undefined)r.spread=B;return r;};
 
-  // ── Register one tank definition into _t / W1 ─────────────────────────────
   function _reg(tank){
-    if(!tank || !tank.name) return;
-    var barrels = (tank.barrels||[]).map(function(b){
-      return _el(b.ao||0, b.len||50, b.w||14, b.rel||1, b.bsz||1, b.bsp||1, b.bdm||1, b.spr||0);
-    });
-    var noB = barrels.length === 0;
-    _t[tank.name] = {
-      name: tank.name,
-      color: tank.color || '#4488ff',
-      requiredLevel: tank.lvl || 45,
-      upgradesFrom: Array.isArray(tank.from) ? tank.from : [tank.from || 'Basic'],
-      description: tank.desc || '',
-      barrels: barrels,
-      noBarrels: noB,
-      bodyDamageMultiplier: tank.bdm || (noB ? 4 : 1),
-      radiusMultiplier: tank.rad || 1.2
-    };
-    if(typeof W1 !== 'undefined') W1[tank.name] = tank.name;
+    if(!tank||!tank.name)return;
+    var barrels=(tank.barrels||[]).map(function(b){var bar=_el(b.ao||0,b.len||50,b.w||14,b.rel||1,b.bsz||1,b.bsp||1,b.bdm||1,b.spr||0);if(b.isBomb)bar.isBomb=true;if(b.isSticky)bar.isSticky=true;if(b.isTrap)bar.isTrap=true;if(b.isHoming)bar.isHoming=true;return bar;});
+    var noB=barrels.length===0;
+    _t[tank.name]={name:tank.name,color:tank.color||'#4488ff',requiredLevel:tank.lvl||45,upgradesFrom:Array.isArray(tank.from)?tank.from:[tank.from||'Basic'],description:tank.desc||'',barrels:barrels,noBarrels:noB,bodyDamageMultiplier:tank.bdm||(noB?4:1),radiusMultiplier:tank.rad||1.2,isInvis:!!tank.isInvis};
+    if(typeof W1!=='undefined')W1[tank.name]=tank.name;
+  }
+  function _loadAll(){try{JSON.parse(localStorage.getItem(SK)||'[]').forEach(_reg);}catch(e){}}
+  function _saveAll(l){try{localStorage.setItem(SK,JSON.stringify(l));}catch(e){}}
+  function _getAll(){try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch(e){return[];}}
+  _loadAll();
+
+  function _parentOptions(){return Object.keys(_t).filter(function(n){return n&&_t[n]&&_t[n].name;}).sort();}
+  function _upgradesTo(name){return Object.keys(_t).filter(function(k){var u=_t[k]&&_t[k].upgradesFrom;return Array.isArray(u)&&u.indexOf(name)>=0;});}
+  function _nm(n){return(typeof W1!=='undefined'&&W1[n])||n;}
+
+  // ── TIPS ──────────────────────────────────────────────────────────────────
+  function _getTips(name){
+    var td=_t[name];if(!td)return['Нет данных.'];
+    var bars=td.barrels||[],tips=[];
+    if(td.isInvis)tips.push('🫥 Оставайтесь неподвижны — невидимость активна. Атакуйте из засады, затем снова замрите и исчезните.');
+    if(td.isDroneShooter)tips.push('🤖 Держитесь ЗА дронами: они ваш щит и оружие. Прижмитесь в угол для плотного контроля.');
+    if(bars.some(function(b){return b.isHoming;}))tips.push('🎯 Самонаводящиеся снаряды — держитесь рядом с целью и непрерывно давите. Уклониться почти невозможно.');
+    if(bars.some(function(b){return b.isBomb;}))tips.push('💥 Бомбы взрываются при контакте — целься в группы врагов для цепных взрывов. Максимально эффективны в тесных зонах.');
+    if(bars.some(function(b){return b.isSticky;}))tips.push('🔵 Липкие заряды тормозят и ждут врага — стреляй прямо ПЕРЕД движущейся целью, чтобы она влетела в снаряд.');
+    if(bars.some(function(b){return b.isTrap;}))tips.push('⚓ Мины — расставляй в дверях и проходах. Отступай через своё минное поле: враг следует и подрывается.');
+    if(bars.length>=6)tips.push('🔥 Много стволов — врывайся в ближний бой! Все пули попадут при нулевой дистанции.');
+    if(bars.length===1&&!td.noBarrels)tips.push('🎯 Один точный ствол — держи максимальную дистанцию. Стреляй в паузы между уклонениями врага.');
+    if(bars.length>=2&&bars.length<=3&&!td.noBarrels)tips.push('⚖ Сбалансированный танк — чередуй дальний бой и сближение по ситуации. Универсальный стиль игры.');
+    if((td.bodyDamageMultiplier||1)>=3)tips.push('🚀 Высокий урон тараном — разгонись по диагонали и врежься во врага. Избегай встречных столкновений.');
+    if((td.radiusMultiplier||1)>=1.5)tips.push('🛡 Большой корпус поглощает больше урона — используй его для прикрытия союзников на линии огня.');
+    if(td.noBarrels)tips.push('💨 Нет стволов — всё решает таран. Прокачай скорость движения и урон корпусом в первую очередь.');
+    if(tips.length===0)tips.push('⚔ Прокачивай скорость снарядов и перезарядку прежде всего. Затем живучесть и урон.');
+    tips.push('📈 Оптимальная прокачка: Скорость снарядов → Перезаряд → Урон снарядов → Скорость движения → Жизни.');
+    return tips;
   }
 
-  // ── Load saved tanks and register them on startup ─────────────────────────
-  function _loadAll(){
-    try{
-      var list = JSON.parse(localStorage.getItem(SK)||'[]');
-      list.forEach(_reg);
-    } catch(e){}
+  // ── COUNTERS ──────────────────────────────────────────────────────────────
+  function _getCounters(name){
+    var td=_t[name];if(!td)return['Нет данных.'];
+    var bars=td.barrels||[],counters=[];
+    if(td.isInvis){counters.push('👁 Следите за следами урона и частицами — невидимки оставляют следы при движении и стрельбе.');counters.push('💨 Быстрый таран: атакуйте зону откуда появился урон — контакт вскрывает невидимку.');}
+    if(td.isDroneShooter){counters.push('🔫 Высокая скорость снарядов уничтожает дроны до подлёта. Используй снайперские классы.');counters.push('🏃 Обойдите дронов с фланга — зайдите за спину хозяину, пока дроны его догоняют.');}
+    if(bars.some(function(b){return b.isBomb;})){counters.push('🏃 Держите среднюю дистанцию — бомбы летят медленно и не наводятся. Высокоскоростной танк легко уходит.');counters.push('⚡ Используйте быстрый класс — бомбы просто не успевают за вами.');}
+    if(bars.some(function(b){return b.isSticky;})){counters.push('🔀 Движение зигзагом — липкие снаряды тормозят и лежат на земле, их легко объехать.');counters.push('📏 Держите дистанцию и расстреливайте издалека, не давая прицелиться.');}
+    if(bars.some(function(b){return b.isTrap;})){counters.push('🗺 Никогда не преследуйте минёра — он отступает и оставляет мины на вашем пути.');counters.push('🎯 Расстреляйте видимые мины издалека — они взрываются от попаданий.');}
+    if(bars.length>=6){counters.push('📏 Дальний бой со снайпером — многоствольные опасны вблизи, но уязвимы на дистанции.');counters.push('🔄 Хаотичное движение — трудно попасть всеми стволами в постоянно движущуюся цель.');}
+    if(bars.length===1&&!td.noBarrels){counters.push('↔️ Двигайтесь перпендикулярно линии огня — один снаряд легко уклонить.');counters.push('🔫 Врывайтесь в ближний бой — снайперские классы слабы вплотную.');}
+    if((td.bodyDamageMultiplier||1)>=3||td.noBarrels){counters.push('🔫 Максимальная дистанция — тараньщики опасны только вплотную. Расстреляйте с безопасного расстояния.');counters.push('🌀 Постоянно уходите от направления разгона тараньщика — круговое движение сбивает с толку.');}
+    if(counters.length===0){counters.push('⚔ Используйте Fighter — скорость + универсальный урон эффективны против большинства.');counters.push('🏴 Landmine — заложи мины на пути отступления врага. Невидимость мешает контратаке.');}
+    return counters;
   }
 
-  function _saveAll(list){
-    try{ localStorage.setItem(SK, JSON.stringify(list)); } catch(e){}
+  // ── EVOLUTION ─────────────────────────────────────────────────────────────
+  function _getEvo(name){var td=_t[name];if(!td)return{parents:[],children:[]};return{parents:td.upgradesFrom||[],children:_upgradesTo(name)};}
+
+  // ── STATE & MODAL ─────────────────────────────────────────────────────────
+  var _state={tab:'list',editing:null,barrels:[],msg:'',msgType:'ok',guideTank:'',guideTab:'evo',syncSel:{}};
+  var _modal=null;
+
+  function _buildModal(){var ov=document.createElement('div');ov.id='_tbOv';ov.style.cssText='position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);display:none;align-items:center;justify-content:center;font-family:Arial,sans-serif;padding:12px;box-sizing:border-box;overflow-y:auto;';ov.onclick=function(e){if(e.target===ov)_close();};var panel=document.createElement('div');panel.id='_tbPanel';panel.style.cssText='background:#0d1525;border:1.5px solid rgba(68,136,255,0.4);border-radius:16px;padding:20px;width:100%;max-width:620px;box-sizing:border-box;max-height:92vh;overflow-y:auto;position:relative;';ov.appendChild(panel);document.body.appendChild(ov);_modal=ov;return ov;}
+  function _close(){if(_modal)_modal.style.display='none';}
+  function _open(){if(!_modal)_buildModal();_modal.style.display='flex';_state.tab='list';_state.editing=null;_state.barrels=[];_state.syncSel={};_render();}
+
+  // ── PREVIEW CANVAS ────────────────────────────────────────────────────────
+  function _drawPreview(canvas,barrels,color){
+    var ctx=canvas.getContext('2d');var W=canvas.width,H=canvas.height,cx=W/2,cy=H/2,R=Math.min(W,H)*0.18;
+    ctx.clearRect(0,0,W,H);
+    var c=color||'#4488ff';
+    barrels.forEach(function(b){var ao=b.ao||0,len=(b.len||50)*0.52,w=Math.max(3,(b.w||14)*0.52);var fill=b.isBomb?'#ff6600':b.isSticky?'#ffaa00':b.isTrap?'#00cc88':b.isHoming?'#cc44ff':c;ctx.save();ctx.translate(cx,cy);ctx.rotate(ao);ctx.fillStyle=fill;ctx.globalAlpha=0.88;ctx.fillRect(0,-w/2,len,w);ctx.restore();});
+    ctx.beginPath();ctx.arc(cx,cy,R,0,Math.PI*2);ctx.fillStyle=c;ctx.globalAlpha=1;ctx.fill();ctx.strokeStyle='rgba(255,255,255,0.4)';ctx.lineWidth=2;ctx.stroke();
   }
 
-  function _getAll(){
-    try{ return JSON.parse(localStorage.getItem(SK)||'[]'); } catch(e){ return []; }
-  }
+  // ── TEMPLATES ─────────────────────────────────────────────────────────────
+  var _tmpls=[
+    {name:'🎯 Снайпер',    bars:[{ao:0,len:90,w:9,rel:2,bsz:1.2,bsp:2.2,bdm:2.2}]},
+    {name:'⚔ Двойной',    bars:[{ao:-0.1,len:55,w:12,rel:1,bsz:1,bsp:1,bdm:1},{ao:0.1,len:55,w:12,rel:1,bsz:1,bsp:1,bdm:1}]},
+    {name:'🔥 Пулемёт',   bars:[{ao:0,len:44,w:16,rel:0.28,bsz:0.75,bsp:1.1,bdm:0.65,spr:0.2}]},
+    {name:'💫 Веер×5',    bars:(function(){var b=[];for(var i=0;i<5;i++)b.push({ao:-0.35+i*0.175,len:44,w:12,rel:1,bsz:1,bsp:1,bdm:0.9});return b;})()},
+    {name:'🔄 Окто×8',    bars:(function(){var b=[];for(var i=0;i<8;i++)b.push({ao:i*Math.PI/4,len:40,w:12,rel:1.5,bsz:1,bsp:1,bdm:0.8});return b;})()},
+    {name:'🚀 Таран',     bars:[],bdm:6,rad:1.55},
+    {name:'💥 Бомба',     bars:[{ao:0,len:56,w:24,rel:2,bsz:1.8,bsp:0.7,bdm:2.5,isBomb:true}]},
+    {name:'⚓ Минёр×3',  bars:(function(){var b=[];for(var i=0;i<3;i++)b.push({ao:i*2*Math.PI/3,len:44,w:14,rel:2,bsz:1.3,bsp:0.5,bdm:1.3,isTrap:true});return b;})()},
+    {name:'🎯 Ракета',    bars:[{ao:0,len:62,w:12,rel:2,bsz:1.1,bsp:1.5,bdm:1.8,isHoming:true}]},
+    {name:'🔵 Липкий×4', bars:(function(){var b=[];for(var i=0;i<4;i++)b.push({ao:-0.3+i*0.2,len:48,w:13,rel:1.2,bsz:1,bsp:0.9,bdm:1.1,isSticky:true});return b;})()},
+  ];
 
-  _loadAll(); // register saved tanks immediately
-
-  // ── Vanilla-JS Modal UI ───────────────────────────────────────────────────
-  var _modal = null;
-
-  function _parentOptions(){
-    // All existing tank names as options for "upgrade from"
-    var names = Object.keys(_t).filter(function(n){ return n && _t[n] && _t[n].name; });
-    names.sort();
-    return names;
-  }
-
-  var _state = {
-    tab: 'edit',   // 'edit' | 'list'
-    editing: null, // currently edited tank object
-    barrels: [],   // list of barrel config objects
-    msg: ''
-  };
-
-  function _buildModal(){
-    var ov = document.createElement('div');
-    ov.id = '_tbOv';
-    ov.style.cssText = [
-      'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,0.88);',
-      'display:none;align-items:center;justify-content:center;',
-      'font-family:Arial,sans-serif;padding:12px;box-sizing:border-box;overflow-y:auto;'
-    ].join('');
-    ov.onclick = function(e){ if(e.target===ov) _close(); };
-
-    var panel = document.createElement('div');
-    panel.id = '_tbPanel';
-    panel.style.cssText = [
-      'background:#0d1525;border:1.5px solid rgba(68,136,255,0.4);border-radius:16px;',
-      'padding:20px;width:100%;max-width:560px;box-sizing:border-box;',
-      'max-height:90vh;overflow-y:auto;position:relative;'
-    ].join('');
-
-    ov.appendChild(panel);
-    document.body.appendChild(ov);
-    _modal = ov;
-    return ov;
-  }
-
-  function _close(){
-    if(_modal) _modal.style.display = 'none';
-  }
-
-  function _open(){
-    if(!_modal) _buildModal();
-    _modal.style.display = 'flex';
-    _state.tab = 'list';
-    _state.editing = null;
-    _state.barrels = [];
-    _render();
-  }
-
-  // ── Render the whole panel ─────────────────────────────────────────────────
+  // ── RENDER DISPATCH ───────────────────────────────────────────────────────
   function _render(){
-    var p = document.getElementById('_tbPanel');
-    if(!p) return;
-    p.innerHTML = '';
-
+    var p=document.getElementById('_tbPanel');if(!p)return;
+    p.innerHTML='';
     // Header
-    var hdr = document.createElement('div');
-    hdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;';
-    hdr.innerHTML = '<div style="color:#fff;font-size:18px;font-weight:bold;">⚙ Конструктор танков</div>';
-    var xBtn = document.createElement('button');
-    xBtn.textContent = '✕';
-    xBtn.style.cssText = 'background:none;border:none;color:rgba(255,255,255,0.5);font-size:22px;cursor:pointer;padding:0 4px;';
-    xBtn.onclick = _close;
-    hdr.appendChild(xBtn);
-    p.appendChild(hdr);
-
-    // Tab bar
-    var tabs = document.createElement('div');
-    tabs.style.cssText = 'display:flex;gap:8px;margin-bottom:16px;';
-    ['list','edit'].forEach(function(tab){
-      var b = document.createElement('button');
-      b.textContent = tab === 'list' ? '📋 Мои танки' : '✏️ Создать / Редактировать';
-      var active = _state.tab === tab;
-      b.style.cssText = 'flex:1;padding:8px;border-radius:8px;border:none;font-weight:bold;font-size:13px;cursor:pointer;' +
-        'background:' + (active ? 'rgba(0,120,200,0.7)' : 'rgba(255,255,255,0.07)') + ';' +
-        'color:' + (active ? '#fff' : 'rgba(255,255,255,0.45)') + ';';
-      b.onclick = function(){ _state.tab = tab; _render(); };
-      tabs.appendChild(b);
-    });
-    p.appendChild(tabs);
-
-    if(_state.msg){
-      var msg = document.createElement('div');
-      msg.style.cssText = 'background:rgba(0,180,80,0.18);border:1px solid rgba(0,180,80,0.4);border-radius:8px;padding:8px 12px;color:#66ff99;font-size:12px;margin-bottom:10px;';
-      msg.textContent = _state.msg;
-      p.appendChild(msg);
-      setTimeout(function(){ _state.msg=''; if(_modal && _modal.style.display!=='none') _render(); }, 2500);
-    }
-
-    if(_state.tab === 'list') _renderList(p);
-    else _renderEdit(p);
+    var hdr=document.createElement('div');hdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;';
+    var title=document.createElement('div');title.style.cssText='color:#fff;font-size:18px;font-weight:bold;';title.textContent='⚙ Конструктор танков';hdr.appendChild(title);
+    var xBtn=document.createElement('button');xBtn.textContent='✕';xBtn.style.cssText='background:none;border:none;color:rgba(255,255,255,0.5);font-size:22px;cursor:pointer;padding:0 4px;';xBtn.onclick=_close;hdr.appendChild(xBtn);p.appendChild(hdr);
+    // Tabs
+    var tabs=document.createElement('div');tabs.style.cssText='display:flex;gap:6px;margin-bottom:16px;';
+    [['list','📋 Мои танки'],['edit','✏️ Создать'],['guide','📖 Справочник']].forEach(function(pair){var b=document.createElement('button');b.textContent=pair[1];var act=_state.tab===pair[0];b.style.cssText='flex:1;padding:8px 4px;border-radius:8px;border:none;font-weight:bold;font-size:12px;cursor:pointer;background:'+(act?'rgba(0,120,200,0.7)':'rgba(255,255,255,0.07)')+';color:'+(act?'#fff':'rgba(255,255,255,0.45)')+';';b.onclick=function(){_state.tab=pair[0];_render();};tabs.appendChild(b);});p.appendChild(tabs);
+    // Message
+    if(_state.msg){var msg=document.createElement('div');var ok=_state.msgType!=='err';msg.style.cssText='background:rgba('+(ok?'0,180,80':'200,50,50')+',0.18);border:1px solid rgba('+(ok?'0,180,80':'200,50,50')+',0.4);border-radius:8px;padding:8px 12px;color:'+(ok?'#66ff99':'#ff8888')+';font-size:12px;margin-bottom:10px;';msg.textContent=_state.msg;p.appendChild(msg);setTimeout(function(){_state.msg='';if(_modal&&_modal.style.display!=='none')_render();},2800);}
+    if(_state.tab==='list')_renderList(p);
+    else if(_state.tab==='edit')_renderEdit(p);
+    else _renderGuide(p);
   }
 
-  // ── List tab ───────────────────────────────────────────────────────────────
+  // ── LIST ──────────────────────────────────────────────────────────────────
   function _renderList(p){
-    var list = _getAll();
-    var addBtn = document.createElement('button');
-    addBtn.textContent = '+ Создать новый танк';
-    addBtn.style.cssText = 'width:100%;padding:11px;border-radius:10px;border:2px dashed rgba(68,136,255,0.5);background:rgba(0,40,80,0.3);color:#88ccff;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:14px;';
-    addBtn.onclick = function(){
-      _state.tab = 'edit';
-      _state.editing = null;
-      _state.barrels = [{ao:0,len:50,w:14,rel:1,bsz:1,bsp:1,bdm:1,spr:0}];
-      _render();
-    };
-    p.appendChild(addBtn);
-
-    if(list.length === 0){
-      var empty = document.createElement('div');
-      empty.style.cssText = 'color:rgba(255,255,255,0.35);text-align:center;padding:30px 0;font-size:13px;';
-      empty.textContent = 'Нет сохранённых танков. Создайте первый!';
-      p.appendChild(empty);
-      return;
-    }
-
-    list.forEach(function(tank, idx){
-      var row = document.createElement('div');
-      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);margin-bottom:8px;';
-
-      var dot = document.createElement('div');
-      dot.style.cssText = 'width:16px;height:16px;border-radius:50%;background:' + (tank.color||'#4488ff') + ';flex-shrink:0;';
-      row.appendChild(dot);
-
-      var info = document.createElement('div');
-      info.style.cssText = 'flex:1;min-width:0;';
-      info.innerHTML = '<div style="color:#fff;font-weight:bold;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + tank.name + '</div>' +
-        '<div style="color:rgba(255,255,255,0.4);font-size:11px;">Уровень ' + (tank.lvl||45) + ' · После: ' + (Array.isArray(tank.from)?tank.from.join('/'):tank.from) + ' · ' + (tank.barrels||[]).length + ' ствол(а)</div>';
-      row.appendChild(info);
-
-      var editBtn = document.createElement('button');
-      editBtn.textContent = '✏️';
-      editBtn.style.cssText = 'padding:6px 10px;border-radius:7px;border:1px solid rgba(68,136,255,0.4);background:rgba(0,40,80,0.5);color:#88ccff;cursor:pointer;font-size:13px;';
-      editBtn.onclick = function(){
-        _state.tab = 'edit';
-        _state.editing = Object.assign({}, tank);
-        _state.barrels = (tank.barrels||[]).map(function(b){ return Object.assign({},b); });
-        _render();
-      };
-      row.appendChild(editBtn);
-
-      var delBtn = document.createElement('button');
-      delBtn.textContent = '🗑';
-      delBtn.style.cssText = 'padding:6px 10px;border-radius:7px;border:1px solid rgba(200,40,40,0.4);background:rgba(80,10,10,0.5);color:#ff8888;cursor:pointer;font-size:13px;';
-      delBtn.onclick = function(){
-        if(!confirm('Удалить танк "' + tank.name + '"?')) return;
-        var all = _getAll();
-        all.splice(idx, 1);
-        _saveAll(all);
-        // remove from _t
-        delete _t[tank.name];
-        _state.msg = 'Танк "' + tank.name + '" удалён.';
-        _render();
-      };
-      row.appendChild(delBtn);
+    var addBtn=document.createElement('button');addBtn.textContent='+ Создать новый танк';addBtn.style.cssText='width:100%;padding:11px;border-radius:10px;border:2px dashed rgba(68,136,255,0.5);background:rgba(0,40,80,0.3);color:#88ccff;font-size:14px;font-weight:bold;cursor:pointer;margin-bottom:10px;';addBtn.onclick=function(){_state.tab='edit';_state.editing=null;_state.barrels=[{ao:0,len:50,w:14,rel:1,bsz:1,bsp:1,bdm:1,spr:0}];_state.syncSel={};_render();};p.appendChild(addBtn);
+    var guideRow=document.createElement('button');guideRow.textContent='📖 Справочник по всем танкам → Улучшить / Эволюция / Контр';guideRow.style.cssText='width:100%;padding:9px;border-radius:9px;border:1px solid rgba(100,200,255,0.35);background:rgba(0,40,80,0.3);color:#88ddff;font-size:12px;cursor:pointer;margin-bottom:14px;';guideRow.onclick=function(){_state.tab='guide';_state.guideTank='';_state.guideTab='evo';_render();};p.appendChild(guideRow);
+    var list=_getAll();
+    if(list.length===0){var empty=document.createElement('div');empty.style.cssText='color:rgba(255,255,255,0.35);text-align:center;padding:30px 0;font-size:13px;';empty.textContent='Нет сохранённых танков. Создайте первый!';p.appendChild(empty);return;}
+    list.forEach(function(tank,idx){
+      var row=document.createElement('div');row.style.cssText='display:flex;align-items:center;gap:7px;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);margin-bottom:8px;';
+      var dot=document.createElement('div');dot.style.cssText='width:14px;height:14px;border-radius:50%;background:'+(tank.color||'#4488ff')+';flex-shrink:0;';row.appendChild(dot);
+      var info=document.createElement('div');info.style.cssText='flex:1;min-width:0;';var fromStr=Array.isArray(tank.from)?tank.from.join('/'):tank.from;info.innerHTML='<div style="color:#fff;font-weight:bold;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">'+tank.name+'</div><div style="color:rgba(255,255,255,0.4);font-size:10px;">Ур.'+(tank.lvl||45)+' · ← '+fromStr+' · '+(tank.barrels||[]).length+' ств.'+(tank.isInvis?' 👻':'')+((tank.bdm||1)>=3?' 💥':'')+'</div>';row.appendChild(info);
+      var gdBtn=document.createElement('button');gdBtn.textContent='📖';gdBtn.style.cssText='padding:6px 8px;border-radius:7px;border:1px solid rgba(100,200,255,0.35);background:rgba(0,40,80,0.4);color:#88ddff;cursor:pointer;font-size:12px;';gdBtn.onclick=function(){_state.tab='guide';_state.guideTank=tank.name;_state.guideTab='evo';_render();};row.appendChild(gdBtn);
+      var editBtn=document.createElement('button');editBtn.textContent='✏️';editBtn.style.cssText='padding:6px 8px;border-radius:7px;border:1px solid rgba(68,136,255,0.4);background:rgba(0,40,80,0.5);color:#88ccff;cursor:pointer;font-size:12px;';editBtn.onclick=function(){_state.tab='edit';_state.editing=Object.assign({},tank);_state.barrels=(tank.barrels||[]).map(function(b){return Object.assign({},b);});_state.syncSel={};_render();};row.appendChild(editBtn);
+      var delBtn=document.createElement('button');delBtn.textContent='🗑';delBtn.style.cssText='padding:6px 8px;border-radius:7px;border:1px solid rgba(200,40,40,0.4);background:rgba(80,10,10,0.5);color:#ff8888;cursor:pointer;font-size:12px;';delBtn.onclick=function(){if(!confirm('Удалить "'+tank.name+'"?'))return;var all=_getAll();all.splice(idx,1);_saveAll(all);delete _t[tank.name];_state.msg='Танк "'+tank.name+'" удалён.';_state.msgType='ok';_render();};row.appendChild(delBtn);
       p.appendChild(row);
     });
   }
 
-  // ── Edit tab ──────────────────────────────────────────────────────────────
-  function _renderEdit(p){
-    var t = _state.editing || {};
-
-    function _inp(label, id, val, type, extra){
-      var wr = document.createElement('div');
-      wr.style.cssText = 'margin-bottom:12px;';
-      var lb = document.createElement('label');
-      lb.style.cssText = 'display:block;color:rgba(255,255,255,0.6);font-size:12px;margin-bottom:4px;';
-      lb.textContent = label;
-      wr.appendChild(lb);
-      var inp = document.createElement(type==='select'?'select':type==='textarea'?'textarea':'input');
-      if(type && type !== 'select' && type !== 'textarea') inp.type = type;
-      inp.id = id;
-      inp.value = val || '';
-      if(type==='textarea') inp.rows = 2;
-      inp.style.cssText = 'width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(68,136,255,0.3);background:rgba(255,255,255,0.07);color:#fff;font-size:13px;box-sizing:border-box;' + (extra||'');
-      if(type==='select'){
-        var opts = ['-- выберите --'].concat(_parentOptions());
-        opts.forEach(function(opt){
-          var o = document.createElement('option');
-          o.value = opt.startsWith('--') ? '' : opt;
-          o.textContent = opt;
-          if(opt === (Array.isArray(t.from)?t.from[0]:t.from)) o.selected = true;
-          inp.appendChild(o);
-        });
-      }
-      wr.appendChild(inp);
-      p.appendChild(wr);
+  // ── GUIDE ─────────────────────────────────────────────────────────────────
+  function _renderGuide(p){
+    // Tank selector
+    var selDiv=document.createElement('div');selDiv.style.cssText='margin-bottom:14px;';
+    var selLbl=document.createElement('div');selLbl.style.cssText='color:rgba(255,255,255,0.55);font-size:12px;margin-bottom:6px;';selLbl.textContent='Выберите танк для справки:';selDiv.appendChild(selLbl);
+    var sel=document.createElement('select');sel.style.cssText='width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(68,136,255,0.3);background:#0a1525;color:#fff;font-size:13px;box-sizing:border-box;';
+    var o0=document.createElement('option');o0.value='';o0.textContent='-- выберите танк --';sel.appendChild(o0);
+    _parentOptions().forEach(function(n){var o=document.createElement('option');o.value=n;o.textContent=_nm(n)+(n!==_nm(n)?' ('+n+')':'');if(n===_state.guideTank)o.selected=true;sel.appendChild(o);});
+    sel.onchange=function(){_state.guideTank=sel.value;_render();};selDiv.appendChild(sel);p.appendChild(selDiv);
+    if(!_state.guideTank||!_t[_state.guideTank]){var hint=document.createElement('div');hint.style.cssText='color:rgba(255,255,255,0.3);text-align:center;padding:30px 0;font-size:13px;';hint.textContent='Выберите танк выше чтобы увидеть справку.';p.appendChild(hint);return;}
+    var td=_t[_state.guideTank];
+    // Tank header
+    var thdr=document.createElement('div');thdr.style.cssText='display:flex;align-items:center;gap:12px;padding:12px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);margin-bottom:14px;';
+    var canv=document.createElement('canvas');canv.width=80;canv.height=80;canv.style.cssText='border-radius:50%;background:rgba(0,0,0,0.3);flex-shrink:0;';_drawPreview(canv,td.barrels||[],td.color);thdr.appendChild(canv);
+    var tinfo=document.createElement('div');var lvl=td.requiredLevel||0;var tier=lvl>=45?4:lvl>=30?3:lvl>=15?2:lvl>=5?1:0;var tierDots='⬛⬛⬛⬛⬛'.split('');tierDots.forEach(function(d,i){tierDots[i]=i<=tier?'🟦':'⬛';});
+    tinfo.innerHTML='<div style="color:#fff;font-size:16px;font-weight:bold;">'+_nm(_state.guideTank)+'</div><div style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:2px;">'+_state.guideTank+'</div><div style="color:#aaa;font-size:11px;margin-top:4px;">Уровень '+lvl+' · '+(td.barrels||[]).length+' ствол(а)'+(td.isInvis?' · 👻 Невидим':'')+((td.bodyDamageMultiplier||1)>=3?' · 💥 Таранщик':'')+((td.isDroneShooter)?' · 🤖 Дроны':'')+'</div><div style="font-size:12px;margin-top:4px;">'+tierDots.join('')+'</div>';
+    if(td.description)tinfo.innerHTML+='<div style="color:rgba(255,255,255,0.4);font-size:11px;margin-top:6px;font-style:italic;">'+td.description+'</div>';
+    thdr.appendChild(tinfo);p.appendChild(thdr);
+    // Guide tabs
+    var gtabs=document.createElement('div');gtabs.style.cssText='display:flex;gap:6px;margin-bottom:14px;';
+    [['evo','🌿 Эволюция'],['tips','💡 Улучшить'],['counter','🛡 Контр']].forEach(function(pair){var b=document.createElement('button');b.textContent=pair[1];var act=_state.guideTab===pair[0];b.style.cssText='flex:1;padding:10px 4px;border-radius:8px;border:none;font-weight:bold;font-size:13px;cursor:pointer;background:'+(act?'rgba(0,150,200,0.65)':'rgba(255,255,255,0.07)')+';color:'+(act?'#fff':'rgba(255,255,255,0.45)')+';';b.onclick=function(){_state.guideTab=pair[0];_render();};gtabs.appendChild(b);});p.appendChild(gtabs);
+    var content=document.createElement('div');content.style.cssText='background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:14px;';
+    if(_state.guideTab==='evo'){
+      var evo=_getEvo(_state.guideTank);
+      content.innerHTML='<div style="color:#aef;font-weight:bold;font-size:13px;margin-bottom:12px;">🌿 Дерево эволюции</div>';
+      // Parents
+      if(evo.parents.length>0){content.innerHTML+='<div style="color:rgba(255,255,255,0.45);font-size:11px;margin-bottom:7px;">Прокачивается из:</div>';var pRow=document.createElement('div');pRow.style.cssText='display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;';evo.parents.forEach(function(pn){var pb=document.createElement('button');pb.textContent='← '+_nm(pn);pb.style.cssText='padding:6px 12px;border-radius:20px;border:1px solid rgba(100,200,100,0.4);background:rgba(0,80,40,0.3);color:#88ffaa;font-size:12px;cursor:pointer;';pb.onclick=function(){_state.guideTank=pn;_render();};pRow.appendChild(pb);});content.appendChild(pRow);}
+      else{content.innerHTML+='<div style="color:rgba(255,255,255,0.3);font-size:11px;margin-bottom:12px;font-style:italic;">Базовый класс — нет родителей</div>';}
+      // Current
+      var curDiv=document.createElement('div');curDiv.style.cssText='display:inline-flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;border:2px solid '+(td.color||'#4488ff')+';background:rgba(0,0,0,0.3);margin-bottom:14px;';var curCanv=document.createElement('canvas');curCanv.width=36;curCanv.height=36;_drawPreview(curCanv,td.barrels||[],td.color);curDiv.appendChild(curCanv);var curLbl=document.createElement('span');curLbl.style.cssText='color:#fff;font-size:14px;font-weight:bold;';curLbl.textContent=_nm(_state.guideTank);curDiv.appendChild(curLbl);content.appendChild(curDiv);
+      // Children
+      if(evo.children.length>0){var chLbl=document.createElement('div');chLbl.style.cssText='color:rgba(255,255,255,0.45);font-size:11px;margin-bottom:7px;';chLbl.textContent='Эволюция в:';content.appendChild(chLbl);var chRow=document.createElement('div');chRow.style.cssText='display:flex;gap:6px;flex-wrap:wrap;';evo.children.forEach(function(cn){var ct=_t[cn];var cb=document.createElement('button');var lvReq=ct?('Ур.'+(ct.requiredLevel||'?')):'';cb.innerHTML='<div style="font-size:10px;opacity:0.55;">'+lvReq+'</div><div>→ '+_nm(cn)+'</div>';cb.style.cssText='padding:6px 12px;border-radius:20px;border:1px solid rgba(255,180,50,0.4);background:rgba(60,40,0,0.4);color:#ffcc66;font-size:12px;cursor:pointer;text-align:center;';cb.onclick=function(){_state.guideTank=cn;_render();};chRow.appendChild(cb);});content.appendChild(chRow);}
+      else{var finLbl=document.createElement('div');finLbl.style.cssText='color:rgba(255,220,50,0.6);font-size:11px;margin-top:4px;font-style:italic;';finLbl.textContent='→ Финальный класс в ветке';content.appendChild(finLbl);}
+    } else if(_state.guideTab==='tips'){
+      content.innerHTML='<div style="color:#aef;font-weight:bold;font-size:13px;margin-bottom:10px;">💡 Советы по игре за этот танк</div>';
+      _getTips(_state.guideTank).forEach(function(tip){var d=document.createElement('div');d.style.cssText='padding:9px 12px;border-radius:7px;background:rgba(255,255,255,0.04);margin-bottom:7px;color:rgba(255,255,255,0.85);font-size:12px;line-height:1.6;border-left:3px solid rgba(68,136,255,0.6);';d.textContent=tip;content.appendChild(d);});
+    } else {
+      content.innerHTML='<div style="color:#aef;font-weight:bold;font-size:13px;margin-bottom:10px;">🛡 Как контрить этот танк</div>';
+      _getCounters(_state.guideTank).forEach(function(tip){var d=document.createElement('div');d.style.cssText='padding:9px 12px;border-radius:7px;background:rgba(255,255,255,0.04);margin-bottom:7px;color:rgba(255,255,255,0.85);font-size:12px;line-height:1.6;border-left:3px solid rgba(255,80,80,0.6);';d.textContent=tip;content.appendChild(d);});
     }
+    p.appendChild(content);
+  }
 
-    // Name
-    _inp('Название танка (уникальное, можно кириллицу)', '_tb_name', t.name, 'text');
+  // ── EDIT ──────────────────────────────────────────────────────────────────
+  function _renderEdit(p){
+    var t=_state.editing||{};var color=t.color||'#4488ff';
 
-    // Color
-    _inp('Цвет', '_tb_color', t.color||'#4488ff', 'color', 'height:36px;padding:2px 6px;cursor:pointer;');
+    // ── FEATURE 1: LIVE PREVIEW CANVAS ────────────────────────────────────
+    var prevDiv=document.createElement('div');prevDiv.style.cssText='display:flex;justify-content:center;margin-bottom:14px;';
+    var canv=document.createElement('canvas');canv.id='_tb_canvas';canv.width=120;canv.height=120;canv.style.cssText='border-radius:50%;background:rgba(255,255,255,0.05);border:2px solid rgba(68,136,255,0.35);';
+    _drawPreview(canv,_state.barrels,color);prevDiv.appendChild(canv);p.appendChild(prevDiv);
+    function _refreshPrev(){var cv=document.getElementById('_tb_canvas');var col=(document.getElementById('_tb_color')||{}).value||color;if(cv)_drawPreview(cv,_state.barrels,col);}
+
+    // Tank name
+    function _inp(label,id,val,type,extra){var wr=document.createElement('div');wr.style.cssText='margin-bottom:12px;';var lb=document.createElement('label');lb.style.cssText='display:block;color:rgba(255,255,255,0.6);font-size:12px;margin-bottom:4px;';lb.textContent=label;wr.appendChild(lb);var inp=document.createElement(type==='select'?'select':type==='textarea'?'textarea':'input');if(type&&type!=='select'&&type!=='textarea')inp.type=type;inp.id=id;inp.value=val||'';if(type==='textarea')inp.rows=2;inp.style.cssText='width:100%;padding:8px 10px;border-radius:8px;border:1px solid rgba(68,136,255,0.3);background:rgba(255,255,255,0.07);color:#fff;font-size:13px;box-sizing:border-box;'+(extra||'');wr.appendChild(inp);p.appendChild(wr);}
+    _inp('Название танка','_tb_name',t.name,'text');
+
+    // Color + isInvis row
+    var colorRow=document.createElement('div');colorRow.style.cssText='display:flex;gap:10px;margin-bottom:12px;align-items:flex-end;';
+    var colorWr=document.createElement('div');colorWr.style.cssText='flex:1;';colorWr.innerHTML='<label style="display:block;color:rgba(255,255,255,0.6);font-size:12px;margin-bottom:4px;">Цвет</label>';
+    var colorInp=document.createElement('input');colorInp.type='color';colorInp.id='_tb_color';colorInp.value=t.color||'#4488ff';colorInp.style.cssText='width:100%;height:36px;padding:2px 6px;cursor:pointer;border-radius:8px;border:1px solid rgba(68,136,255,0.3);background:rgba(255,255,255,0.07);box-sizing:border-box;';colorInp.oninput=function(){color=colorInp.value;_refreshPrev();};colorWr.appendChild(colorInp);colorRow.appendChild(colorWr);
+    // ── FEATURE 2: isInvis TOGGLE ─────────────────────────────────────────
+    var invisWr=document.createElement('div');invisWr.style.cssText='flex-shrink:0;text-align:center;';invisWr.innerHTML='<div style="color:rgba(255,255,255,0.55);font-size:11px;margin-bottom:4px;">👻 Невидим</div>';var invisChk=document.createElement('input');invisChk.type='checkbox';invisChk.id='_tb_invis';invisChk.checked=!!t.isInvis;invisChk.style.cssText='width:22px;height:22px;cursor:pointer;accent-color:#4488ff;display:block;margin:0 auto;';invisWr.appendChild(invisChk);colorRow.appendChild(invisWr);p.appendChild(colorRow);
 
     // Level
-    var lvlWr = document.createElement('div');
-    lvlWr.style.cssText = 'margin-bottom:12px;';
-    lvlWr.innerHTML = '<div style="color:rgba(255,255,255,0.6);font-size:12px;margin-bottom:6px;">Требуемый уровень</div>';
-    var lvlRow = document.createElement('div');
-    lvlRow.style.cssText = 'display:flex;gap:8px;';
-    [5,15,30,45].forEach(function(lv){
-      var lb = document.createElement('button');
-      lb.textContent = lv;
-      lb.dataset.lv = lv;
-      var _defLvl = t.lvl || (_state.editing && _state.editing.lvl) || 45;
-      var active = _defLvl === lv;
-      lb.style.cssText = 'flex:1;padding:8px;border-radius:8px;font-weight:bold;font-size:14px;cursor:pointer;border:2px solid ' +
-        (active?'rgba(68,136,255,0.8)':'rgba(255,255,255,0.15)') + ';background:' +
-        (active?'rgba(0,80,160,0.5)':'rgba(255,255,255,0.04)') + ';color:' + (active?'#fff':'rgba(255,255,255,0.4)') + ';';
-      lb.onclick = function(){
-        _state.editing = _state.editing || {};
-        _state.editing.lvl = parseInt(lb.dataset.lv);
-        lvlRow.querySelectorAll('button').forEach(function(b){
-          var act = parseInt(b.dataset.lv) === _state.editing.lvl;
-          b.style.border = '2px solid ' + (act?'rgba(68,136,255,0.8)':'rgba(255,255,255,0.15)');
-          b.style.background = act?'rgba(0,80,160,0.5)':'rgba(255,255,255,0.04)';
-          b.style.color = act?'#fff':'rgba(255,255,255,0.4)';
-        });
-      };
-      lvlRow.appendChild(lb);
-    });
-    lvlWr.appendChild(lvlRow);
-    p.appendChild(lvlWr);
+    var lvlWr=document.createElement('div');lvlWr.style.cssText='margin-bottom:12px;';lvlWr.innerHTML='<div style="color:rgba(255,255,255,0.6);font-size:12px;margin-bottom:6px;">Требуемый уровень</div>';var lvlRow=document.createElement('div');lvlRow.style.cssText='display:flex;gap:8px;';
+    [5,15,30,45].forEach(function(lv){var lb=document.createElement('button');lb.textContent=lv;lb.dataset.lv=lv;var act=(t.lvl||45)===lv;lb.style.cssText='flex:1;padding:8px;border-radius:8px;font-weight:bold;font-size:14px;cursor:pointer;border:2px solid '+(act?'rgba(68,136,255,0.8)':'rgba(255,255,255,0.15)')+';background:'+(act?'rgba(0,80,160,0.5)':'rgba(255,255,255,0.04)')+';color:'+(act?'#fff':'rgba(255,255,255,0.4)')+';';lb.onclick=function(){_state.editing=_state.editing||{};_state.editing.lvl=parseInt(lb.dataset.lv);lvlRow.querySelectorAll('button').forEach(function(b){var a=parseInt(b.dataset.lv)===_state.editing.lvl;b.style.border='2px solid '+(a?'rgba(68,136,255,0.8)':'rgba(255,255,255,0.15)');b.style.background=a?'rgba(0,80,160,0.5)':'rgba(255,255,255,0.04)';b.style.color=a?'#fff':'rgba(255,255,255,0.4)';});};lvlRow.appendChild(lb);});
+    lvlWr.appendChild(lvlRow);p.appendChild(lvlWr);
 
-    // Parent tank
-    _inp('После какого танка (upgradesFrom)', '_tb_from', null, 'select');
+    // ── FEATURE 3: MULTIPLE PARENTS ───────────────────────────────────────
+    var fromWr=document.createElement('div');fromWr.style.cssText='margin-bottom:12px;';fromWr.innerHTML='<label style="display:block;color:rgba(255,255,255,0.6);font-size:12px;margin-bottom:4px;">После танков (можно несколько через запятую)</label>';
+    var fromRow=document.createElement('div');fromRow.style.cssText='display:flex;gap:6px;margin-bottom:5px;';
+    var fromSel=document.createElement('select');fromSel.style.cssText='flex:1;padding:7px 10px;border-radius:8px;border:1px solid rgba(68,136,255,0.3);background:rgba(255,255,255,0.07);color:#fff;font-size:12px;';['-- добавить --'].concat(_parentOptions()).forEach(function(opt){var o=document.createElement('option');o.value=opt.startsWith('--')?'':opt;o.textContent=opt;fromSel.appendChild(o);});fromRow.appendChild(fromSel);
+    var fromTagsInp=document.createElement('input');fromTagsInp.id='_tb_from';fromTagsInp.value=Array.isArray(t.from)?t.from.join(', '):(t.from||'');fromTagsInp.placeholder='Basic, Assault';fromTagsInp.style.cssText='width:100%;padding:7px 10px;border-radius:8px;border:1px solid rgba(68,136,255,0.2);background:rgba(255,255,255,0.05);color:#fff;font-size:12px;box-sizing:border-box;';
+    var fromAddBtn=document.createElement('button');fromAddBtn.textContent='+ Добавить';fromAddBtn.style.cssText='padding:7px 10px;border-radius:8px;border:1px solid rgba(68,136,255,0.4);background:rgba(0,40,80,0.4);color:#88ccff;font-size:12px;cursor:pointer;white-space:nowrap;';fromAddBtn.onclick=function(){var v=fromSel.value;if(!v)return;var cur=(fromTagsInp.value||'').split(',').map(function(s){return s.trim();}).filter(Boolean);if(cur.indexOf(v)<0)cur.push(v);fromTagsInp.value=cur.join(', ');};fromRow.appendChild(fromAddBtn);fromWr.appendChild(fromRow);fromWr.appendChild(fromTagsInp);p.appendChild(fromWr);
 
     // Description
-    _inp('Описание', '_tb_desc', t.desc, 'textarea');
+    _inp('Описание (необязательно)','_tb_desc',t.desc,'textarea');
 
-    // Body damage multiplier
-    function _slider(label, id, val, min, max, step){
-      var wr = document.createElement('div');
-      wr.style.cssText = 'margin-bottom:10px;';
-      var valEl;
-      wr.innerHTML = '<div style="display:flex;justify-content:space-between;margin-bottom:4px;">' +
-        '<span style="color:rgba(255,255,255,0.6);font-size:12px;">' + label + '</span>' +
-        '<span id="' + id + '_v" style="color:#88ccff;font-size:12px;font-weight:bold;">' + val + '</span></div>';
-      var sl = document.createElement('input');
-      sl.type = 'range'; sl.id = id; sl.min = min; sl.max = max; sl.step = step; sl.value = val;
-      sl.style.cssText = 'width:100%;accent-color:#4488ff;cursor:pointer;';
-      sl.oninput = function(){ var el = document.getElementById(id+'_v'); if(el) el.textContent = parseFloat(sl.value).toFixed(2); };
-      wr.appendChild(sl);
-      p.appendChild(wr);
+    // Sliders
+    function _slider(label,id,val,min,max,step){var wr=document.createElement('div');wr.style.cssText='margin-bottom:10px;';wr.innerHTML='<div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="color:rgba(255,255,255,0.6);font-size:12px;">'+label+'</span><span id="'+id+'_v" style="color:#88ccff;font-size:12px;font-weight:bold;">'+parseFloat(val).toFixed(2)+'</span></div>';var sl=document.createElement('input');sl.type='range';sl.id=id;sl.min=min;sl.max=max;sl.step=step;sl.value=val;sl.style.cssText='width:100%;accent-color:#4488ff;cursor:pointer;';sl.oninput=function(){var el=document.getElementById(id+'_v');if(el)el.textContent=parseFloat(sl.value).toFixed(2);};wr.appendChild(sl);p.appendChild(wr);}
+    _slider('Урон корпусом ×','_tb_bdm',t.bdm||1,0.5,15,0.1);
+    _slider('Размер корпуса ×','_tb_rad',t.rad||1.2,0.7,2.0,0.05);
+
+    // ── FEATURE 4: IMPORT FROM EXISTING TANK ─────────────────────────────
+    var impSec=document.createElement('div');impSec.style.cssText='margin-top:14px;border-top:1px solid rgba(255,255,255,0.1);padding-top:12px;margin-bottom:12px;';impSec.innerHTML='<div style="color:rgba(255,255,255,0.45);font-size:12px;margin-bottom:8px;">📥 Импортировать стволы из готового танка</div>';
+    var impRow=document.createElement('div');impRow.style.cssText='display:flex;gap:6px;';var impSel=document.createElement('select');impSel.style.cssText='flex:1;padding:7px 10px;border-radius:8px;border:1px solid rgba(68,136,255,0.3);background:rgba(255,255,255,0.07);color:#fff;font-size:12px;';['-- выберите --'].concat(_parentOptions()).forEach(function(opt){var o=document.createElement('option');o.value=opt.startsWith('--')?'':opt;o.textContent=_nm(opt)||opt;impSel.appendChild(o);});impRow.appendChild(impSel);
+    var impBtn=document.createElement('button');impBtn.textContent='📥 Импорт';impBtn.style.cssText='padding:7px 12px;border-radius:8px;border:1px solid rgba(68,136,255,0.4);background:rgba(0,40,80,0.4);color:#88ccff;font-size:12px;cursor:pointer;';impBtn.onclick=function(){var tn=impSel.value;if(!tn||!_t[tn])return;var bars=_t[tn].barrels||[];_state.barrels=bars.map(function(b){return{ao:b.angleOffset||0,len:b.length||50,w:b.width||14,rel:b.reloadMultiplier||1,bsz:b.bulletSizeMultiplier||1,bsp:b.bulletSpeedMultiplier||1,bdm:b.bulletDamageMultiplier||1,spr:b.spread||0,isBomb:!!b.isBomb,isSticky:!!b.isSticky,isTrap:!!b.isTrap,isHoming:!!b.isHoming};});_state.msg='✅ Стволы из "'+_nm(tn)+'" импортированы';_state.msgType='ok';_render();};impRow.appendChild(impBtn);impSec.appendChild(impRow);p.appendChild(impSec);
+
+    // ── BARRELS SECTION ───────────────────────────────────────────────────
+    var bSec=document.createElement('div');bSec.style.cssText='border-top:1px solid rgba(255,255,255,0.12);padding-top:14px;';
+    var bHdr=document.createElement('div');bHdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;';var bTitle=document.createElement('div');bTitle.style.cssText='color:#fff;font-size:13px;font-weight:bold;';bTitle.textContent='Стволы ('+_state.barrels.length+')';bHdr.appendChild(bTitle);
+    var addB=document.createElement('button');addB.textContent='+ Ствол';addB.style.cssText='padding:6px 10px;border-radius:8px;border:1px solid rgba(68,136,255,0.4);background:rgba(0,40,80,0.4);color:#88ccff;font-size:12px;cursor:pointer;';addB.onclick=function(){_state.barrels.push({ao:0,len:50,w:14,rel:1,bsz:1,bsp:1,bdm:1,spr:0});_render();};bHdr.appendChild(addB);bSec.appendChild(bHdr);
+
+    // ── FEATURE 5: TEMPLATES ──────────────────────────────────────────────
+    var tmplDiv=document.createElement('div');tmplDiv.style.cssText='margin-bottom:10px;';tmplDiv.innerHTML='<div style="color:rgba(255,255,255,0.38);font-size:11px;margin-bottom:6px;">📋 Шаблоны:</div>';
+    var tmplRow=document.createElement('div');tmplRow.style.cssText='display:flex;gap:4px;flex-wrap:wrap;';
+    _tmpls.forEach(function(tmpl){var tb=document.createElement('button');tb.textContent=tmpl.name;tb.style.cssText='padding:5px 9px;border-radius:14px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.7);font-size:11px;cursor:pointer;';tb.onclick=function(){_state.barrels=(tmpl.bars||[]).map(function(b){return Object.assign({spr:0},b);});if(tmpl.bdm)_state.editing=Object.assign(_state.editing||{},{bdm:tmpl.bdm});if(tmpl.rad)_state.editing=Object.assign(_state.editing||{},{rad:tmpl.rad});_state.msg='Шаблон "'+tmpl.name+'" применён';_state.msgType='ok';_render();};tmplRow.appendChild(tb);});
+    tmplDiv.appendChild(tmplRow);bSec.appendChild(tmplDiv);
+
+    // ── TOOLS ROW ─────────────────────────────────────────────────────────
+    var toolsRow=document.createElement('div');toolsRow.style.cssText='display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;align-items:center;';
+    toolsRow.innerHTML='<span style="color:rgba(255,255,255,0.38);font-size:11px;white-space:nowrap;">🛠 Инструменты:</span>';
+
+    // ── FEATURE 6: SPREAD EVENLY ──────────────────────────────────────────
+    var spreadInp=document.createElement('input');spreadInp.type='number';spreadInp.min=1;spreadInp.max=12;spreadInp.value=4;spreadInp.style.cssText='width:44px;padding:5px 6px;border-radius:7px;border:1px solid rgba(68,136,255,0.3);background:rgba(255,255,255,0.07);color:#fff;font-size:12px;';
+    var spreadBtn=document.createElement('button');spreadBtn.textContent='🔄 Равномерно';spreadBtn.style.cssText='padding:5px 9px;border-radius:7px;border:1px solid rgba(68,136,255,0.35);background:rgba(0,40,80,0.4);color:#88ccff;font-size:11px;cursor:pointer;';spreadBtn.onclick=function(){var n=Math.max(1,Math.min(12,parseInt(spreadInp.value)||4));_state.barrels=[];for(var i=0;i<n;i++)_state.barrels.push({ao:i*2*Math.PI/n,len:50,w:14,rel:1,bsz:1,bsp:1,bdm:1,spr:0});_state.msg=n+' стволов по 360°';_state.msgType='ok';_render();};
+    toolsRow.appendChild(spreadInp);toolsRow.appendChild(spreadBtn);
+
+    // ── FEATURE 7: ROTATE ALL ─────────────────────────────────────────────
+    var rotBtn=document.createElement('button');rotBtn.textContent='↻ Повернуть все';rotBtn.style.cssText='padding:5px 9px;border-radius:7px;border:1px solid rgba(255,180,50,0.35);background:rgba(40,30,0,0.4);color:#ffcc66;font-size:11px;cursor:pointer;';rotBtn.onclick=function(){var a=parseFloat(prompt('Угол поворота (рад). Примеры: 0.52=30°, 0.79=45°, 1.57=90°','0.52'));if(isNaN(a))return;_state.barrels=_state.barrels.map(function(b){return Object.assign({},b,{ao:(b.ao||0)+a});});_render();};toolsRow.appendChild(rotBtn);
+
+    // ── FEATURE 8: SORT BY ANGLE ──────────────────────────────────────────
+    var sortBtn=document.createElement('button');sortBtn.textContent='↕ Сортировать';sortBtn.style.cssText='padding:5px 9px;border-radius:7px;border:1px solid rgba(100,255,200,0.3);background:rgba(0,40,30,0.4);color:#66ffcc;font-size:11px;cursor:pointer;';sortBtn.onclick=function(){_state.barrels.sort(function(a,b){return(a.ao||0)-(b.ao||0);});_state.msg='Стволы отсортированы по углу';_state.msgType='ok';_render();};toolsRow.appendChild(sortBtn);
+
+    // ── FEATURE 9: MIRROR ALL ─────────────────────────────────────────────
+    var mirAllBtn=document.createElement('button');mirAllBtn.textContent='↔ Зеркало всех';mirAllBtn.style.cssText='padding:5px 9px;border-radius:7px;border:1px solid rgba(180,100,255,0.35);background:rgba(40,0,60,0.4);color:#cc88ff;font-size:11px;cursor:pointer;';mirAllBtn.onclick=function(){var orig=_state.barrels.slice();var mirrored=orig.map(function(b){return Object.assign({},b,{ao:-(b.ao||0)});});_state.barrels=orig.concat(mirrored);_state.msg='Зеркальные копии всех '+orig.length+' стволов добавлены';_state.msgType='ok';_render();};toolsRow.appendChild(mirAllBtn);
+
+    // Delete all
+    var delAllBtn=document.createElement('button');delAllBtn.textContent='🗑 Все';delAllBtn.style.cssText='padding:5px 9px;border-radius:7px;border:1px solid rgba(200,40,40,0.35);background:rgba(80,10,10,0.4);color:#ff8888;font-size:11px;cursor:pointer;';delAllBtn.onclick=function(){if(_state.barrels.length>0&&confirm('Удалить все '+_state.barrels.length+' стволов?')){_state.barrels=[];_render();}};toolsRow.appendChild(delAllBtn);
+    bSec.appendChild(toolsRow);
+
+    // ── FEATURE 10: STATS PREVIEW ─────────────────────────────────────────
+    var bars=_state.barrels;var avgDmg=bars.length?bars.reduce(function(s,b){return s+(b.bdm||1);},0)/bars.length:0;var avgSpd=bars.length?bars.reduce(function(s,b){return s+(b.bsp||1);},0)/bars.length:0;var avgRel=bars.length?bars.reduce(function(s,b){return s+(b.rel||1);},0)/bars.length:0;var dps=bars.length?(avgDmg/avgRel*bars.length).toFixed(1):'—';
+    var statsDiv=document.createElement('div');statsDiv.style.cssText='padding:8px;border-radius:8px;background:rgba(0,0,0,0.2);margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;';
+    [['🔫',bars.length,'Стволов'],['💥',dps,'~DPS'],['⚡',avgSpd.toFixed(2),'Ср.скорость'],['⏱',avgRel.toFixed(2),'Ср.перезаряд']].forEach(function(item){var sd=document.createElement('div');sd.style.cssText='text-align:center;flex:1;min-width:60px;';sd.innerHTML='<div style="color:rgba(255,255,255,0.3);font-size:10px;">'+item[0]+' '+item[2]+'</div><div style="color:#88ccff;font-size:14px;font-weight:bold;">'+item[1]+'</div>';statsDiv.appendChild(sd);});
+    bSec.appendChild(statsDiv);
+
+    // ── FEATURE 11: GROUP SYNC ────────────────────────────────────────────
+    if(_state.barrels.length>=2){
+      var syncSel=_state.syncSel||{};var selCount=Object.keys(syncSel).filter(function(k){return syncSel[k];}).length;
+      if(selCount>=2){
+        var syncDiv=document.createElement('div');syncDiv.style.cssText='padding:10px 12px;border-radius:10px;background:rgba(255,200,50,0.08);border:1px solid rgba(255,200,50,0.25);margin-bottom:10px;';syncDiv.innerHTML='<div style="color:#ffcc66;font-size:12px;font-weight:bold;margin-bottom:8px;">🔗 Синхронизация выбранных ('+selCount+'): изменение применится ко всем</div>';
+        function _syncSlider(lbl,key,def,min,max,step){var sid='_sync_'+key;var swr=document.createElement('div');swr.style.cssText='margin-bottom:7px;display:flex;align-items:center;gap:8px;';swr.innerHTML='<span style="color:rgba(255,255,255,0.55);font-size:11px;min-width:70px;">'+lbl+'</span>';var ssl=document.createElement('input');ssl.type='range';ssl.min=min;ssl.max=max;ssl.step=step;ssl.value=def;ssl.style.cssText='flex:1;accent-color:#ffcc00;cursor:pointer;';var svl=document.createElement('span');svl.style.cssText='color:#ffcc66;font-size:11px;min-width:30px;text-align:right;';svl.textContent=parseFloat(def).toFixed(2);ssl.oninput=function(){var v=parseFloat(ssl.value);svl.textContent=v.toFixed(2);Object.keys(syncSel).forEach(function(k){if(syncSel[k]&&_state.barrels[parseInt(k)])_state.barrels[parseInt(k)][key]=v;});_refreshPrev();};swr.appendChild(ssl);swr.appendChild(svl);syncDiv.appendChild(swr);}
+        _syncSlider('Урон ×','bdm',1,0.1,5,0.05);_syncSlider('Скорость ×','bsp',1,0.3,3,0.05);_syncSlider('Перезаряд ×','rel',1,0.2,5,0.05);_syncSlider('Длина','len',50,15,100,1);_syncSlider('Ширина','w',14,5,35,1);
+        bSec.appendChild(syncDiv);
+      } else {
+        var syncHint=document.createElement('div');syncHint.style.cssText='color:rgba(255,200,50,0.5);font-size:11px;margin-bottom:8px;text-align:center;';syncHint.textContent='☑ Отметьте 2+ стволов для групповой синхронизации характеристик';bSec.appendChild(syncHint);
+      }
     }
 
-    _slider('Урон корпусом (bodyDamageMultiplier)', '_tb_bdm', t.bdm||1, 0.5, 15, 0.1);
-    _slider('Размер (radiusMultiplier)', '_tb_rad', t.rad||1.2, 0.7, 2.0, 0.05);
+    // Per-barrel rows
+    _state.barrels.forEach(function(br,bi){
+      var syncSel=_state.syncSel||{};
+      var bRow=document.createElement('div');bRow.style.cssText='background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;margin-bottom:10px;';
+      var bRHdr=document.createElement('div');bRHdr.style.cssText='display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;';
+      // Sync checkbox + label
+      var bLbl=document.createElement('label');bLbl.style.cssText='display:flex;align-items:center;gap:6px;cursor:pointer;';var syncChk=document.createElement('input');syncChk.type='checkbox';syncChk.checked=!!syncSel[bi];syncChk.style.cssText='accent-color:#ffcc00;cursor:pointer;';syncChk.onchange=function(){_state.syncSel[bi]=syncChk.checked;_render();};var bLblTxt=document.createElement('span');bLblTxt.style.cssText='color:rgba(255,255,255,0.7);font-weight:bold;font-size:12px;';bLblTxt.textContent='Ствол '+(bi+1);bLbl.appendChild(syncChk);bLbl.appendChild(bLblTxt);bRHdr.appendChild(bLbl);
+      var bBtns=document.createElement('div');bBtns.style.cssText='display:flex;gap:4px;';
 
-    // Barrels section
-    var bSec = document.createElement('div');
-    bSec.style.cssText = 'margin-top:16px;border-top:1px solid rgba(255,255,255,0.12);padding-top:14px;';
-    var bHdr = document.createElement('div');
-    bHdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;';
-    bHdr.innerHTML = '<div style="color:#fff;font-size:13px;font-weight:bold;">Стволы (' + _state.barrels.length + ')</div>';
-    var addB = document.createElement('button');
-    addB.textContent = '+ Добавить ствол';
-    addB.style.cssText = 'padding:6px 12px;border-radius:8px;border:1px solid rgba(68,136,255,0.4);background:rgba(0,40,80,0.4);color:#88ccff;font-size:12px;cursor:pointer;';
-    addB.onclick = function(){
-      _state.barrels.push({ao:0,len:50,w:14,rel:1,bsz:1,bsp:1,bdm:1,spr:0});
-      _render();
-    };
-    bHdr.appendChild(addB);
-    bSec.appendChild(bHdr);
+      // ── FEATURE 12: MIRROR (single barrel) ───────────────────────────────
+      var mirBtn=document.createElement('button');mirBtn.textContent='↔ Зеркало';mirBtn.title='Добавить зеркальную копию этого ствола';mirBtn.style.cssText='padding:3px 8px;border-radius:5px;border:1px solid rgba(100,200,255,0.4);background:rgba(0,40,80,0.5);color:#88ddff;cursor:pointer;font-size:11px;';(function(idx){mirBtn.onclick=function(){var b=_state.barrels[idx];_state.barrels.splice(idx+1,0,Object.assign({},b,{ao:-(b.ao||0)}));_state.msg='Зеркальный ствол добавлен';_state.msgType='ok';_render();};})(bi);bBtns.appendChild(mirBtn);
 
-    _state.barrels.forEach(function(br, bi){
-      var bRow = document.createElement('div');
-      bRow.style.cssText = 'background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:10px 12px;margin-bottom:10px;';
+      // ── FEATURE 13: DUPLICATE ─────────────────────────────────────────────
+      var dupBtn=document.createElement('button');dupBtn.textContent='⧉ Копия';dupBtn.style.cssText='padding:3px 8px;border-radius:5px;border:1px solid rgba(255,200,50,0.4);background:rgba(40,30,0,0.4);color:#ffcc66;cursor:pointer;font-size:11px;';(function(idx){dupBtn.onclick=function(){_state.barrels.splice(idx+1,0,Object.assign({},_state.barrels[idx]));_render();};})(bi);bBtns.appendChild(dupBtn);
 
-      var bRHdr = document.createElement('div');
-      bRHdr.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;';
-      bRHdr.innerHTML = '<span style="color:rgba(255,255,255,0.7);font-weight:bold;font-size:12px;">Ствол ' + (bi+1) + '</span>';
-      var delBr = document.createElement('button');
-      delBr.textContent = '✕';
-      delBr.style.cssText = 'background:rgba(200,40,40,0.3);border:1px solid rgba(200,40,40,0.4);border-radius:5px;color:#ff8888;cursor:pointer;padding:2px 7px;font-size:12px;';
-      delBr.dataset.bi = bi;
-      delBr.onclick = function(){ _state.barrels.splice(parseInt(delBr.dataset.bi),1); _render(); };
-      bRHdr.appendChild(delBr);
-      bRow.appendChild(bRHdr);
+      var delBr=document.createElement('button');delBr.textContent='✕';delBr.style.cssText='padding:3px 8px;border-radius:5px;background:rgba(200,40,40,0.3);border:1px solid rgba(200,40,40,0.4);color:#ff8888;cursor:pointer;font-size:12px;';(function(idx){delBr.onclick=function(){_state.barrels.splice(idx,1);_render();};})(bi);bBtns.appendChild(delBr);
+      bRHdr.appendChild(bBtns);bRow.appendChild(bRHdr);
 
-      var grid = document.createElement('div');
-      grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;';
-
-      function _bSlider(lbl, key, val, min, max, step){
-        var id = '_tbr_'+bi+'_'+key;
-        var wr = document.createElement('div');
-        wr.innerHTML = '<div style="display:flex;justify-content:space-between;"><span style="color:rgba(255,255,255,0.5);font-size:11px;">' + lbl + '</span><span id="'+id+'_v" style="color:#88ccff;font-size:11px;">' + val + '</span></div>';
-        var sl = document.createElement('input');
-        sl.type='range'; sl.id=id; sl.min=min; sl.max=max; sl.step=step; sl.value=val;
-        sl.style.cssText='width:100%;accent-color:#4488ff;cursor:pointer;margin-top:2px;';
-        sl.dataset.bi=bi; sl.dataset.key=key;
-        sl.oninput=function(){
-          var vv = parseFloat(sl.value);
-          _state.barrels[parseInt(sl.dataset.bi)][sl.dataset.key] = vv;
-          var ve = document.getElementById(id+'_v'); if(ve) ve.textContent = vv.toFixed(2);
-        };
-        wr.appendChild(sl);
-        return wr;
-      }
-
-      grid.appendChild(_bSlider('Угол (°)', 'ao', br.ao||0, -3.14, 3.14, 0.01));
-      grid.appendChild(_bSlider('Длина', 'len', br.len||50, 15, 100, 1));
-      grid.appendChild(_bSlider('Ширина', 'w', br.w||14, 5, 35, 1));
-      grid.appendChild(_bSlider('Перезаряд ×', 'rel', br.rel||1, 0.2, 5, 0.05));
-      grid.appendChild(_bSlider('Скорость ×', 'bsp', br.bsp||1, 0.3, 3, 0.05));
-      grid.appendChild(_bSlider('Урон ×', 'bdm', br.bdm||1, 0.1, 5, 0.05));
+      // Sliders grid
+      var grid=document.createElement('div');grid.style.cssText='display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;';
+      function _bSlider(lbl,key,val,min,max,step){var id='_tbr_'+bi+'_'+key;var wr=document.createElement('div');wr.innerHTML='<div style="display:flex;justify-content:space-between;"><span style="color:rgba(255,255,255,0.5);font-size:11px;">'+lbl+'</span><span id="'+id+'_v" style="color:#88ccff;font-size:11px;">'+parseFloat(val).toFixed(2)+'</span></div>';var sl=document.createElement('input');sl.type='range';sl.id=id;sl.min=min;sl.max=max;sl.step=step;sl.value=val;sl.style.cssText='width:100%;accent-color:#4488ff;cursor:pointer;margin-top:2px;';(function(b_idx,b_key){sl.oninput=function(){var vv=parseFloat(sl.value);_state.barrels[b_idx][b_key]=vv;var ve=document.getElementById(id+'_v');if(ve)ve.textContent=vv.toFixed(2);_refreshPrev();};})(bi,key);wr.appendChild(sl);return wr;}
+      grid.appendChild(_bSlider('Угол (рад)','ao',br.ao||0,-3.14,3.14,0.01));
+      grid.appendChild(_bSlider('Длина','len',br.len||50,15,100,1));
+      grid.appendChild(_bSlider('Ширина','w',br.w||14,5,35,1));
+      grid.appendChild(_bSlider('Перезаряд ×','rel',br.rel||1,0.2,5,0.05));
+      grid.appendChild(_bSlider('Скорость ×','bsp',br.bsp||1,0.3,3,0.05));
+      grid.appendChild(_bSlider('Урон ×','bdm',br.bdm||1,0.1,5,0.05));
       bRow.appendChild(grid);
-      bSec.appendChild(bRow);
-    });
 
+      // ── FEATURE 14: BARREL TYPE FLAGS ────────────────────────────────────
+      var flagsDiv=document.createElement('div');flagsDiv.style.cssText='display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid rgba(255,255,255,0.08);padding-top:8px;';
+      [['💥 Бомба','isBomb','#ff6600'],['🔵 Липкий','isSticky','#ffaa00'],['⚓ Мина','isTrap','#00cc88'],['🎯 Наводка','isHoming','#cc44ff']].forEach(function(flag){var fKey=flag[1],fName=flag[0],fColor=flag[2];var fl=document.createElement('label');fl.style.cssText='display:flex;align-items:center;gap:4px;cursor:pointer;';var chk=document.createElement('input');chk.type='checkbox';chk.checked=!!br[fKey];chk.style.cssText='accent-color:'+fColor+';cursor:pointer;';(function(b_idx,b_key){chk.onchange=function(){_state.barrels[b_idx][b_key]=chk.checked;_refreshPrev();};})(bi,fKey);var fnm=document.createElement('span');fnm.style.cssText='font-size:11px;color:rgba(255,255,255,0.55);';fnm.textContent=fName;fl.appendChild(chk);fl.appendChild(fnm);flagsDiv.appendChild(fl);});
+      bRow.appendChild(flagsDiv);bSec.appendChild(bRow);
+    });
     p.appendChild(bSec);
 
     // Save button
-    var saveBtn = document.createElement('button');
-    saveBtn.textContent = '💾 Сохранить танк';
-    saveBtn.style.cssText = 'width:100%;margin-top:16px;padding:13px;font-size:15px;font-weight:bold;border-radius:10px;border:none;background:linear-gradient(90deg,#0068a8,#22aadd);color:#fff;cursor:pointer;';
-    saveBtn.onclick = function(){
-      var name = (document.getElementById('_tb_name')||{}).value || '';
-      name = name.trim();
-      if(!name){ alert('Введите название танка!'); return; }
-      // sanitize for use as object key: replace spaces/special chars with _
-      var nameKey = name.replace(/\s+/g,'_').replace(/[^\u0400-\u04FFa-zA-Z0-9_]/g,'_');
-      if(!nameKey){ alert('Введите название танка!'); return; }
-      name = nameKey;
-      var fromEl = document.getElementById('_tb_from');
-      var from = fromEl ? fromEl.value : '';
-      if(!from){ alert('Выберите родительский танк!'); return; }
-      var color = (document.getElementById('_tb_color')||{}).value || '#4488ff';
-      var desc = (document.getElementById('_tb_desc')||{}).value || '';
-      var bdm = parseFloat((document.getElementById('_tb_bdm')||{}).value||1);
-      var rad = parseFloat((document.getElementById('_tb_rad')||{}).value||1.2);
-      var lvl = (_state.editing && _state.editing.lvl) || t.lvl || 45;
+    var saveBtn=document.createElement('button');saveBtn.textContent='💾 Сохранить танк';saveBtn.style.cssText='width:100%;margin-top:16px;padding:13px;font-size:15px;font-weight:bold;border-radius:10px;border:none;background:linear-gradient(90deg,#0068a8,#22aadd);color:#fff;cursor:pointer;';
+    saveBtn.onclick=function(){var name=((document.getElementById('_tb_name')||{}).value||'').trim();if(!name){alert('Введите название!');return;}var nameKey=name.replace(/\s+/g,'_').replace(/[^\u0400-\u04FFa-zA-Z0-9_]/g,'_');if(!nameKey){alert('Недопустимое название!');return;}name=nameKey;var fromVal=((document.getElementById('_tb_from')||{}).value||'').trim();var fromArr=fromVal?fromVal.split(',').map(function(s){return s.trim();}).filter(Boolean):[];if(fromArr.length===0){alert('Укажите хотя бы один родительский танк!');return;}var newTank={name:name,color:(document.getElementById('_tb_color')||{}).value||'#4488ff',lvl:(_state.editing&&_state.editing.lvl)||t.lvl||45,from:fromArr,desc:((document.getElementById('_tb_desc')||{}).value||''),bdm:parseFloat(((document.getElementById('_tb_bdm')||{}).value)||1),rad:parseFloat(((document.getElementById('_tb_rad')||{}).value)||1.2),isInvis:!!(document.getElementById('_tb_invis')||{}).checked,barrels:_state.barrels.map(function(b){return Object.assign({},b);})};var all=_getAll();var found=false;for(var i=0;i<all.length;i++){if(all[i].name===name){all[i]=newTank;found=true;break;}}if(!found)all.push(newTank);_saveAll(all);_reg(newTank);_state.msg='✅ Танк "'+name+'" сохранён и активирован!';_state.msgType='ok';_state.tab='list';_state.editing=null;_state.barrels=[];_render();};p.appendChild(saveBtn);
 
-      var newTank = {
-        name: name,
-        color: color,
-        lvl: lvl,
-        from: [from],
-        desc: desc,
-        bdm: bdm,
-        rad: rad,
-        barrels: _state.barrels.map(function(b){ return Object.assign({},b); })
-      };
+    // ── FEATURE 15: EXPORT JSON ───────────────────────────────────────────
+    var expRow=document.createElement('div');expRow.style.cssText='display:flex;gap:8px;margin-top:8px;';
+    function _exportOverlay(title,textVal,editable,onApply){var ov=document.createElement('div');ov.style.cssText='position:fixed;inset:0;z-index:20000;background:rgba(0,0,0,0.9);display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;';ov.onclick=function(e){if(e.target===ov)document.body.removeChild(ov);};var box=document.createElement('div');box.style.cssText='background:#0d1525;border:1.5px solid rgba(68,136,255,0.4);border-radius:14px;padding:20px;width:100%;max-width:480px;';box.innerHTML='<div style="color:#fff;font-weight:bold;font-size:14px;margin-bottom:10px;">'+title+'</div>';var ta=document.createElement('textarea');ta.value=textVal;ta.readOnly=!editable;ta.rows=12;ta.style.cssText='width:100%;background:#0a101e;color:'+(editable?'#ffcc88':'#88ffcc')+';font-size:11px;font-family:monospace;padding:10px;border-radius:8px;border:1px solid rgba(68,136,255,0.3);box-sizing:border-box;resize:vertical;';ta.onclick=function(){if(!editable)ta.select();};box.appendChild(ta);if(!editable){var copyBtn=document.createElement('button');copyBtn.textContent='📋 Скопировать';copyBtn.style.cssText='width:100%;margin-top:8px;padding:10px;border-radius:8px;border:1px solid rgba(68,136,255,0.4);background:rgba(0,40,80,0.5);color:#88ccff;font-size:13px;cursor:pointer;';copyBtn.onclick=function(){ta.select();try{navigator.clipboard.writeText(ta.value);}catch(e){document.execCommand('copy');}copyBtn.textContent='✅ Скопировано!';setTimeout(function(){copyBtn.textContent='📋 Скопировать';},1500);};box.appendChild(copyBtn);}if(editable&&onApply){var applyBtn=document.createElement('button');applyBtn.textContent='✅ Применить';applyBtn.style.cssText='width:100%;margin-top:8px;padding:10px;border-radius:8px;border:none;background:linear-gradient(90deg,#0068a8,#22aadd);color:#fff;font-size:13px;cursor:pointer;';applyBtn.onclick=function(){try{onApply(ta.value);document.body.removeChild(ov);}catch(e){alert('Ошибка: '+e.message);}};box.appendChild(applyBtn);}var cl=document.createElement('button');cl.textContent='Закрыть';cl.style.cssText='width:100%;margin-top:6px;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.5);font-size:12px;cursor:pointer;';cl.onclick=function(){document.body.removeChild(ov);};box.appendChild(cl);ov.appendChild(box);document.body.appendChild(ov);}
+    var expBtn=document.createElement('button');expBtn.textContent='📤 Экспорт JSON';expBtn.style.cssText='flex:1;padding:10px;font-size:12px;border-radius:10px;border:1px solid rgba(100,255,180,0.35);background:rgba(0,40,30,0.4);color:#66ffcc;cursor:pointer;';
+    expBtn.onclick=function(){var name=((document.getElementById('_tb_name')||{}).value||'МойТанк').trim().replace(/\s+/g,'_').replace(/[^\u0400-\u04FFa-zA-Z0-9_]/g,'_')||'МойТанк';var fromVal=((document.getElementById('_tb_from')||{}).value||'Basic').trim();var fromArr=fromVal.split(',').map(function(s){return s.trim();}).filter(Boolean);var snap={name:name,color:(document.getElementById('_tb_color')||{}).value||'#4488ff',lvl:(_state.editing&&_state.editing.lvl)||45,from:fromArr,desc:((document.getElementById('_tb_desc')||{}).value||''),bdm:parseFloat(((document.getElementById('_tb_bdm')||{}).value)||1),rad:parseFloat(((document.getElementById('_tb_rad')||{}).value)||1.2),isInvis:!!(document.getElementById('_tb_invis')||{}).checked,barrels:_state.barrels};_exportOverlay('📤 JSON конфиг танка',JSON.stringify(snap,null,2),false,null);};expRow.appendChild(expBtn);
 
-      var all = _getAll();
-      // Replace if editing same-named tank, otherwise push
-      var found = false;
-      for(var i=0;i<all.length;i++){
-        if(all[i].name === name){ all[i] = newTank; found = true; break; }
-      }
-      if(!found) all.push(newTank);
-      _saveAll(all);
-      _reg(newTank);
+    // ── FEATURE 16: IMPORT JSON ────────────────────────────────────────────
+    var impJsonBtn=document.createElement('button');impJsonBtn.textContent='📥 Импорт JSON';impJsonBtn.style.cssText='flex:1;padding:10px;font-size:12px;border-radius:10px;border:1px solid rgba(255,180,50,0.35);background:rgba(40,30,0,0.4);color:#ffcc66;cursor:pointer;';impJsonBtn.onclick=function(){_exportOverlay('📥 Вставьте JSON конфиг','',true,function(v){var d=JSON.parse(v.trim());if(!d.name||!Array.isArray(d.barrels))throw new Error('Нет name/barrels');_state.editing=d;_state.barrels=d.barrels.map(function(b){return Object.assign({spr:0},b);});_render();});};expRow.appendChild(impJsonBtn);
+    p.appendChild(expRow);
 
-      _state.msg = '✅ Танк "' + name + '" сохранён и активирован в игре!';
-      _state.tab = 'list';
-      _state.editing = null;
-      _state.barrels = [];
-      _render();
-    };
-    p.appendChild(saveBtn);
-
-    // Cancel
-    var canBtn = document.createElement('button');
-    canBtn.textContent = '← Назад к списку';
-    canBtn.style.cssText = 'width:100%;margin-top:8px;padding:10px;font-size:13px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.5);cursor:pointer;';
-    canBtn.onclick = function(){ _state.tab='list'; _state.editing=null; _state.barrels=[]; _render(); };
-    p.appendChild(canBtn);
+    var canBtn=document.createElement('button');canBtn.textContent='← Назад к списку';canBtn.style.cssText='width:100%;margin-top:8px;padding:10px;font-size:13px;border-radius:10px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);color:rgba(255,255,255,0.5);cursor:pointer;';canBtn.onclick=function(){_state.tab='list';_state.editing=null;_state.barrels=[];_render();};p.appendChild(canBtn);
   }
 
-  window._openTankBuilder = _open;
-  window._reloadCustomTanks = _loadAll; // for dev use
+  window._openTankBuilder=_open;
+  window._openTankGuide=function(name){_open();_state.tab='guide';_state.guideTank=name||'';_state.guideTab='evo';_render();};
+  window._reloadCustomTanks=_loadAll;
 })();
+
