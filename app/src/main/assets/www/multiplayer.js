@@ -39,6 +39,7 @@
   var _bulletSeq  = 0;        // counter for tagging local bullets
   var _myKills    = 0;
   var _respawnTimer = 0;   // ms until respawn (0 = not respawning)
+  var _mpGameMode   = 'classic'; // game mode chosen in lobby
 
   /* ── Android bridge ──────────────────────────────────────────────── */
   function _droid(method) {
@@ -142,6 +143,7 @@
 
       case 'start':
         _started = true;
+        _mpGameMode = msg.gameMode || 'classic';
         _startSync();
         _ensureOverlay();
         _hideLobby();
@@ -173,12 +175,17 @@
         break;
 
       case 'kill':
-        /* killer gets kill credit */
+        /* killer gets kill credit + 50% of victim XP */
         if (msg.killerId === _myId) {
           _myKills++;
           var gs2 = window._gs;
           if (gs2 && gs2.player) {
             gs2.kills = (gs2.kills || 0) + 1;
+            var _xpGain = Math.floor((msg.victimXp || 0) * 0.5);
+            if (_xpGain > 0) {
+              gs2.player.totalXp = (gs2.player.totalXp || 0) + _xpGain;
+              gs2.player.score   = (gs2.player.score   || 0) + _xpGain;
+            }
           }
         }
         _addKillFeed(msg.killerName, msg.victimName, msg.killerId === _myId);
@@ -297,7 +304,8 @@
               killerId: rp.id || ids[i],
               killerName: rp.name || '?',
               victimId: _myId,
-              victimName: _myName
+              victimName: _myName,
+              victimXp: Math.floor(p.totalXp || p.score || 0)
             });
           }
         }
@@ -331,6 +339,18 @@
     } catch (e) {}
     setTimeout(function () {
       try {
+        /* Select game mode button first */
+        var _mnm={classic:'Классика',survival:'Выживание',domination:'Доминирование',zombie:'Зомби',horde:'Волны',sniper:'Снайперы'};
+        var _mtn=_mnm[_mpGameMode]||'';
+        if(_mtn){
+          var btnsM=document.querySelectorAll('button');
+          for(var j=0;j<btnsM.length;j++){
+            if(btnsM[j].textContent&&btnsM[j].textContent.indexOf(_mtn)!==-1){
+              btnsM[j].dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));
+              break;
+            }
+          }
+        }
         var btns = document.querySelectorAll('button');
         for (var i = 0; i < btns.length; i++) {
           var t = btns[i].textContent && btns[i].textContent.trim();
@@ -798,12 +818,36 @@
       '⚔️ PvP урон включён — пули игроков наносят урон друг другу'
     ));
 
+    /* ── Game mode selector ─────────────────────────────── */
+    box.appendChild(_div(
+      'color:rgba(255,255,255,0.55);font-size:12px;text-align:center;margin-bottom:6px;',
+      'Режим игры:'
+    ));
+    var _modeRow = document.createElement('div');
+    _modeRow.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;';
+    [{id:'classic',icon:'🎯',nm:'Классика'},{id:'survival',icon:'💥',nm:'Выживание'},{id:'zombie',icon:'🧟',nm:'Зомби'},{id:'horde',icon:'🌊',nm:'Волны'}].forEach(function(m) {
+      var b = document.createElement('button');
+      b.textContent = m.icon + ' ' + m.nm;
+      b.dataset.modeId = m.id;
+      b.style.cssText = 'padding:7px 11px;border-radius:8px;border:2px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);color:#fff;font-size:12px;cursor:pointer;touch-action:manipulation;';
+      if (m.id === _mpGameMode) { b.style.borderColor='#44b4e0'; b.style.background='rgba(68,180,224,0.25)'; }
+      b.addEventListener('pointerdown', function() {
+        _mpGameMode = m.id;
+        _modeRow.querySelectorAll('button').forEach(function(bb) {
+          bb.style.borderColor = bb.dataset.modeId === _mpGameMode ? '#44b4e0' : 'rgba(255,255,255,0.15)';
+          bb.style.background  = bb.dataset.modeId === _mpGameMode ? 'rgba(68,180,224,0.25)' : 'rgba(255,255,255,0.05)';
+        });
+      });
+      _modeRow.appendChild(b);
+    });
+    box.appendChild(_modeRow);
+
     if (players.length >= 2) {
       box.appendChild(_btn('▶  Начать игру  (' + players.length + ' игроков)',
         'width:100%;padding:14px;font-size:15px;font-weight:bold;border-radius:12px;' +
         'border:none;background:linear-gradient(90deg,#0098c8,#44b4e0);color:#fff;cursor:pointer;margin-bottom:10px;touch-action:manipulation;',
         function () {
-          _broadcastMsg({type: 'start'});
+          _broadcastMsg({type: 'start', gameMode: _mpGameMode});
           _started = true;
           _startSync();
           _ensureOverlay();
