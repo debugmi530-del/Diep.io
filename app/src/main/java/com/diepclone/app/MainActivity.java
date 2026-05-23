@@ -14,6 +14,7 @@ import android.webkit.WebChromeClient;
 public class MainActivity extends Activity {
 
     private WebView webView;
+    private final MultiplayerManager mpManager = new MultiplayerManager();
 
     class AndroidBridge {
         @JavascriptInterface
@@ -25,6 +26,80 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void updateWidgetAll(String tanksJson) {
             TankWidget.saveAllTanks(MainActivity.this, tanksJson);
+        }
+
+        /* ── Multiplayer bridge ─────────────────────────────────────────── */
+
+        /** Returns this device's local Wi-Fi IPv4 address. */
+        @JavascriptInterface
+        public String mpGetLocalIp() {
+            return MultiplayerManager.getLocalIp();
+        }
+
+        /** Start a WebSocket server on the given port (host mode).
+         *  Returns "ok" or "error:<message>". */
+        @JavascriptInterface
+        public String mpStartServer(int port) {
+            return mpManager.startServer(port);
+        }
+
+        /** Stop the WebSocket server. */
+        @JavascriptInterface
+        public void mpStopServer() {
+            mpManager.stopServer();
+        }
+
+        /** Connect to a host as a client.
+         *  Returns "ok" or "error:<message>". */
+        @JavascriptInterface
+        public String mpConnect(String host, int port) {
+            return mpManager.connectClient(host, port);
+        }
+
+        /** Disconnect from the host. */
+        @JavascriptInterface
+        public void mpDisconnect() {
+            mpManager.disconnectClient();
+        }
+
+        /** Stop all multiplayer activity (server + client). */
+        @JavascriptInterface
+        public void mpStopAll() {
+            mpManager.stopAll();
+        }
+
+        /** Send a JSON message.
+         *  If client: sends to server.
+         *  If host: use mpBroadcast instead. */
+        @JavascriptInterface
+        public void mpSend(String json) {
+            mpManager.send(json);
+        }
+
+        /** Broadcast a JSON message to all connected clients (host only). */
+        @JavascriptInterface
+        public void mpBroadcast(String json) {
+            mpManager.broadcast(json);
+        }
+
+        /** Poll pending inbound messages.
+         *  Returns a JSON array string, e.g. [{...},{...}].
+         *  Call this frequently (every 50ms) from JS. */
+        @JavascriptInterface
+        public String mpPoll() {
+            return mpManager.pollMessages();
+        }
+
+        /** Returns current role: "host", "client", or "none". */
+        @JavascriptInterface
+        public String mpGetRole() {
+            return mpManager.getRole();
+        }
+
+        /** Returns number of connected peers (clients connected to host). */
+        @JavascriptInterface
+        public int mpGetPeerCount() {
+            return mpManager.getPeerCount();
         }
     }
 
@@ -106,5 +181,11 @@ public class MainActivity extends Activity {
             "if(typeof window.__gamePause==='function'&&window.__gamePauseActive!==true){window.__gamePause();}",
             null
         );
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mpManager.stopAll();
     }
 }
