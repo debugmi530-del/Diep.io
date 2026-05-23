@@ -4,11 +4,11 @@
   /* ── Config ──────────────────────────────────────────────────────── */
   var MP_PORT         = 9987;
   var MAX_PLAYERS     = 10;
-  var SYNC_MS         = 100;   // state + bullet snapshot
+  var SYNC_MS         = 32;    // state + bullet snapshot (≈30 fps)
   var POLL_MS         = 50;
   var STALE_MS        = 2500;  // remote player gone after this
   var BULLET_TTL      = 600;   // ms a remote bullet lives on receiver side
-  var HIT_COOLDOWN    = 80;    // ms between damage ticks from same bullet
+  var HIT_COOLDOWN    = 16;    // ms between damage ticks from same bullet
   var KILL_FEED_MS    = 4000;
   var DMG_FLASH_MS    = 300;
   var PLAYER_COLORS   = [
@@ -177,7 +177,6 @@
           _myKills++;
           var gs2 = window._gs;
           if (gs2 && gs2.player) {
-            gs2.player.score = (gs2.player.score || 0) + 500;
             gs2.kills = (gs2.kills || 0) + 1;
           }
         }
