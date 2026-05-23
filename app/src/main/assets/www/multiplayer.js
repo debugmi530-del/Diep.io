@@ -38,6 +38,7 @@
   var _killFeed   = [];       // [{msg, ts}]
   var _bulletSeq  = 0;        // counter for tagging local bullets
   var _myKills    = 0;
+  var _respawnTimer = 0;   // ms until respawn (0 = not respawning)
 
   /* ── Android bridge ──────────────────────────────────────────────── */
   function _droid(method) {
@@ -182,6 +183,15 @@
         }
         _addKillFeed(msg.killerName, msg.victimName, msg.killerId === _myId);
         break;
+
+      case 'respawn':
+        /* remote player came back — mark alive */
+        if (msg.id && _remote[msg.id]) {
+          _remote[msg.id].alive = true;
+          _remote[msg.id].hp = 100;
+        }
+        _addKillFeed('↩ ' + (msg.name || msg.id) + ' возродился', '', false);
+        break;
     }
   }
 
@@ -276,11 +286,12 @@
             dmg: dmg
           });
 
-          /* Death */
+          /* Death — start 5s respawn countdown */
           if (p.health <= 0) {
             p.health = 0;
             gs.phase = 'dead';
             window._gamePhase = 'dead';
+            _respawnTimer = 5000;
             _sendMsg({
               type: 'kill',
               killerId: rp.id || ids[i],
@@ -430,6 +441,59 @@
       _drawKillFeed(ctx, W);
       return;
     }
+
+    /* ── Respawn countdown ─────────────────────────────────────── */
+    if (_respawnTimer > 0) {
+      _respawnTimer -= (dt || 16);
+      if (_respawnTimer <= 0) {
+        /* Time to respawn */
+        _respawnTimer = 0;
+        var gs3 = window._gs;
+        if (gs3 && gs3.player) {
+          var _mapSz = (typeof Ul !== 'undefined' ? Ul : 4800);
+          gs3.player.pos.x = 600 + Math.random() * (_mapSz - 1200);
+          gs3.player.pos.y = 600 + Math.random() * (_mapSz - 1200);
+          gs3.player.health = 99999; /* engine caps to real max */
+          if (gs3.player.vel) { gs3.player.vel.x = 0; gs3.player.vel.y = 0; }
+          gs3.phase = 'playing';
+          window._gamePhase = 'playing';
+          _startSync();
+          _sendMsg({ type: 'respawn', id: _myId, name: _myName });
+        }
+        /* Fall through — draw normally this frame */
+      } else {
+        /* Draw respawn screen */
+        var secs = Math.ceil(_respawnTimer / 1000);
+        var prog = 1 - _respawnTimer / 5000;
+        ctx.save();
+        ctx.fillStyle = 'rgba(0,0,0,0.70)';
+        ctx.fillRect(0, 0, W, H);
+        /* Circular progress ring */
+        ctx.beginPath();
+        ctx.arc(W/2, H/2, 58, -Math.PI/2, -Math.PI/2 + prog*Math.PI*2);
+        ctx.strokeStyle = '#ff4444';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+        /* 'Вы убиты' */
+        ctx.fillStyle = '#ff6666';
+        ctx.font = 'bold 26px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('Вы убиты', W/2, H/2 - 50);
+        /* Countdown number */
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 52px Arial';
+        ctx.fillText(secs, W/2, H/2);
+        /* Subtitle */
+        ctx.fillStyle = 'rgba(255,255,255,0.55)';
+        ctx.font = '17px Arial';
+        ctx.fillText('возрождение через...', W/2, H/2 + 50);
+        ctx.restore();
+        _drawKillFeed(ctx, W);
+        return;
+      }
+    }
+
     if ((window._gamePhase || 'menu') !== 'playing') {
       _drawKillFeed(ctx, W);
       return;
@@ -866,6 +930,7 @@
         /* reset PvP state for this round */
         _hitBuf = {};
         _myKills = 0;
+        _respawnTimer = 0;
       }
       if ((cur === 'menu' || cur === 'dead') && prev === 'playing') {
         _stopSync();
