@@ -582,17 +582,7 @@
       ctx.fillText(rp.name, sx, sy - R - 15);
       ctx.restore();
 
-      /* Level badge */
-      ctx.save();
-      ctx.font = 'bold 9px Arial';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.beginPath();
-      ctx.arc(sx + R * 0.7, sy - R * 0.7, 8, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#ffe14d';
-      ctx.fillText(rp.lvl || 1, sx + R * 0.7, sy - R * 0.7);
-      ctx.restore();
+      /*
 
       /* Draw remote bullets on screen */
       var bullets = rp.bullets || {};
