@@ -194,7 +194,38 @@ public class MultiplayerManager {
 
     public static String getLocalIp() {
         try {
+            // First pass: prefer Wi-Fi and Ethernet interfaces (wlan*, eth*, ap*)
             Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
+            while (ifaces != null && ifaces.hasMoreElements()) {
+                NetworkInterface iface = ifaces.nextElement();
+                if (!iface.isUp() || iface.isLoopback()) continue;
+                String name = iface.getName().toLowerCase();
+                if (!name.startsWith("wlan") && !name.startsWith("eth") && !name.startsWith("ap")) continue;
+                Enumeration<InetAddress> addrs = iface.getInetAddresses();
+                while (addrs.hasMoreElements()) {
+                    InetAddress addr = addrs.nextElement();
+                    if (!addr.isLoopbackAddress() && addr instanceof Inet4Address) {
+                        String ip = addr.getHostAddress();
+                        if (ip != null && !ip.startsWith("169.")) return ip;
+                    }
+                }
+            }
+            // Second pass: any non-loopback IPv4 (fallback)
+            ifaces = NetworkInterface.getNetworkInterfaces();
+            while (ifaces != null && ifaces.hasMoreElements()) {
+                NetworkInterface iface = ifaces.nextElement();
+                if (!iface.isUp() || iface.isLoopback()) continue;
+                Enumeration<InetAddress> addrs = iface.getInetAddresses();
+                while (addrs.hasMoreElements()) {
+                    InetAddress addr = addrs.nextElement();
+                    if (!addr.isLoopbackAddress() && addr instanceof Inet4Address) {
+                        String ip = addr.getHostAddress();
+                        if (ip != null && !ip.startsWith("169.") && !ip.startsWith("10.")) return ip;
+                    }
+                }
+            }
+            // Third pass: accept 10.x.x.x too (some hotspot configs use this range)
+            ifaces = NetworkInterface.getNetworkInterfaces();
             while (ifaces != null && ifaces.hasMoreElements()) {
                 NetworkInterface iface = ifaces.nextElement();
                 if (!iface.isUp() || iface.isLoopback()) continue;
@@ -211,5 +242,31 @@ public class MultiplayerManager {
             Log.e(TAG, "getLocalIp error", e);
         }
         return "0.0.0.0";
+    }
+
+    /** Returns all non-loopback IPv4 addresses as a comma-separated string. */
+    public static String getAllLocalIps() {
+        StringBuilder sb = new StringBuilder();
+        try {
+            Enumeration<NetworkInterface> ifaces = NetworkInterface.getNetworkInterfaces();
+            while (ifaces != null && ifaces.hasMoreElements()) {
+                NetworkInterface iface = ifaces.nextElement();
+                if (!iface.isUp() || iface.isLoopback()) continue;
+                Enumeration<InetAddress> addrs = iface.getInetAddresses();
+                while (addrs.hasMoreElements()) {
+                    InetAddress addr = addrs.nextElement();
+                    if (!addr.isLoopbackAddress() && addr instanceof Inet4Address) {
+                        String ip = addr.getHostAddress();
+                        if (ip != null && !ip.startsWith("169.")) {
+                            if (sb.length() > 0) sb.append(",");
+                            sb.append(iface.getName()).append(":").append(ip);
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "getAllLocalIps error", e);
+        }
+        return sb.length() > 0 ? sb.toString() : "none";
     }
 }
