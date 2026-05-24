@@ -339,17 +339,13 @@
     } catch (e) {}
     setTimeout(function () {
       try {
-        /* Select game mode button first */
-        var _mnm={classic:'Классика',survival:'Выживание',domination:'Доминирование',zombie:'Зомби',horde:'Волны',sniper:'Снайперы'};
-        var _mtn=_mnm[_mpGameMode]||'';
-        if(_mtn){
-          var btnsM=document.querySelectorAll('button');
-          for(var j=0;j<btnsM.length;j++){
-            if(btnsM[j].textContent&&btnsM[j].textContent.indexOf(_mtn)!==-1){
-              btnsM[j].dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true}));
-              break;
-            }
-          }
+        /* Inject game mode via G0 patch — no fragile mode-button UI clicks */
+        if (window.G0 && _mpGameMode && _mpGameMode !== 'classic') {
+          var _g0orig = window.G0;
+          window.G0 = function(tm, gm) {
+            window.G0 = _g0orig;
+            return _g0orig(tm || false, _mpGameMode);
+          };
         }
         var btns = document.querySelectorAll('button');
         for (var i = 0; i < btns.length; i++) {
@@ -360,7 +356,7 @@
           }
         }
       } catch (e) {}
-    }, 300);
+    }, 600);
   }
 
   /* ── State sync ──────────────────────────────────────────────────── */
@@ -523,7 +519,9 @@
     if (!gs || !gs.player) { _drawKillFeed(ctx, W); return; }
     var lp = gs.player;
     var lpPos = _playerPos(lp);
-    var lx = lpPos.x, ly = lpPos.y;
+    var _cam = (gs.camera || lpPos);
+    var lx = (_cam.x != null ? _cam.x : lpPos.x);
+    var ly = (_cam.y != null ? _cam.y : lpPos.y);
     var scale = Math.min(W / 900, H / 600, 1.4) / 1.3;
     var now = Date.now();
 
