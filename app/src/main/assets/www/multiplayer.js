@@ -350,12 +350,31 @@
         var btns = document.querySelectorAll('button');
         for (var i = 0; i < btns.length; i++) {
           var t = btns[i].textContent && btns[i].textContent.trim();
-          if (t === 'Играть') {
-            btns[i].dispatchEvent(new PointerEvent('pointerdown', {bubbles: true, cancelable: true}));
+          if (t.indexOf('Играть') !== -1) {
+            var _b = btns[i];
+            /* Fire all event types — React needs at least one of these */
+            try { _b.dispatchEvent(new PointerEvent('pointerdown', {bubbles:true,cancelable:true})); } catch(x){}
+            try { _b.dispatchEvent(new MouseEvent('mousedown',    {bubbles:true,cancelable:true})); } catch(x){}
+            try { _b.dispatchEvent(new MouseEvent('click',        {bubbles:true,cancelable:true})); } catch(x){}
+            try { _b.click(); }                                            catch(x){}
             break;
           }
         }
       } catch (e) {}
+      /* Retry once — in case React hadn't rendered the button yet */
+      setTimeout(function () {
+        if ((window._gamePhase || 'menu') !== 'playing') {
+          try {
+            var btns2 = document.querySelectorAll('button');
+            for (var j = 0; j < btns2.length; j++) {
+              if (btns2[j].textContent && btns2[j].textContent.indexOf('Играть') !== -1) {
+                try { btns2[j].click(); } catch(x){}
+                break;
+              }
+            }
+          } catch(e2){}
+        }
+      }, 1400);
     }, 600);
   }
 
@@ -542,11 +561,13 @@
       ctx.save();
       ctx.translate(sx, sy);
       ctx.rotate(rp.angle || 0);
-      ctx.fillStyle = '#555';
-      ctx.strokeStyle = '#333';
-      ctx.lineWidth = 1;
+      /* Barrel starts at body edge so it connects cleanly */
+      var bCol = col ? col.replace(/[^,]+\)$/, '0.85)') : 'rgba(80,80,80,0.85)';
+      ctx.fillStyle = bCol;
+      ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.rect(0, -R * 0.3, R * 1.5, R * 0.6);
+      ctx.rect(R * 0.1, -R * 0.28, R * 1.5, R * 0.56);
       ctx.fill(); ctx.stroke();
       ctx.restore();
 
@@ -936,6 +957,7 @@
         _mpBtnEl.style.padding = '9px 14px';
         _mpBtnEl.style.fontSize = '12px';
         _mpBtnEl.style.top = '16px';
+        _mpBtnEl.style.bottom = '';          /* clear opposite axis */
       } else if (_role !== 'none') {
         _mpBtnEl.style.display = '';
         var cnt = Object.keys(_remote).length + 1;
@@ -943,6 +965,7 @@
         _mpBtnEl.style.padding = '6px 10px';
         _mpBtnEl.style.fontSize = '11px';
         _mpBtnEl.style.bottom = '60px';
+        _mpBtnEl.style.top = '';             /* clear opposite axis */
       } else {
         _mpBtnEl.style.display = 'none';
       }
