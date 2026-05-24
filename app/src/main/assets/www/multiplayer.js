@@ -316,7 +316,7 @@
   /* ── Kill feed ───────────────────────────────────────────────────── */
   function _addKillFeed(killer, victim, isMe) {
     _killFeed.push({
-      msg: killer + ' убил ' + victim,
+      msg: (victim ? killer + ' убил ' + victim : killer),
       ts: Date.now(),
       isMe: isMe
     });
@@ -581,8 +581,6 @@
       ctx.fillStyle = '#fff';
       ctx.fillText(rp.name, sx, sy - R - 15);
       ctx.restore();
-
-      /*
 
       /* Draw remote bullets on screen */
       var bullets = rp.bullets || {};
