@@ -6,7 +6,7 @@
   var MAX_PLAYERS     = 10;
   var SYNC_MS         = 32;    // state + bullet snapshot (≈30 fps)
   var POLL_MS         = 50;
-  var STALE_MS        = 2500;  // remote player gone after this
+  var STALE_MS        = 6000;  // remote player gone after this
   var BULLET_TTL      = 600;   // ms a remote bullet lives on receiver side
   var HIT_COOLDOWN    = 16;    // ms between damage ticks from same bullet
   var KILL_FEED_MS    = 4000;
@@ -96,7 +96,10 @@
         break;
 
       case '_clientConnected':
-        _droid('mpSend', JSON.stringify({type:'join', id:_myId, name:_myName, color:_myColor}));
+        /* Small delay so the WebSocket handshake fully completes before sending */
+        setTimeout(function () {
+          _droid('mpSend', JSON.stringify({type:'join', id:_myId, name:_myName, color:_myColor}));
+        }, 150);
         _rerender();
         break;
 
@@ -557,51 +560,14 @@
       var R = Math.max(9, Math.min(22, 18 * scale));
       var col = rp.color || '#4488ff';
 
-      /* Barrel */
-      ctx.save();
-      ctx.translate(sx, sy);
-      ctx.rotate(rp.angle || 0);
-      /* Barrel starts at body edge so it connects cleanly */
-      var bCol = col ? col.replace(/[^,]+\)$/, '0.85)') : 'rgba(80,80,80,0.85)';
-      ctx.fillStyle = bCol;
-      ctx.strokeStyle = 'rgba(0,0,0,0.45)';
-      ctx.lineWidth = 1.5;
-      ctx.beginPath();
-      ctx.rect(R * 0.1, -R * 0.28, R * 1.5, R * 0.56);
-      ctx.fill(); ctx.stroke();
-      ctx.restore();
-
-      /* Body */
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(sx, sy, R, 0, Math.PI * 2);
-      ctx.fillStyle = col + 'cc';
-      ctx.fill();
-      ctx.strokeStyle = col;
-      ctx.lineWidth = 2.5;
-      ctx.stroke();
-      ctx.restore();
-
-      /* HP bar */
+      /* HP bar only — tank model and name are rendered by the game engine */
       var frac = rp.maxHp > 0 ? Math.max(0, Math.min(1, rp.hp / rp.maxHp)) : 1;
-      var bw = R * 2.6, bh = 4;
-      var bx = sx - bw / 2, by = sy - R - 13;
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.fillRect(bx, by, bw, bh);
+      var bw = R * 2.6, bh = 5;
+      var bx = sx - bw / 2, by = sy - R - 10;
+      ctx.fillStyle = 'rgba(0,0,0,0.55)';
+      ctx.fillRect(bx - 1, by - 1, bw + 2, bh + 2);
       ctx.fillStyle = frac > 0.5 ? '#44cc44' : frac > 0.25 ? '#ffcc00' : '#ff4444';
       ctx.fillRect(bx, by, bw * frac, bh);
-
-      /* Name */
-      var fs = Math.round(Math.max(10, 9 * scale + 5));
-      ctx.save();
-      ctx.font = 'bold ' + fs + 'px Arial';
-      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = 'rgba(0,0,0,0.85)';
-      ctx.strokeText(rp.name, sx, sy - R - 15);
-      ctx.fillStyle = '#fff';
-      ctx.fillText(rp.name, sx, sy - R - 15);
-      ctx.restore();
 
       /* Draw remote bullets on screen */
       var bullets = rp.bullets || {};
@@ -792,15 +758,36 @@
     ));
   }
 
+  function _getAllIps() {
+    var raw = _droid('mpGetAllIps') || '';
+    if (!raw || raw === 'none') return [];
+    return raw.split(',').map(function(e) {
+      var parts = e.split(':');
+      return { iface: parts[0] || '', ip: parts[1] || '' };
+    }).filter(function(e) { return e.ip; });
+  }
+
   function _buildHost(box) {
+    var allIps = _getAllIps();
     var ipBox = _div(
       'background:rgba(0,40,20,0.7);border:1px solid rgba(68,255,136,0.35);' +
       'border-radius:10px;padding:12px;margin-bottom:14px;text-align:center;'
     );
+    var ipsHtml = '';
+    if (allIps.length > 0) {
+      allIps.forEach(function(e) {
+        ipsHtml += '<div style="color:#44ff88;font-size:' +
+          (allIps.length === 1 ? '22' : '18') +
+          'px;font-weight:bold;letter-spacing:2px;margin-top:3px;">' +
+          e.ip + '<span style="color:rgba(255,255,255,0.3);font-size:10px;font-weight:normal;margin-left:6px;">(' + e.iface + ')</span></div>';
+      });
+    } else {
+      ipsHtml = '<div style="color:#44ff88;font-size:22px;font-weight:bold;letter-spacing:2px;">' + (_hostIp || '...') + '</div>';
+    }
     ipBox.innerHTML =
-      '<div style="color:rgba(255,255,255,0.5);font-size:11px;margin-bottom:6px;">📱 IP для подключения:</div>' +
-      '<div style="color:#44ff88;font-size:22px;font-weight:bold;letter-spacing:2px;">' + (_hostIp || '...') + '</div>' +
-      '<div style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:4px;">Порт: ' + MP_PORT + '</div>';
+      '<div style="color:rgba(255,255,255,0.5);font-size:11px;margin-bottom:4px;">📱 IP для подключения:</div>' +
+      ipsHtml +
+      '<div style="color:rgba(255,255,255,0.35);font-size:11px;margin-top:6px;">Порт: ' + MP_PORT + ' · Нужен общий Wi-Fi</div>';
     box.appendChild(ipBox);
 
     var players = _allPlayers();
