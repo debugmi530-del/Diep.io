@@ -918,7 +918,7 @@
     if (_mpBtnEl) return;
     _mpBtnEl = document.createElement('button');
     _mpBtnEl.style.cssText =
-      'position:fixed;bottom:16px;right:16px;z-index:501;' +
+      'position:fixed;top:16px;right:16px;z-index:501;' +
       'background:rgba(0,30,70,0.9);border:2px solid rgba(68,136,255,0.6);' +
       'color:#88ccff;font-family:Arial;font-size:12px;font-weight:bold;' +
       'padding:9px 14px;border-radius:12px;cursor:pointer;' +
@@ -937,7 +937,7 @@
         _mpBtnEl.textContent = '🌐 Wi-Fi игра';
         _mpBtnEl.style.padding = '9px 14px';
         _mpBtnEl.style.fontSize = '12px';
-        _mpBtnEl.style.bottom = '16px';
+        _mpBtnEl.style.top = '16px';
       } else if (_role !== 'none') {
         _mpBtnEl.style.display = '';
         var cnt = Object.keys(_remote).length + 1;
