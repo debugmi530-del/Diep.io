@@ -36,6 +36,12 @@ public class MainActivity extends Activity {
             return MultiplayerManager.getLocalIp();
         }
 
+        /** Returns all non-loopback IPv4 addresses as "iface:ip,iface:ip" string. */
+        @JavascriptInterface
+        public String mpGetAllIps() {
+            return MultiplayerManager.getAllLocalIps();
+        }
+
         /** Start a WebSocket server on the given port (host mode).
          *  Returns "ok" or "error:<message>". */
         @JavascriptInterface
