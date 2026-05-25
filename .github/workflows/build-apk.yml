@@ -25,7 +25,7 @@ jobs:
           wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_export_templates.tpz" -O /tmp/templates.tpz
           cd /tmp && unzip -q templates.tpz
           mv /tmp/templates/* "$TEMPLATES_DIR/"
-          echo "Templates OK: $(ls $TEMPLATES_DIR | grep android)"
+          echo "Templates: $(ls $TEMPLATES_DIR | grep android)"
 
       - name: Install Android build-tools 34
         run: |
@@ -40,18 +40,38 @@ jobs:
             -storepass android -alias androiddebugkey -keypass android \
             -dname "CN=Android Debug,O=Android,C=US" \
             -keyalg RSA -keysize 2048 -validity 10000 2>/dev/null
-          echo "Keystore: $(ls -lh ~/.android/debug.keystore)"
+          echo "Keystore OK"
 
-      - name: Patch keystore in export_presets.cfg
+      - name: Write minimal export preset
         run: |
-          sed -i "s|keystore/debug=\"\"|keystore/debug=\"$HOME/.android/debug.keystore\"|g" godot/export_presets.cfg
-          sed -i 's|keystore/debug_user=""|keystore/debug_user="androiddebugkey"|g' godot/export_presets.cfg
-          sed -i 's|keystore/debug_password=""|keystore/debug_password="android"|g' godot/export_presets.cfg
-          sed -i 's|package/signed=false|package/signed=true|g' godot/export_presets.cfg
-          echo "Preset patched:"
-          cat godot/export_presets.cfg
+          PRESET_FILE="godot/export_presets.cfg"
+          KEYSTORE="$HOME/.android/debug.keystore"
+          echo '[preset.0]'                                         >  "$PRESET_FILE"
+          echo ''                                                   >> "$PRESET_FILE"
+          echo 'name="Android Debug"'                              >> "$PRESET_FILE"
+          echo 'platform="Android"'                                >> "$PRESET_FILE"
+          echo 'runnable=true'                                      >> "$PRESET_FILE"
+          echo 'export_filter="all_resources"'                     >> "$PRESET_FILE"
+          echo ''                                                   >> "$PRESET_FILE"
+          echo '[preset.0.options]'                                 >> "$PRESET_FILE"
+          echo ''                                                   >> "$PRESET_FILE"
+          echo 'gradle_build/use_gradle_build=false'               >> "$PRESET_FILE"
+          echo 'architectures/arm64-v8a=true'                      >> "$PRESET_FILE"
+          echo "keystore/debug=\"$KEYSTORE\""                      >> "$PRESET_FILE"
+          echo 'keystore/debug_user="androiddebugkey"'             >> "$PRESET_FILE"
+          echo 'keystore/debug_password="android"'                 >> "$PRESET_FILE"
+          echo 'package/unique_name="com.debugmi530.diepclone"'   >> "$PRESET_FILE"
+          echo 'package/name="Diep.io Clone"'                      >> "$PRESET_FILE"
+          echo 'package/signed=true'                               >> "$PRESET_FILE"
+          echo 'package/classify_as_game=true'                     >> "$PRESET_FILE"
+          echo 'permissions/internet=true'                         >> "$PRESET_FILE"
+          echo 'permissions/access_network_state=true'             >> "$PRESET_FILE"
+          echo 'permissions/access_wifi_state=true'                >> "$PRESET_FILE"
+          echo ''                                                   >> "$PRESET_FILE"
+          echo '=== Minimal preset ==='
+          cat "$PRESET_FILE"
 
-      - name: Write editor settings and export APK
+      - name: Write editor settings and export
         run: |
           JAVA_PATH=$(dirname $(dirname $(readlink -f $(which java))))
           mkdir -p ~/.config/godot
@@ -64,16 +84,13 @@ jobs:
           echo 'export/android/debug_keystore_user = "androiddebugkey"'            >> "$SF"
           echo 'export/android/debug_keystore_pass = "android"'                    >> "$SF"
           echo "export/android/java_sdk_path = \"$JAVA_PATH\""                    >> "$SF"
-          echo "=== Settings written to $SF ==="
+          echo '=== Editor settings ==='
           cat "$SF"
-          echo "=== Starting export (no separate import) ==="
           mkdir -p /tmp/apk-out
           cd godot
+          echo '=== Running export ==='
           godot --headless --verbose --export-debug "Android Debug" /tmp/apk-out/diep-clone.apk 2>&1
-          EXPORT_CODE=$?
-          echo "=== Export exit code: $EXPORT_CODE ==="
-          echo "=== Settings after export ==="
-          cat "$SF"
+          echo "=== Exit: $? ==="
 
       - name: Verify APK
         run: |
