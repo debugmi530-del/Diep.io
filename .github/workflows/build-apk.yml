@@ -35,8 +35,8 @@ jobs:
           wget -q \
             "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_linux.x86_64.zip" \
             -O /tmp/godot.zip
-          unzip -q /tmp/godot.zip -d /tmp/godot-bin
-          mv "/tmp/godot-bin/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_linux.x86_64" /usr/local/bin/godot
+          cd /tmp && unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_linux.x86_64" /usr/local/bin/godot
           chmod +x /usr/local/bin/godot
           godot --version
 
@@ -47,8 +47,8 @@ jobs:
           wget -q \
             "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_export_templates.tpz" \
             -O /tmp/templates.tpz
-          unzip -q /tmp/templates.tpz -d /tmp/godot-templates
-          mv /tmp/godot-templates/templates/* "$TEMPLATES_DIR/"
+          cd /tmp && unzip -q templates.tpz
+          mv /tmp/templates/* "$TEMPLATES_DIR/"
           echo "Templates installed:"
           ls "$TEMPLATES_DIR/" | grep android
 
@@ -62,33 +62,38 @@ jobs:
             -keypass android \
             -dname "CN=Android Debug,O=Android,C=US" \
             -keyalg RSA -keysize 2048 -validity 10000 2>/dev/null
-          echo "Keystore created"
+          echo "Keystore created at ~/.android/debug.keystore"
 
-      - name: Configure Godot editor settings (Android SDK path)
+      - name: Configure Godot editor settings
         run: |
           mkdir -p ~/.config/godot
-          cat > ~/.config/godot/editor_settings-4.tres << EOF
-          [gd_resource type="EditorSettings" format=3]
-          [resource]
-          export/android/android_sdk_path = "$ANDROID_HOME"
-          export/android/debug_keystore = "$HOME/.android/debug.keystore"
-          export/android/debug_keystore_user = "androiddebugkey"
-          export/android/debug_keystore_pass = "android"
-          EOF
+          printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/android_sdk_path = "%s"\nexport/android/debug_keystore = "%s"\nexport/android/debug_keystore_user = "androiddebugkey"\nexport/android/debug_keystore_pass = "android"\n' \
+            "$ANDROID_HOME" "$HOME/.android/debug.keystore" \
+            > ~/.config/godot/editor_settings-4.tres
+          echo "Editor settings:"
+          cat ~/.config/godot/editor_settings-4.tres
+
+      - name: Import Godot project resources
+        run: |
+          cd godot
+          echo "Importing project resources..."
+          timeout 60 godot --headless --import 2>&1 || true
+          echo "Import done."
 
       - name: Export Android APK
         run: |
           mkdir -p /tmp/apk-out
           cd godot
-          # Run headless export; ignore non-fatal Godot warnings
-          godot --headless --export-debug "Android Debug" /tmp/apk-out/diep-clone.apk 2>&1 || true
-          echo "--- Output directory contents ---"
-          ls -lh /tmp/apk-out/
+          echo "Starting Godot Android export..."
+          godot --headless --export-debug "Android Debug" /tmp/apk-out/diep-clone.apk 2>&1
+          echo "Export command exit code: $?"
 
-      - name: Verify APK exists
+      - name: Verify and list APK
         run: |
+          echo "--- Output directory ---"
+          ls -lh /tmp/apk-out/ 2>/dev/null || echo "(empty)"
           if [ ! -f /tmp/apk-out/diep-clone.apk ]; then
-            echo "ERROR: APK not found! Export may have failed."
+            echo "ERROR: APK not found!"
             exit 1
           fi
           echo "APK size: $(du -h /tmp/apk-out/diep-clone.apk | cut -f1)"
