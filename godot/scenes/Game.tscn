@@ -1,0 +1,386 @@
+[gd_scene load_steps=10 format=3 uid="uid://game"]
+
+[ext_resource type="Script" path="res://scripts/Game.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/ui/WorldBackground.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/ui/HUD.gd" id="3"]
+[ext_resource type="Script" path="res://scripts/ui/ClassSelect.gd" id="4"]
+[ext_resource type="Script" path="res://scripts/ui/Leaderboard.gd" id="5"]
+[ext_resource type="Script" path="res://scripts/ui/DeathScreen.gd" id="6"]
+[ext_resource type="Script" path="res://scripts/ui/AdminPanel.gd" id="7"]
+[ext_resource type="Script" path="res://scripts/ui/Minimap.gd" id="8"]
+
+[node name="Game" type="Node2D"]
+script = ExtResource("1")
+
+[node name="WorldBackground" type="Node2D" parent="."]
+script = ExtResource("2")
+
+[node name="ShapesLayer" type="Node2D" parent="."]
+
+[node name="EntitiesLayer" type="Node2D" parent="."]
+
+[node name="BulletsLayer" type="Node2D" parent="."]
+
+[node name="Camera" type="Camera2D" parent="."]
+zoom = Vector2(1, 1)
+position_smoothing_enabled = true
+position_smoothing_speed = 12.0
+
+[node name="HUD" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("3")
+
+[node name="XPBar" type="ProgressBar" parent="HUD"]
+layout_mode = 1
+anchors_preset = 12
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -34.0
+offset_bottom = -8.0
+min_value = 0.0
+max_value = 100.0
+value = 0.0
+show_percentage = false
+add_theme_color_override = {"font_color": Color(1,1,1,1)}
+
+[node name="XPLabel" type="Label" parent="HUD"]
+layout_mode = 1
+anchors_preset = 12
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -60.0
+offset_top = -32.0
+offset_right = 60.0
+offset_bottom = -8.0
+text = "0 XP"
+horizontal_alignment = 1
+add_theme_font_size_override = {"font_size": 11}
+add_theme_color_override = {"font_color": Color(1,1,1,0.8)}
+
+[node name="HPBar" type="ProgressBar" parent="HUD"]
+layout_mode = 1
+anchors_preset = 12
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -68.0
+offset_bottom = -42.0
+min_value = 0.0
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="LevelLabel" type="Label" parent="HUD"]
+layout_mode = 1
+anchors_preset = 12
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -66.0
+offset_right = 100.0
+offset_bottom = -44.0
+text = "Ур. 1"
+add_theme_font_size_override = {"font_size": 13}
+add_theme_color_override = {"font_color": Color(1, 0.87, 0.3, 1)}
+
+[node name="ScoreLabel" type="Label" parent="HUD"]
+layout_mode = 1
+anchors_preset = 12
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = -90.0
+offset_right = 200.0
+offset_bottom = -68.0
+text = "Очки: 0"
+add_theme_font_size_override = {"font_size": 12}
+add_theme_color_override = {"font_color": Color(0.85, 0.85, 0.85, 1)}
+
+[node name="ClassLabel" type="Label" parent="HUD"]
+layout_mode = 1
+anchors_preset = 12
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -100.0
+offset_top = -68.0
+offset_right = 100.0
+offset_bottom = -44.0
+text = "Базовый"
+horizontal_alignment = 1
+add_theme_font_size_override = {"font_size": 12}
+add_theme_color_override = {"font_color": Color(0.55, 0.75, 1.0, 1)}
+
+[node name="KillFeedContainer" type="VBoxContainer" parent="HUD"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -260.0
+offset_top = 220.0
+offset_right = -10.0
+offset_bottom = 420.0
+
+[node name="LevelUpFlash" type="ColorRect" parent="HUD"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(1, 0.87, 0.3, 0.0)
+mouse_filter = 2
+visible = false
+
+[node name="JoystickBG" type="Control" parent="HUD"]
+layout_mode = 1
+anchors_preset = 12
+anchor_left = 0.0
+anchor_top = 1.0
+anchor_right = 0.0
+anchor_bottom = 1.0
+offset_left = 60.0
+offset_top = -160.0
+offset_right = 220.0
+offset_bottom = -20.0
+visible = false
+
+[node name="Knob" type="Control" parent="HUD/JoystickBG"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -24.0
+offset_right = 24.0
+offset_bottom = 24.0
+
+[node name="StatsPanel" type="Control" parent="HUD"]
+
+[node name="Minimap" type="Control" parent="HUD"]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_top = 0.0
+anchor_right = 1.0
+anchor_bottom = 0.0
+offset_left = -130.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 130.0
+script = ExtResource("8")
+
+[node name="ClassSelectUI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("4")
+
+[node name="Background" type="ColorRect" parent="ClassSelectUI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.6)
+mouse_filter = 0
+
+[node name="Panel" type="PanelContainer" parent="ClassSelectUI"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -130.0
+offset_right = 300.0
+offset_bottom = 130.0
+
+[node name="VBox" type="VBoxContainer" parent="ClassSelectUI/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="ClassSelectUI/Panel/VBox"]
+text = "Выберите класс:"
+horizontal_alignment = 1
+add_theme_font_size_override = {"font_size": 16}
+add_theme_color_override = {"font_color": Color(1, 1, 1, 0.9)}
+
+[node name="ButtonsContainer" type="HBoxContainer" parent="ClassSelectUI/Panel/VBox"]
+alignment = 1
+theme_override_constants/separation = 10
+
+[node name="DescLabel" type="Label" parent="ClassSelectUI/Panel/VBox"]
+custom_minimum_size = Vector2(0, 30)
+add_theme_font_size_override = {"font_size": 11}
+add_theme_color_override = {"font_color": Color(0.75, 0.75, 0.75, 1)}
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Leaderboard" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -180.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = 220.0
+script = ExtResource("5")
+
+[node name="Panel" type="PanelContainer" parent="Leaderboard"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Leaderboard/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Title" type="Label" parent="Leaderboard/Panel/VBox"]
+text = "ТОП ИГРОКИ"
+horizontal_alignment = 1
+add_theme_font_size_override = {"font_size": 11}
+add_theme_color_override = {"font_color": Color(1, 0.87, 0.3, 1)}
+
+[node name="Rows" type="VBoxContainer" parent="Leaderboard/Panel/VBox"]
+theme_override_constants/separation = 2
+
+[node name="DeathScreen" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+visible = false
+script = ExtResource("6")
+
+[node name="Overlay" type="ColorRect" parent="DeathScreen"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0, 0, 0, 0.7)
+
+[node name="Panel" type="PanelContainer" parent="DeathScreen"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -160.0
+offset_top = -130.0
+offset_right = 160.0
+offset_bottom = 130.0
+
+[node name="VBox" type="VBoxContainer" parent="DeathScreen/Panel"]
+layout_mode = 2
+alignment = 1
+theme_override_constants/separation = 14
+
+[node name="DeadTitle" type="Label" parent="DeathScreen/Panel/VBox"]
+text = "ВЫ ПОГИБЛИ"
+horizontal_alignment = 1
+add_theme_font_size_override = {"font_size": 26}
+add_theme_color_override = {"font_color": Color(1, 0.25, 0.25, 1)}
+
+[node name="ScoreLabel" type="Label" parent="DeathScreen/Panel/VBox"]
+text = "Очки: 0"
+horizontal_alignment = 1
+add_theme_font_size_override = {"font_size": 15}
+
+[node name="LevelLabel" type="Label" parent="DeathScreen/Panel/VBox"]
+text = "Уровень: 1"
+horizontal_alignment = 1
+add_theme_font_size_override = {"font_size": 13}
+add_theme_color_override = {"font_color": Color(0.7, 0.7, 0.7, 1)}
+
+[node name="CountdownLabel" type="Label" parent="DeathScreen/Panel/VBox"]
+text = ""
+horizontal_alignment = 1
+add_theme_font_size_override = {"font_size": 12}
+add_theme_color_override = {"font_color": Color(0.6, 0.6, 0.6, 1)}
+
+[node name="RespawnBtn" type="Button" parent="DeathScreen/Panel/VBox"]
+custom_minimum_size = Vector2(200, 48)
+text = "ВОЗРОДИТЬСЯ"
+add_theme_font_size_override = {"font_size": 16}
+disabled = true
+
+[node name="AdminPanel" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+mouse_filter = 2
+script = ExtResource("7")
+
+[node name="Panel" type="PanelContainer" parent="AdminPanel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -180.0
+offset_top = -280.0
+offset_right = 180.0
+offset_bottom = 280.0
+visible = false
+
+[node name="VBox" type="VBoxContainer" parent="AdminPanel/Panel"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="AdminPanel/Panel/VBox"]
+
+[node name="AdminTitle" type="Label" parent="AdminPanel/Panel/VBox/Header"]
+text = "ПАНЕЛЬ АДМИНИСТРАТОРА"
+size_flags_horizontal = 3
+add_theme_font_size_override = {"font_size": 13}
+add_theme_color_override = {"font_color": Color(0.78, 0.63, 0.09, 1)}
+
+[node name="Tabs" type="HBoxContainer" parent="AdminPanel/Panel/VBox"]
+
+[node name="TabShapesBtn" type="Button" parent="AdminPanel/Panel/VBox/Tabs"]
+size_flags_horizontal = 3
+text = "Фигуры"
+
+[node name="TabTanksBtn" type="Button" parent="AdminPanel/Panel/VBox/Tabs"]
+size_flags_horizontal = 3
+text = "Танки"
+
+[node name="Body" type="ScrollContainer" parent="AdminPanel/Panel/VBox"]
+custom_minimum_size = Vector2(0, 360)
+
+[node name="PaneShapes" type="VBoxContainer" parent="AdminPanel/Panel/VBox/Body"]
+size_flags_horizontal = 3
+
+[node name="PaneTanks" type="VBoxContainer" parent="AdminPanel/Panel/VBox/Body"]
+size_flags_horizontal = 3
+visible = false
+
+[node name="Status" type="Label" parent="AdminPanel/Panel/VBox"]
+text = "Нажмите кнопку для действия"
+add_theme_font_size_override = {"font_size": 10}
+add_theme_color_override = {"font_color": Color(0.6, 0.6, 0.6, 1)}
+horizontal_alignment = 1
