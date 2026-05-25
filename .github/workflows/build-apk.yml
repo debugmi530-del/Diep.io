@@ -5,6 +5,10 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
+env:
+  GODOT_VERSION: "4.3"
+  GODOT_RELEASE: "stable"
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,14 +18,22 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Verify Godot and templates
+      - name: Install export templates
         run: |
-          godot --version
-          echo "Templates dir:"
-          ls ~/.local/share/godot/export_templates/ 2>/dev/null || echo "(no templates dir)"
-          ls ~/.local/share/godot/export_templates/*/ 2>/dev/null | grep android || echo "(no android templates found in any dir)"
-          echo "Android SDK:"
-          ls /usr/lib/android-sdk/ 2>/dev/null || ls $ANDROID_HOME/ 2>/dev/null || echo "(SDK not found)"
+          TEMPLATES_DIR="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}"
+          mkdir -p "$TEMPLATES_DIR"
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_export_templates.tpz" -O /tmp/templates.tpz
+          cd /tmp && unzip -q templates.tpz
+          mv /tmp/templates/* "$TEMPLATES_DIR/"
+          echo "Templates at $TEMPLATES_DIR:"
+          ls "$TEMPLATES_DIR/" | grep android
+
+      - name: Install Android build-tools 34
+        run: |
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses > /dev/null 2>&1 || true
+          sdkmanager --sdk_root="$ANDROID_HOME" "build-tools;34.0.0" "platforms;android-34" 2>&1 | tail -5
+          echo "Build tools:"
+          ls "$ANDROID_HOME/build-tools/"
 
       - name: Generate debug keystore
         run: |
@@ -32,26 +44,27 @@ jobs:
             -keyalg RSA -keysize 2048 -validity 10000 2>/dev/null
           echo "Keystore: $(ls -lh ~/.android/debug.keystore)"
 
-      - name: Write Godot editor settings
+      - name: Find Java path and write editor settings
         run: |
+          JAVA_PATH=$(dirname $(dirname $(readlink -f $(which java))))
+          echo "Java path: $JAVA_PATH"
           mkdir -p ~/.config/godot
           SF="$HOME/.config/godot/editor_settings-4.tres"
-          SDK_PATH="${ANDROID_HOME:-/usr/lib/android-sdk}"
           echo '[gd_resource type="EditorSettings" format=3]'                      >  "$SF"
           echo ''                                                                   >> "$SF"
           echo '[resource]'                                                         >> "$SF"
-          echo "export/android/android_sdk_path = \"$SDK_PATH\""                   >> "$SF"
+          echo "export/android/android_sdk_path = \"$ANDROID_HOME\""              >> "$SF"
           echo "export/android/debug_keystore = \"$HOME/.android/debug.keystore\"" >> "$SF"
           echo 'export/android/debug_keystore_user = "androiddebugkey"'            >> "$SF"
           echo 'export/android/debug_keystore_pass = "android"'                    >> "$SF"
+          echo "export/android/java_sdk_path = \"$JAVA_PATH\""                    >> "$SF"
           echo "=== Editor settings ==="
           cat "$SF"
 
       - name: Patch keystore in export_presets.cfg
         run: |
           PRESET="godot/export_presets.cfg"
-          KEYSTORE="$HOME/.android/debug.keystore"
-          sed -i "s|keystore/debug=\"\"|keystore/debug=\"$KEYSTORE\"|g" "$PRESET"
+          sed -i "s|keystore/debug=\"\"|keystore/debug=\"$HOME/.android/debug.keystore\"|g" "$PRESET"
           sed -i 's|keystore/debug_user=""|keystore/debug_user="androiddebugkey"|g' "$PRESET"
           sed -i 's|keystore/debug_password=""|keystore/debug_password="android"|g' "$PRESET"
           sed -i 's|package/signed=false|package/signed=true|g' "$PRESET"
