@@ -1453,8 +1453,8 @@ static func get_all_class_names() -> Array:
         return TANKS.keys()
 
 static func get_tier(tank_name: String) -> int:
-        var t := get_tank(tank_name)
-        var req := t.get("required_level", 0)
+        var t: Dictionary = get_tank(tank_name)
+        var req: int = t.get("required_level", 0)
         if req == 0: return 0
         for i in range(GameConfig.UPGRADE_LEVELS.size()):
                 if req <= GameConfig.UPGRADE_LEVELS[i]:
