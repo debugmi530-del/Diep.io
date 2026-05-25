@@ -29,6 +29,8 @@ jobs:
         run: |
           yes | sdkmanager --licenses || true
           sdkmanager "ndk;23.2.8568313" "build-tools;34.0.0" "platforms;android-34"
+          echo "$ANDROID_HOME/build-tools/34.0.0" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
       - name: Download Godot 4.3 headless editor
         run: |
@@ -36,7 +38,7 @@ jobs:
             "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_linux.x86_64.zip" \
             -O /tmp/godot.zip
           cd /tmp && unzip -q godot.zip
-          mv "Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_linux.x86_64" /usr/local/bin/godot
+          mv "/tmp/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_linux.x86_64" /usr/local/bin/godot
           chmod +x /usr/local/bin/godot
           godot --version
 
@@ -50,7 +52,7 @@ jobs:
           cd /tmp && unzip -q templates.tpz
           mv /tmp/templates/* "$TEMPLATES_DIR/"
           echo "Templates installed:"
-          ls "$TEMPLATES_DIR/" | grep android
+          ls "$TEMPLATES_DIR/" | grep android || echo "(no android templates found)"
 
       - name: Generate debug keystore
         run: |
@@ -62,36 +64,45 @@ jobs:
             -keypass android \
             -dname "CN=Android Debug,O=Android,C=US" \
             -keyalg RSA -keysize 2048 -validity 10000 2>/dev/null
-          echo "Keystore created at ~/.android/debug.keystore"
+          echo "Keystore OK: $(ls -lh ~/.android/debug.keystore)"
 
-      - name: Configure Godot editor settings
+      - name: Write Godot editor settings
         run: |
           mkdir -p ~/.config/godot
-          printf '[gd_resource type="EditorSettings" format=3]\n\n[resource]\nexport/android/android_sdk_path = "%s"\nexport/android/debug_keystore = "%s"\nexport/android/debug_keystore_user = "androiddebugkey"\nexport/android/debug_keystore_pass = "android"\n' \
-            "$ANDROID_HOME" "$HOME/.android/debug.keystore" \
-            > ~/.config/godot/editor_settings-4.tres
-          echo "Editor settings:"
+          # Write file using tee + single-quoted heredoc (no variable expansion issues)
+          tee ~/.config/godot/editor_settings-4.tres > /dev/null << 'EOSETTINGS'
+[gd_resource type="EditorSettings" format=3]
+
+[resource]
+export/android/android_sdk_path = "SDK_PATH_PLACEHOLDER"
+export/android/debug_keystore = "KEYSTORE_PATH_PLACEHOLDER"
+export/android/debug_keystore_user = "androiddebugkey"
+export/android/debug_keystore_pass = "android"
+EOSETTINGS
+          # Replace placeholders with real paths
+          sed -i "s|SDK_PATH_PLACEHOLDER|${ANDROID_HOME}|g" ~/.config/godot/editor_settings-4.tres
+          sed -i "s|KEYSTORE_PATH_PLACEHOLDER|${HOME}/.android/debug.keystore|g" ~/.config/godot/editor_settings-4.tres
+          echo "=== Editor settings written ==="
           cat ~/.config/godot/editor_settings-4.tres
 
       - name: Import Godot project resources
         run: |
           cd godot
-          echo "Importing project resources..."
-          timeout 60 godot --headless --import 2>&1 || true
-          echo "Import done."
+          echo "Importing resources..."
+          timeout 90 godot --headless --import 2>&1 | tail -20 || true
+          echo "Import step done."
 
-      - name: Export Android APK
+      - name: Export Android APK (verbose)
         run: |
           mkdir -p /tmp/apk-out
           cd godot
-          echo "Starting Godot Android export..."
-          godot --headless --export-debug "Android Debug" /tmp/apk-out/diep-clone.apk 2>&1
-          echo "Export command exit code: $?"
+          echo "=== Starting export ==="
+          godot --headless --verbose --export-debug "Android Debug" /tmp/apk-out/diep-clone.apk 2>&1
+          echo "=== Export exit code: $? ==="
 
-      - name: Verify and list APK
+      - name: Verify APK
         run: |
-          echo "--- Output directory ---"
-          ls -lh /tmp/apk-out/ 2>/dev/null || echo "(empty)"
+          ls -lh /tmp/apk-out/ 2>/dev/null || echo "(output dir empty)"
           if [ ! -f /tmp/apk-out/diep-clone.apk ]; then
             echo "ERROR: APK not found!"
             exit 1
