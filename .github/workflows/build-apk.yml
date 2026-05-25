@@ -25,8 +25,7 @@ jobs:
         run: |
           yes | sdkmanager --licenses > /dev/null 2>&1 || true
           sdkmanager "build-tools;33.0.2" "platforms;android-33"
-          echo "Build-tools: $(ls $ANDROID_HOME/build-tools/)"
-          echo "aapt2: $(ls $ANDROID_HOME/build-tools/33.0.2/aapt2)"
+          echo "SDK ready: $(ls $ANDROID_HOME/build-tools/)"
 
       - name: Generate debug keystore
         run: |
@@ -35,7 +34,7 @@ jobs:
             -storepass android -alias androiddebugkey -keypass android \
             -dname "CN=Android Debug,O=Android,C=US" \
             -keyalg RSA -keysize 2048 -validity 10000 2>/dev/null
-          echo "Keystore: OK"
+          echo "Keystore: OK at $HOME/.android/debug.keystore"
 
       - name: Patch export_presets.cfg
         run: |
@@ -44,7 +43,8 @@ jobs:
           sed -i 's|keystore/debug_user=""|keystore/debug_user="androiddebugkey"|g' godot/export_presets.cfg
           sed -i 's|keystore/debug_password=""|keystore/debug_password="android"|g' godot/export_presets.cfg
           sed -i 's|package/signed=false|package/signed=true|g' godot/export_presets.cfg
-          echo "Preset patched OK"
+          sed -i 's|export_path=""|export_path="diep-clone.apk"|g' godot/export_presets.cfg
+          echo "Preset export_path: $(grep export_path godot/export_presets.cfg)"
 
       - name: Export Godot project
         uses: firebelley/godot-export@v5.2.1
@@ -55,19 +55,19 @@ jobs:
           archive_export_output: false
           cache: false
           export_debug: true
-          use_preset_export_path: false
+          use_preset_export_path: true
         env:
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
 
-      - name: Find and upload APK
+      - name: Find APK
         run: |
-          echo "Export outputs:"
-          find /home/runner/work -name "*.apk" 2>/dev/null | head -10
-          find /tmp -name "*.apk" 2>/dev/null | head -10
-          find . -name "*.apk" 2>/dev/null | head -10
+          echo "Looking for APK..."
+          find /home/runner -name "*.apk" 2>/dev/null | head -10
+          find $GITHUB_WORKSPACE -name "*.apk" 2>/dev/null | head -10
 
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: diep-clone-apk
           path: "**/*.apk"
