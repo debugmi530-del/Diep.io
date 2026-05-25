@@ -1,34 +1,101 @@
-name: Build APK
+name: Build Godot APK
+
 on:
   push:
     branches: [main, master]
   workflow_dispatch:
+
+env:
+  GODOT_VERSION: "4.3"
+  GODOT_RELEASE: "stable"
+
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
-      - name: Install Gradle 8.4
-        run: |
-          wget -q https://services.gradle.org/distributions/gradle-8.4-bin.zip -O /tmp/gradle.zip
-          unzip -q /tmp/gradle.zip -d /opt
-          echo "/opt/gradle-8.4/bin" >> $GITHUB_PATH
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
-      - name: Accept licenses and install tools
+
+      - name: Install Android NDK and build tools
         run: |
           yes | sdkmanager --licenses || true
-          sdkmanager "build-tools;34.0.0" "platforms;android-34"
-      - name: Build debug APK
-        run: gradle assembleDebug
+          sdkmanager "ndk;23.2.8568313" "build-tools;34.0.0" "platforms;android-34"
+
+      - name: Download Godot 4.3 headless editor
+        run: |
+          wget -q \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_linux.x86_64.zip" \
+            -O /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot-bin
+          mv "/tmp/godot-bin/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_linux.x86_64" /usr/local/bin/godot
+          chmod +x /usr/local/bin/godot
+          godot --version
+
+      - name: Download Godot Android export templates
+        run: |
+          TEMPLATES_DIR="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}"
+          mkdir -p "$TEMPLATES_DIR"
+          wget -q \
+            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_export_templates.tpz" \
+            -O /tmp/templates.tpz
+          unzip -q /tmp/templates.tpz -d /tmp/godot-templates
+          mv /tmp/godot-templates/templates/* "$TEMPLATES_DIR/"
+          echo "Templates installed:"
+          ls "$TEMPLATES_DIR/" | grep android
+
+      - name: Generate debug keystore
+        run: |
+          mkdir -p ~/.android
+          keytool -genkey -v \
+            -keystore ~/.android/debug.keystore \
+            -storepass android \
+            -alias androiddebugkey \
+            -keypass android \
+            -dname "CN=Android Debug,O=Android,C=US" \
+            -keyalg RSA -keysize 2048 -validity 10000 2>/dev/null
+          echo "Keystore created"
+
+      - name: Configure Godot editor settings (Android SDK path)
+        run: |
+          mkdir -p ~/.config/godot
+          cat > ~/.config/godot/editor_settings-4.tres << EOF
+          [gd_resource type="EditorSettings" format=3]
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_HOME"
+          export/android/debug_keystore = "$HOME/.android/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+
+      - name: Export Android APK
+        run: |
+          mkdir -p /tmp/apk-out
+          cd godot
+          # Run headless export; ignore non-fatal Godot warnings
+          godot --headless --export-debug "Android Debug" /tmp/apk-out/diep-clone.apk 2>&1 || true
+          echo "--- Output directory contents ---"
+          ls -lh /tmp/apk-out/
+
+      - name: Verify APK exists
+        run: |
+          if [ ! -f /tmp/apk-out/diep-clone.apk ]; then
+            echo "ERROR: APK not found! Export may have failed."
+            exit 1
+          fi
+          echo "APK size: $(du -h /tmp/apk-out/diep-clone.apk | cut -f1)"
+
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: diep-clone-apk
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: /tmp/apk-out/diep-clone.apk
           retention-days: 30
