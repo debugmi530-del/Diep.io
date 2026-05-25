@@ -114,7 +114,7 @@ func reset_barrel_timer(idx: int) -> void:
         if idx < barrel_timers.size():
                 var barrels: Array = tank_data.get("barrels", [])
                 if idx < barrels.size():
-                        var b := barrels[idx]
+                        var b: Dictionary = barrels[idx]
                         var reload_mult: float = b.get("rl", b.get("reload_multiplier", 1.0))
                         barrel_timers[idx] = GameConfig.BASE_RELOAD_TIME * reload_mult
 
