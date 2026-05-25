@@ -11,7 +11,7 @@ static func B(ao:float,ln:float,wd:float,rl:float=1.0,bsm:float=1.0,
         return {"ao":ao,"len":ln,"wd":wd,"rl":rl,"bsm":bsm,"bsp":bsp,"bdm":dm,"sp":sp,"lat":lat}
 
 # ── Full tank registry ────────────────────────────────────────────────────────
-const TANKS: Dictionary = {
+static var TANKS: Dictionary = {
 
 # ═════════════════════════════════════════════════════════════════════════════
 # TIER 0
@@ -851,7 +851,7 @@ const TANKS: Dictionary = {
 } # end TANKS
 
 # ── Barrel data (separate to keep TANKS dict readable) ────────────────────────
-const BARRELS: Dictionary = {
+static var BARRELS: Dictionary = {
 "Basic":       [{"ao":0.0,"len":48.0,"wd":14.0,"rl":1.0,"bsm":1.0,"bsp":1.0,"bdm":1.0,"sp":0.0,"lat":0.0}],
 "Assault":     [{"ao":0.0,"len":50.0,"wd":14.0,"rl":0.95,"bsm":1.02,"bsp":1.08,"bdm":1.08,"sp":0.0,"lat":0.0}],
 "Skirmisher":  [{"ao":0.0,"len":48.0,"wd":13.0,"rl":0.90,"bsm":0.98,"bsp":1.12,"bdm":0.98,"sp":0.0,"lat":0.0}],
