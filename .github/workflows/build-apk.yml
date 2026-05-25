@@ -32,85 +32,77 @@ jobs:
           echo "$ANDROID_HOME/build-tools/34.0.0" >> $GITHUB_PATH
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
-      - name: Download Godot 4.3 headless editor
+      - name: Download Godot 4.3
         run: |
-          wget -q \
-            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_linux.x86_64.zip" \
-            -O /tmp/godot.zip
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_linux.x86_64.zip" -O /tmp/godot.zip
           cd /tmp && unzip -q godot.zip
           mv "/tmp/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_linux.x86_64" /usr/local/bin/godot
           chmod +x /usr/local/bin/godot
           godot --version
 
-      - name: Download Godot Android export templates
+      - name: Download export templates
         run: |
           TEMPLATES_DIR="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}"
           mkdir -p "$TEMPLATES_DIR"
-          wget -q \
-            "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_export_templates.tpz" \
-            -O /tmp/templates.tpz
+          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_export_templates.tpz" -O /tmp/templates.tpz
           cd /tmp && unzip -q templates.tpz
           mv /tmp/templates/* "$TEMPLATES_DIR/"
-          echo "Templates installed:"
-          ls "$TEMPLATES_DIR/" | grep android || echo "(no android templates found)"
+          ls "$TEMPLATES_DIR/" | grep android
 
       - name: Generate debug keystore
         run: |
           mkdir -p ~/.android
-          keytool -genkey -v \
-            -keystore ~/.android/debug.keystore \
-            -storepass android \
-            -alias androiddebugkey \
-            -keypass android \
+          keytool -genkey -v -keystore ~/.android/debug.keystore \
+            -storepass android -alias androiddebugkey -keypass android \
             -dname "CN=Android Debug,O=Android,C=US" \
             -keyalg RSA -keysize 2048 -validity 10000 2>/dev/null
-          echo "Keystore OK: $(ls -lh ~/.android/debug.keystore)"
+          echo "Keystore: $(ls -lh ~/.android/debug.keystore)"
 
       - name: Write Godot editor settings
         run: |
           mkdir -p ~/.config/godot
-          # Write file using tee + single-quoted heredoc (no variable expansion issues)
-          tee ~/.config/godot/editor_settings-4.tres > /dev/null << 'EOSETTINGS'
-[gd_resource type="EditorSettings" format=3]
+          SF="$HOME/.config/godot/editor_settings-4.tres"
+          echo '[gd_resource type="EditorSettings" format=3]'  > "$SF"
+          echo ''                                              >> "$SF"
+          echo '[resource]'                                    >> "$SF"
+          echo "export/android/android_sdk_path = \"$ANDROID_HOME\""                >> "$SF"
+          echo "export/android/debug_keystore = \"$HOME/.android/debug.keystore\""  >> "$SF"
+          echo 'export/android/debug_keystore_user = "androiddebugkey"'             >> "$SF"
+          echo 'export/android/debug_keystore_pass = "android"'                     >> "$SF"
+          echo "=== Editor settings ==="
+          cat "$SF"
 
-[resource]
-export/android/android_sdk_path = "SDK_PATH_PLACEHOLDER"
-export/android/debug_keystore = "KEYSTORE_PATH_PLACEHOLDER"
-export/android/debug_keystore_user = "androiddebugkey"
-export/android/debug_keystore_pass = "android"
-EOSETTINGS
-          # Replace placeholders with real paths
-          sed -i "s|SDK_PATH_PLACEHOLDER|${ANDROID_HOME}|g" ~/.config/godot/editor_settings-4.tres
-          sed -i "s|KEYSTORE_PATH_PLACEHOLDER|${HOME}/.android/debug.keystore|g" ~/.config/godot/editor_settings-4.tres
-          echo "=== Editor settings written ==="
-          cat ~/.config/godot/editor_settings-4.tres
+      - name: Patch keystore paths in export_presets.cfg
+        run: |
+          PRESET="godot/export_presets.cfg"
+          KEYSTORE="$HOME/.android/debug.keystore"
+          sed -i "s|keystore/debug=\"\"|keystore/debug=\"$KEYSTORE\"|g" "$PRESET"
+          sed -i 's|keystore/debug_user=""|keystore/debug_user="androiddebugkey"|g' "$PRESET"
+          sed -i 's|keystore/debug_password=""|keystore/debug_password="android"|g' "$PRESET"
+          sed -i 's|package/signed=false|package/signed=true|g' "$PRESET"
+          echo "=== Preset keystore lines ==="
+          grep -E "keystore|signed" "$PRESET"
 
-      - name: Import Godot project resources
+      - name: Import project resources
         run: |
           cd godot
-          echo "Importing resources..."
-          timeout 90 godot --headless --import 2>&1 | tail -20 || true
-          echo "Import step done."
+          timeout 90 godot --headless --import 2>&1 | tail -30 || true
+          echo "Import done."
 
-      - name: Export Android APK (verbose)
+      - name: Export APK
         run: |
           mkdir -p /tmp/apk-out
           cd godot
-          echo "=== Starting export ==="
           godot --headless --verbose --export-debug "Android Debug" /tmp/apk-out/diep-clone.apk 2>&1
-          echo "=== Export exit code: $? ==="
+          echo "Exit: $?"
 
-      - name: Verify APK
+      - name: Verify and upload APK
         run: |
-          ls -lh /tmp/apk-out/ 2>/dev/null || echo "(output dir empty)"
-          if [ ! -f /tmp/apk-out/diep-clone.apk ]; then
-            echo "ERROR: APK not found!"
-            exit 1
-          fi
-          echo "APK size: $(du -h /tmp/apk-out/diep-clone.apk | cut -f1)"
+          ls -lh /tmp/apk-out/ || echo "dir empty"
+          test -f /tmp/apk-out/diep-clone.apk || (echo "APK missing!" && exit 1)
+          echo "APK OK: $(du -h /tmp/apk-out/diep-clone.apk | cut -f1)"
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: diep-clone-apk
           path: /tmp/apk-out/diep-clone.apk
