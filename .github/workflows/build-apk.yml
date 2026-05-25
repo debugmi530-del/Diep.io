@@ -21,11 +21,11 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android platform and build-tools
+      - name: Install Android build-tools and platform
         run: |
           yes | sdkmanager --licenses > /dev/null 2>&1 || true
           sdkmanager "build-tools;33.0.2" "platforms;android-33"
-          echo "SDK ready: $(ls $ANDROID_HOME/build-tools/)"
+          echo "aapt2: $(ls $ANDROID_HOME/build-tools/33.0.2/aapt2)"
 
       - name: Generate debug keystore
         run: |
@@ -34,7 +34,52 @@ jobs:
             -storepass android -alias androiddebugkey -keypass android \
             -dname "CN=Android Debug,O=Android,C=US" \
             -keyalg RSA -keysize 2048 -validity 10000 2>/dev/null
-          echo "Keystore: OK at $HOME/.android/debug.keystore"
+          ls -lh ~/.android/debug.keystore
+
+      - name: Install Godot export templates
+        run: |
+          TDIR="$HOME/.local/share/godot/export_templates/4.3.stable"
+          mkdir -p "$TDIR"
+          wget -q "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz" -O /tmp/templates.tpz
+          unzip -q /tmp/templates.tpz -d /tmp/tpl_extract
+          mv /tmp/tpl_extract/templates/* "$TDIR/"
+          echo "Templates: $(ls $TDIR | grep android)"
+
+      - name: Install Godot headless
+        run: |
+          wget -q "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip" -O /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot_bin
+          chmod +x "/tmp/godot_bin/Godot_v4.3-stable_linux.x86_64"
+          "/tmp/godot_bin/Godot_v4.3-stable_linux.x86_64" --version
+
+      - name: Write EditorSettings with android_sdk_path
+        run: |
+          SETTINGS_DIR="$HOME/.config/godot"
+          mkdir -p "$SETTINGS_DIR"
+          SF="$SETTINGS_DIR/editor_settings-4.tres"
+          KEYSTORE="$HOME/.android/debug.keystore"
+          JAVA_PATH="$(dirname $(dirname $(readlink -f $(which java))))"
+          SDK="$ANDROID_HOME"
+          BT="$(ls $SDK/build-tools/ | sort -V | tail -1)"
+          python3 -c "
+import sys
+sdk=sys.argv[1]; bt=sys.argv[2]; ks=sys.argv[3]; jp=sys.argv[4]; sf=sys.argv[5]
+lines=[
+  '[gd_resource type=\"EditorSettings\" format=3]',
+  '',
+  '[resource]',
+  'export/android/android_sdk_path = \"' + sdk + '\"',
+  'export/android/debug_keystore = \"' + ks + '\"',
+  'export/android/debug_keystore_user = \"androiddebugkey\"',
+  'export/android/debug_keystore_pass = \"android\"',
+  'export/android/java_sdk_path = \"' + jp + '\"',
+  'export/android/apksigner = \"' + sdk + '/build-tools/' + bt + '/apksigner\"',
+]
+open(sf,'w').write('\n'.join(lines)+'\n')
+print('Wrote: '+sf)
+" "$SDK" "$BT" "$KEYSTORE" "$JAVA_PATH" "$SF"
+          echo "=== EditorSettings ==="
+          cat "$SF"
 
       - name: Patch export_presets.cfg
         run: |
@@ -44,31 +89,33 @@ jobs:
           sed -i 's|keystore/debug_password=""|keystore/debug_password="android"|g' godot/export_presets.cfg
           sed -i 's|package/signed=false|package/signed=true|g' godot/export_presets.cfg
           sed -i 's|export_path=""|export_path="diep-clone.apk"|g' godot/export_presets.cfg
-          echo "Preset export_path: $(grep export_path godot/export_presets.cfg)"
+          grep -E "export_path|keystore|signed" godot/export_presets.cfg
 
       - name: Export Godot project
-        uses: firebelley/godot-export@v5.2.1
-        with:
-          godot_executable_download_url: "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
-          godot_export_templates_download_url: "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz"
-          relative_project_path: ./godot
-          archive_export_output: false
-          cache: false
-          export_debug: true
-          use_preset_export_path: true
-        env:
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
-          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
-
-      - name: Find APK
         run: |
-          echo "Looking for APK..."
-          find /home/runner -name "*.apk" 2>/dev/null | head -10
-          find $GITHUB_WORKSPACE -name "*.apk" 2>/dev/null | head -10
+          mkdir -p /tmp/apk-out
+          GODOT="/tmp/godot_bin/Godot_v4.3-stable_linux.x86_64"
+          "$GODOT" --headless --verbose \
+            --export-debug "Android Debug" /tmp/apk-out/diep-clone.apk \
+            2>&1 | tee /tmp/godot-export.log || true
+          echo "=== APK output ==="
+          ls -lh /tmp/apk-out/ || true
+          echo "=== Export log (relevant lines) ==="
+          grep -E "ERROR|error|valid|can_export|sdk|keystore|template|aapt2|apksigner|setting|Setting|config" \
+            /tmp/godot-export.log | grep -v "^Godot\|framebuffer\|^//\|stb_\|gif_\|renderer\|shader" | head -50
+
+      - name: Diagnostics after export
+        if: always()
+        run: |
+          echo "=== EditorSettings after export ==="
+          cat "$HOME/.config/godot/editor_settings-4.tres" || echo "NOT FOUND"
+          echo "=== Full export log last 60 lines ==="
+          tail -60 /tmp/godot-export.log || true
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: diep-clone-apk
-          path: "**/*.apk"
+          path: /tmp/apk-out/*.apk
+          if-no-files-found: warn
           retention-days: 30
