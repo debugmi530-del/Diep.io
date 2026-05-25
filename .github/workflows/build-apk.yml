@@ -25,15 +25,13 @@ jobs:
           wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_export_templates.tpz" -O /tmp/templates.tpz
           cd /tmp && unzip -q templates.tpz
           mv /tmp/templates/* "$TEMPLATES_DIR/"
-          echo "Templates at $TEMPLATES_DIR:"
-          ls "$TEMPLATES_DIR/" | grep android
+          echo "Templates OK: $(ls $TEMPLATES_DIR | grep android)"
 
       - name: Install Android build-tools 34
         run: |
           yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses > /dev/null 2>&1 || true
-          sdkmanager --sdk_root="$ANDROID_HOME" "build-tools;34.0.0" "platforms;android-34" 2>&1 | tail -5
-          echo "Build tools:"
-          ls "$ANDROID_HOME/build-tools/"
+          sdkmanager --sdk_root="$ANDROID_HOME" "build-tools;34.0.0" "platforms;android-34" > /dev/null 2>&1
+          echo "Build tools: $(ls $ANDROID_HOME/build-tools/)"
 
       - name: Generate debug keystore
         run: |
@@ -44,13 +42,21 @@ jobs:
             -keyalg RSA -keysize 2048 -validity 10000 2>/dev/null
           echo "Keystore: $(ls -lh ~/.android/debug.keystore)"
 
-      - name: Find Java path and write editor settings
+      - name: Patch keystore in export_presets.cfg
+        run: |
+          sed -i "s|keystore/debug=\"\"|keystore/debug=\"$HOME/.android/debug.keystore\"|g" godot/export_presets.cfg
+          sed -i 's|keystore/debug_user=""|keystore/debug_user="androiddebugkey"|g' godot/export_presets.cfg
+          sed -i 's|keystore/debug_password=""|keystore/debug_password="android"|g' godot/export_presets.cfg
+          sed -i 's|package/signed=false|package/signed=true|g' godot/export_presets.cfg
+          echo "Preset patched:"
+          cat godot/export_presets.cfg
+
+      - name: Write editor settings and export APK
         run: |
           JAVA_PATH=$(dirname $(dirname $(readlink -f $(which java))))
-          echo "Java path: $JAVA_PATH"
           mkdir -p ~/.config/godot
           SF="$HOME/.config/godot/editor_settings-4.tres"
-          echo '[gd_resource type="EditorSettings" format=3]'                      >  "$SF"
+          echo '[gd_resource type="EditorSettings" format=3]'                       > "$SF"
           echo ''                                                                   >> "$SF"
           echo '[resource]'                                                         >> "$SF"
           echo "export/android/android_sdk_path = \"$ANDROID_HOME\""              >> "$SF"
@@ -58,30 +64,16 @@ jobs:
           echo 'export/android/debug_keystore_user = "androiddebugkey"'            >> "$SF"
           echo 'export/android/debug_keystore_pass = "android"'                    >> "$SF"
           echo "export/android/java_sdk_path = \"$JAVA_PATH\""                    >> "$SF"
-          echo "=== Editor settings ==="
+          echo "=== Settings written to $SF ==="
           cat "$SF"
-
-      - name: Patch keystore in export_presets.cfg
-        run: |
-          PRESET="godot/export_presets.cfg"
-          sed -i "s|keystore/debug=\"\"|keystore/debug=\"$HOME/.android/debug.keystore\"|g" "$PRESET"
-          sed -i 's|keystore/debug_user=""|keystore/debug_user="androiddebugkey"|g' "$PRESET"
-          sed -i 's|keystore/debug_password=""|keystore/debug_password="android"|g' "$PRESET"
-          sed -i 's|package/signed=false|package/signed=true|g' "$PRESET"
-          grep -E "keystore|signed" "$PRESET"
-
-      - name: Import project resources
-        run: |
-          cd godot
-          timeout 120 godot --headless --import 2>&1 | tail -20 || true
-          echo "Import done."
-
-      - name: Export APK
-        run: |
+          echo "=== Starting export (no separate import) ==="
           mkdir -p /tmp/apk-out
           cd godot
           godot --headless --verbose --export-debug "Android Debug" /tmp/apk-out/diep-clone.apk 2>&1
-          echo "Exit: $?"
+          EXPORT_CODE=$?
+          echo "=== Export exit code: $EXPORT_CODE ==="
+          echo "=== Settings after export ==="
+          cat "$SF"
 
       - name: Verify APK
         run: |
