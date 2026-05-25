@@ -5,36 +5,28 @@ on:
     branches: [main, master]
   workflow_dispatch:
 
-env:
-  GODOT_VERSION: "4.3"
-  GODOT_RELEASE: "stable"
-
 jobs:
   build:
-    runs-on: ubuntu-latest
-    container:
-      image: barichello/godot-ci:4.3
+    runs-on: ubuntu-22.04
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install export templates
-        run: |
-          TEMPLATES_DIR="$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}"
-          mkdir -p "$TEMPLATES_DIR"
-          wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-${GODOT_RELEASE}/Godot_v${GODOT_VERSION}-${GODOT_RELEASE}_export_templates.tpz" -O /tmp/templates.tpz
-          cd /tmp && unzip -q templates.tpz
-          mv /tmp/templates/* "$TEMPLATES_DIR/"
-          echo "Templates: $(ls $TEMPLATES_DIR | grep android)"
+      - name: Install Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
 
-      - name: Install Android build-tools 33 and platforms
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android platform and build-tools
         run: |
-          yes | sdkmanager --sdk_root="$ANDROID_HOME" --licenses > /dev/null 2>&1 || true
-          sdkmanager --sdk_root="$ANDROID_HOME" "platforms;android-33" > /dev/null 2>&1
-          echo "Build tools available:"
-          ls "$ANDROID_HOME/build-tools/"
-          echo "Platforms available:"
-          ls "$ANDROID_HOME/platforms/" 2>/dev/null || echo "(none)"
+          yes | sdkmanager --licenses > /dev/null 2>&1 || true
+          sdkmanager "build-tools;33.0.2" "platforms;android-33"
+          echo "Build-tools: $(ls $ANDROID_HOME/build-tools/)"
+          echo "aapt2: $(ls $ANDROID_HOME/build-tools/33.0.2/aapt2)"
 
       - name: Generate debug keystore
         run: |
@@ -43,72 +35,40 @@ jobs:
             -storepass android -alias androiddebugkey -keypass android \
             -dname "CN=Android Debug,O=Android,C=US" \
             -keyalg RSA -keysize 2048 -validity 10000 2>/dev/null
-          echo "Keystore: $(ls -lh ~/.android/debug.keystore)"
+          echo "Keystore: OK"
 
-      - name: Full Android SDK diagnostic
-        run: |
-          JAVA_PATH=$(dirname $(dirname $(readlink -f $(which java))))
-          SDK="$ANDROID_HOME"
-          BT=$(ls "$SDK/build-tools/" | tail -1)
-          echo "=== JAVA ==="
-          echo "JAVA_PATH: $JAVA_PATH"
-          ls "$JAVA_PATH/bin/java" && echo "java OK" || echo "java MISSING"
-          ls "$JAVA_PATH/bin/keytool" && echo "keytool OK" || echo "keytool MISSING"
-          ls "$JAVA_PATH/bin/jarsigner" && echo "jarsigner OK" || echo "jarsigner MISSING"
-          echo "=== SDK BUILD-TOOLS ($BT) ==="
-          ls "$SDK/build-tools/$BT/" | grep -E "aapt2|apksigner|zipalign|dx|d8"
-          ls "$SDK/build-tools/$BT/aapt2" && echo "aapt2 OK" || echo "aapt2 MISSING"
-          ls "$SDK/build-tools/$BT/apksigner" && echo "apksigner OK" || echo "apksigner MISSING"
-          ls "$SDK/build-tools/$BT/zipalign" && echo "zipalign OK" || echo "zipalign MISSING"
-          echo "=== PLATFORM-TOOLS ==="
-          ls "$SDK/platform-tools/adb" && echo "adb OK" || echo "adb MISSING"
-          echo "=== TEMPLATES ==="
-          ls "$HOME/.local/share/godot/export_templates/${GODOT_VERSION}.${GODOT_RELEASE}/" | grep android
-          echo "=== KEYSTORE ==="
-          ls "$HOME/.android/debug.keystore" && echo "keystore OK" || echo "keystore MISSING"
-
-      - name: Patch and verify export_presets.cfg
+      - name: Patch export_presets.cfg
         run: |
           KEYSTORE="$HOME/.android/debug.keystore"
           sed -i "s|keystore/debug=\"\"|keystore/debug=\"$KEYSTORE\"|g" godot/export_presets.cfg
           sed -i 's|keystore/debug_user=""|keystore/debug_user="androiddebugkey"|g' godot/export_presets.cfg
           sed -i 's|keystore/debug_password=""|keystore/debug_password="android"|g' godot/export_presets.cfg
           sed -i 's|package/signed=false|package/signed=true|g' godot/export_presets.cfg
-          echo "=== export_presets.cfg ==="
-          cat godot/export_presets.cfg
+          echo "Preset patched OK"
 
-      - name: Write editor settings and export APK
+      - name: Export Godot project
+        uses: firebelley/godot-export@v5.2.1
+        with:
+          godot_executable_download_url: "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_linux.x86_64.zip"
+          godot_export_templates_download_url: "https://github.com/godotengine/godot/releases/download/4.3-stable/Godot_v4.3-stable_export_templates.tpz"
+          relative_project_path: ./godot
+          archive_export_output: false
+          cache: false
+          export_debug: true
+          use_preset_export_path: false
+        env:
+          ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+
+      - name: Find and upload APK
         run: |
-          JAVA_PATH=$(dirname $(dirname $(readlink -f $(which java))))
-          BT_VER=$(ls "$ANDROID_HOME/build-tools/" | sort -V | tail -1)
-          mkdir -p ~/.config/godot
-          SF="$HOME/.config/godot/editor_settings-4.tres"
-          echo '[gd_resource type="EditorSettings" format=3]'                        > "$SF"
-          echo ''                                                                    >> "$SF"
-          echo '[resource]'                                                          >> "$SF"
-          echo "export/android/android_sdk_path = \"$ANDROID_HOME\""               >> "$SF"
-          echo "export/android/debug_keystore = \"$HOME/.android/debug.keystore\""  >> "$SF"
-          echo 'export/android/debug_keystore_user = "androiddebugkey"'             >> "$SF"
-          echo 'export/android/debug_keystore_pass = "android"'                     >> "$SF"
-          echo "export/android/java_sdk_path = \"$JAVA_PATH\""                     >> "$SF"
-          echo "export/android/apksigner = \"$ANDROID_HOME/build-tools/$BT_VER/apksigner\""  >> "$SF"
-          echo "=== Settings (BT_VER=$BT_VER) ==="
-          cat "$SF"
-          mkdir -p /tmp/apk-out
-          cd godot
-          echo "=== Starting export ==="
-          godot --headless --verbose --export-debug "Android Debug" /tmp/apk-out/diep-clone.apk 2>&1 || true
-          echo "=== Exit: $? ==="
-          echo "=== Godot log files ==="
-          find "$HOME/.local/share/godot/logs" -name "*.log" 2>/dev/null | head -3 | xargs cat 2>/dev/null || echo "(no log files)"
-          echo "=== APK output ==="
-          ls -lh /tmp/apk-out/ 2>/dev/null || echo "(empty)"
-
-      - name: Fail if no APK
-        run: test -f /tmp/apk-out/diep-clone.apk || (echo "APK not created" && exit 1)
+          echo "Export outputs:"
+          find /home/runner/work -name "*.apk" 2>/dev/null | head -10
+          find /tmp -name "*.apk" 2>/dev/null | head -10
+          find . -name "*.apk" 2>/dev/null | head -10
 
       - uses: actions/upload-artifact@v4
         with:
           name: diep-clone-apk
-          path: /tmp/apk-out/diep-clone.apk
+          path: "**/*.apk"
           retention-days: 30
